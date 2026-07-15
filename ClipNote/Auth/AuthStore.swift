@@ -1,4 +1,5 @@
 import Foundation
+import AuthenticationServices
 import Supabase
 
 /// Pure, testable snapshot of auth state. `loggedIn` is derived from token presence.
@@ -14,9 +15,14 @@ struct AuthState: Equatable {
 @MainActor
 final class AuthStore: ObservableObject {
     @Published private(set) var state = AuthState(accessToken: nil, loading: true)
+    /// 마지막 로그인 실패 메시지(유저 취소는 제외). LoginView가 표시.
+    @Published var lastError: String?
 
     var accessToken: String? { state.accessToken }
     var loggedIn: Bool { state.loggedIn }
+
+    /// Supabase OAuth 콜백 리다이렉트. 딥링크 스킴(#6 AuthDeepLink)과 일치.
+    static let oauthRedirect = URL(string: "clipnote://auth/callback")!
 
     let client: SupabaseClient
     private var observeTask: Task<Void, Never>?
@@ -81,6 +87,24 @@ final class AuthStore: ObservableObject {
     /// token_hash를 소비 처리. 신규면 true(verify 진행), 중복이면 false. 가드 로직 분리(테스트용).
     func markTokenHashConsumed(_ tokenHash: String) -> Bool {
         consumedTokenHashes.insert(tokenHash).inserted
+    }
+
+    /// Google/Kakao 등 Supabase OAuth 로그인(ASWebAuthenticationSession PKCE).
+    /// 성공 시 세션은 authStateChanges로 반영. 유저 취소는 무시, 그 외 실패만 lastError.
+    func signIn(provider: Provider) async {
+        lastError = nil
+        do {
+            try await client.auth.signInWithOAuth(provider: provider, redirectTo: Self.oauthRedirect)
+        } catch {
+            if !Self.isUserCancellation(error) {
+                lastError = error.localizedDescription
+            }
+        }
+    }
+
+    /// ASWebAuthenticationSession 유저 취소는 에러로 취급하지 않는다.
+    static func isUserCancellation(_ error: Error) -> Bool {
+        (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin
     }
 
     func signOut() async {

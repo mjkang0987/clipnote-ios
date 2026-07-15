@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import AuthenticationServices
 import Supabase
 @testable import ClipNote
 
@@ -48,6 +49,20 @@ import Supabase
         #expect(store.markTokenHashConsumed("hash-1") == true)   // 신규 → verify 진행
         #expect(store.markTokenHashConsumed("hash-1") == false)  // 중복 → 무시
         #expect(store.markTokenHashConsumed("hash-2") == true)   // 다른 값 → 진행
+    }
+
+    @Test func oauthRedirectMatchesDeepLinkScheme() {
+        #expect(AuthStore.oauthRedirect.scheme == AuthDeepLink.scheme)
+        #expect(AuthDeepLink.parse(AuthStore.oauthRedirect.appending(queryItems: [
+            URLQueryItem(name: "code", value: "abc")
+        ])) == .oauthCallback(code: "abc"))
+    }
+
+    @Test func userCancellationNotTreatedAsError() {
+        #expect(AuthStore.isUserCancellation(
+            ASWebAuthenticationSessionError(.canceledLogin)) == true)
+        #expect(AuthStore.isUserCancellation(
+            URLError(.timedOut)) == false)
     }
 }
 
