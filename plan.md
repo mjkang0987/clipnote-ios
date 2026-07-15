@@ -11,4 +11,34 @@
 
 ---
 
-(진행 중인 작업 없음)
+## 진행 중 — Phase 2 인증 (에픽 #4)
+
+RN `lib/auth.tsx`·`login.tsx`·`lib/naver.ts` → Swift `AuthStore`(Supabase 래핑). 설계 스펙 §3.3/§3.7.
+
+서브이슈: #5 Supabase+AuthStore 코어 → #6 딥링크 라우팅 → #7 Google/Kakao → #8 네이버.
+
+### #5 Supabase SPM 통합 + AuthStore 코어 (현재)
+
+**요구사항**
+- `supabase-swift` SPM 의존성 추가, 빌드 통과.
+- `AuthStore`(@MainActor, ObservableObject): 세션·토큰·로그인상태 관찰, `onAuthStateChange` 구독, `signOut()`.
+- 세션은 supabase-swift 기본 Keychain 저장·자동 갱신.
+
+**구현 방식**
+- `project.yml` `packages:`에 Supabase 추가, `ClipNote` 타깃 `dependencies`에 `package: Supabase / product: Supabase`.
+- `SUPABASE_URL`/`SUPABASE_ANON_KEY`를 `Secrets.xcconfig`→`info.properties`로 주입(API_BASE 패턴 동일).
+- `Config` 헬퍼: Info.plist에서 값 읽기(APIClient의 Bundle 읽기 패턴 통일).
+- `AuthStore`: `SupabaseClient` 보관, `@Published session/loading`, 파생 `accessToken`/`loggedIn`. init에서 `authStateChanges` async 시퀀스 구독 Task.
+
+**영향 파일**
+- 수정: `project.yml`, `ClipNote/Info.plist`(생성물), `Secrets.example.xcconfig`(키 문서화)
+- 신규: `ClipNote/Auth/AuthStore.swift`, `ClipNote/Util/Config.swift`, `ClipNoteTests/AuthStoreTests.swift`
+
+**기대 결과**
+- `xcodebuild build` 그린(supabase-swift 링크).
+- AuthStore 상태 파생 로직(세션 유무→loggedIn/accessToken) 유닛테스트 통과.
+- OAuth 실제 플로우는 #7/#8로 이월(이 서브에선 코어·상태만).
+
+**리스크**
+- supabase-swift Swift 6 동시성 호환: 최신 2.x 사용으로 대응. 실패 시 버전 핀 조정.
+- SPM 첫 해석은 네트워크 필요(CI 러너 포함).

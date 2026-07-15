@@ -7,6 +7,10 @@ options:
 configs:
   Debug: debug
   Release: release
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.51.0"
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -21,6 +25,9 @@ targets:
       Release: Secrets.xcconfig
     sources:
       - ClipNote
+    dependencies:
+      - package: Supabase
+        product: Supabase
     info:
       path: ClipNote/Info.plist
       properties:
@@ -33,6 +40,9 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         API_BASE: $(API_BASE)
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        NAVER_CLIENT_ID: $(NAVER_CLIENT_ID)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: kr.co.clipnote.app
