@@ -10,6 +10,7 @@ private struct IdentifiedURL: Identifiable {
 /// 최소 로그인 화면 — Google/Kakao OAuth(#7) + 네이버 커스텀 OAuth(#8). 게스트·동의체크는 Phase 7.
 struct LoginView: View {
     @EnvironmentObject private var auth: AuthStore
+    @Environment(\.scenePhase) private var scenePhase
     @State private var naverAuth: IdentifiedURL?
 
     var body: some View {
@@ -35,6 +36,11 @@ struct LoginView: View {
         .sheet(item: $naverAuth) { item in
             SafariView(url: item.url)
                 .ignoresSafeArea()
+        }
+        // 네이버 콜백 딥링크로 앱이 포그라운드 복귀하면 SFSafari 시트를 닫는다
+        // (성공·실패 무관 — 실패 시 시트가 열린 채 멈추는 것 방지).
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { naverAuth = nil }
         }
     }
 
