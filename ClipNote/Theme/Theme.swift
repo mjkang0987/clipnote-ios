@@ -22,26 +22,26 @@ enum Radius {
     static let full: CGFloat = 9999
 }
 
-struct Gradient: Equatable {
+struct ClipGradient: Equatable {
     let name: String
     let from: Color
     let to:   Color
 }
 
-let GRADIENTS: [Gradient] = [
-    Gradient(name: "sunset",   from: Color(hex: 0xFF6B6B), to: Color(hex: 0xFFA94D)),
-    Gradient(name: "ocean",    from: Color(hex: 0x4F8DFD), to: Color(hex: 0x6FE0C9)),
-    Gradient(name: "grape",    from: Color(hex: 0x7C5CFC), to: Color(hex: 0xE879F9)),
-    Gradient(name: "forest",   from: Color(hex: 0x0EA5E9), to: Color(hex: 0x22C55E)),
-    Gradient(name: "peach",    from: Color(hex: 0xFB7185), to: Color(hex: 0xFDBA74)),
-    Gradient(name: "midnight", from: Color(hex: 0x4338CA), to: Color(hex: 0x7C3AED)),
-    Gradient(name: "mint",     from: Color(hex: 0x06B6D4), to: Color(hex: 0x34D399)),
-    Gradient(name: "rose",     from: Color(hex: 0xEC4899), to: Color(hex: 0x8B5CF6)),
+let GRADIENTS: [ClipGradient] = [
+    ClipGradient(name: "sunset",   from: Color(hex: 0xFF6B6B), to: Color(hex: 0xFFA94D)),
+    ClipGradient(name: "ocean",    from: Color(hex: 0x4F8DFD), to: Color(hex: 0x6FE0C9)),
+    ClipGradient(name: "grape",    from: Color(hex: 0x7C5CFC), to: Color(hex: 0xE879F9)),
+    ClipGradient(name: "forest",   from: Color(hex: 0x0EA5E9), to: Color(hex: 0x22C55E)),
+    ClipGradient(name: "peach",    from: Color(hex: 0xFB7185), to: Color(hex: 0xFDBA74)),
+    ClipGradient(name: "midnight", from: Color(hex: 0x4338CA), to: Color(hex: 0x7C3AED)),
+    ClipGradient(name: "mint",     from: Color(hex: 0x06B6D4), to: Color(hex: 0x34D399)),
+    ClipGradient(name: "rose",     from: Color(hex: 0xEC4899), to: Color(hex: 0x8B5CF6)),
 ]
 
 /// 결정적 그라디언트 선택. JS의 `(hash * 31 + charCodeAt) | 0` 을 UTF-16 코드 유닛으로 재현.
 /// `abs(Int(hash))` — Int32를 64비트로 확장한 뒤 abs를 적용해 Int32.min 크래시 방지.
-func pickGradient(_ seed: String) -> Gradient {
+func pickGradient(_ seed: String) -> ClipGradient {
     var hash: Int32 = 0
     for unit in seed.utf16 {
         hash = hash &* 31 &+ Int32(unit)
