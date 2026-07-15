@@ -1,0 +1,41 @@
+# PR 자동 검증 (iOS 빌드) — XcodeGen 생성 + xcodebuild build.
+# AI 코드리뷰는 작성자(Claude)가 절차 5단계(/code-review)에서 세션 내에서 수행한다.
+# 이 CI는 자동 게이트: 컴파일 오류를 머지 전에 잡는다.
+# 주의: macOS 러너 사용 — 비공개 저장소에서는 분(minutes)이 Linux의 10배로 차감된다.
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "**/*.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    # 포크 PR은 스킵(보안)
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Prepare Secrets (빌드용 더미 — 실제 값 아님)
+        run: cp Secrets.example.xcconfig Secrets.xcconfig
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project ClipNote.xcodeproj \
+            -scheme ClipNote \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
