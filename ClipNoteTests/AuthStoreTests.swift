@@ -64,6 +64,30 @@ import Supabase
         #expect(AuthStore.isUserCancellation(
             URLError(.timedOut)) == false)
     }
+
+    @Test func naverAuthURLMatchesRNContract() throws {
+        let url = try #require(AuthStore.makeNaverAuthURL(clientID: "cid-1", nonce: "abc"))
+        let comps = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        #expect(comps.host == "nid.naver.com")
+        #expect(comps.path == "/oauth2.0/authorize")
+
+        func q(_ n: String) -> String? { comps.queryItems?.first { $0.name == n }?.value }
+        #expect(q("response_type") == "code")
+        #expect(q("client_id") == "cid-1")
+        #expect(q("redirect_uri") == AuthStore.naverCallback)
+
+        let stateJSON = try #require(q("state")).data(using: .utf8)!
+        let state = try JSONDecoder().decode(AuthStore.NaverState.self, from: stateJSON)
+        #expect(state == AuthStore.NaverState(returnUrl: AuthStore.naverReturnURL, n: "abc"))
+    }
+
+    @Test func releaseTokenHashAllowsRetry() {
+        let store = makeStore()
+        #expect(store.markTokenHashConsumed("h") == true)
+        #expect(store.markTokenHashConsumed("h") == false)  // 소비됨
+        store.releaseTokenHash("h")                          // 실패 → 롤백
+        #expect(store.markTokenHashConsumed("h") == true)    // 재시도 허용
+    }
 }
 
 extension AuthStore {
