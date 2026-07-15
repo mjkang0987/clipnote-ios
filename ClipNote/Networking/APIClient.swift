@@ -9,11 +9,7 @@ actor APIClient {
         self.session = session
     }
 
-    static let shared: APIClient = {
-        let raw = Bundle.main.object(forInfoDictionaryKey: "API_BASE") as? String
-        let base = URL(string: (raw?.isEmpty == false ? raw! : "https://clipnote.co.kr"))!
-        return APIClient(baseURL: base)
-    }()
+    static let shared = APIClient(baseURL: Config.apiBase)
 
     struct ClipsResponse: Codable {
         let loggedIn: Bool
