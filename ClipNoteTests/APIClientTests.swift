@@ -73,6 +73,7 @@ private func stubbedClient() -> APIClient {
         let out = await stubbedClient().getClips(accessToken: "t")
         #expect(out.loggedIn == false)
         #expect(out.clips.isEmpty)
+        #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer t")
     }
 
     @Test func ogImageURLBuildsQuery() async {
@@ -90,6 +91,11 @@ private func stubbedClient() -> APIClient {
             tags: ["x"], shared: nil, accessToken: "t")
         #expect(ok == true)
         #expect(StubURLProtocol.lastRequest?.httpMethod == "PATCH")
+        #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer t")
+        let body = try! JSONSerialization.jsonObject(with: StubURLProtocol.lastBody ?? Data()) as! [String: Any]
+        #expect(body["title"] as? String == "new")
+        #expect(body["tags"] as? [String] == ["x"])
+        #expect(body["shared"] == nil)
     }
 
     @Test func deleteClipUsesDeleteMethod() async {
@@ -97,5 +103,6 @@ private func stubbedClient() -> APIClient {
         let ok = await stubbedClient().deleteClip(slug: "s1", accessToken: "t")
         #expect(ok == true)
         #expect(StubURLProtocol.lastRequest?.httpMethod == "DELETE")
+        #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer t")
     }
 }
