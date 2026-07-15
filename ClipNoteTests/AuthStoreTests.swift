@@ -42,6 +42,13 @@ import Supabase
         #expect(AuthState(accessToken: nil, loading: true).loggedIn == false)
         #expect(AuthState(accessToken: "x", loading: false).loggedIn == true)
     }
+
+    @Test func naverTokenHashConsumedOnce() {
+        let store = makeStore()
+        #expect(store.markTokenHashConsumed("hash-1") == true)   // 신규 → verify 진행
+        #expect(store.markTokenHashConsumed("hash-1") == false)  // 중복 → 무시
+        #expect(store.markTokenHashConsumed("hash-2") == true)   // 다른 값 → 진행
+    }
 }
 
 extension AuthStore {
