@@ -28,7 +28,12 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `ClipNoteTests/` | 유닛 테스트 |
 
 ## 현재 상태
-- (채워넣기) 초기 구조 확립 단계. 세부 기능/화면 목록은 작업하며 갱신.
+- **Phase 1(토대) 완료** — 시뮬레이터 빌드/테스트 그린(18 tests / 4 suites).
+  - `Theme`(색·radius·`GRADIENTS`·`pickGradient` JS 해시 동일)
+  - `Models`(Codable DTO: `ClipMetadata`/`DbClip`/`CreateClipInput`/`CreateClipResult` + `UClip`)
+  - `APIClient`(actor, 메타·클립·OG·목록·수정·삭제, URLProtocol 스텁 테스트)
+  - `ShareText`(제목+설명+링크 개행 결합, §4.3)
+- **다음: Phase 2 — Auth**(Supabase SPM·AuthStore·Google/Kakao/네이버·딥링크). 세부 기능/화면은 작업하며 갱신.
 
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
