@@ -21,19 +21,22 @@ targets:
       Release: Secrets.xcconfig
     sources:
       - ClipNote
+    info:
+      path: ClipNote/Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: kr.co.clipnote.app
+            CFBundleURLSchemes:
+              - clipnote
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        API_BASE: $(API_BASE)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: kr.co.clipnote.app
-        GENERATE_INFOPLIST_FILE: true
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        API_BASE: $(API_BASE)
-      configs:
-        Debug:
-          INFOPLIST_KEY_API_BASE: $(API_BASE)
-        Release:
-          INFOPLIST_KEY_API_BASE: $(API_BASE)
+        GENERATE_INFOPLIST_FILE: false
   ClipNoteTests:
     type: bundle.unit-test
     platform: iOS
