@@ -47,7 +47,8 @@ actor APIClient {
                 return CreateClipResult(slug: nil, shareUrl: nil, alreadySaved: nil,
                                         error: decoded?.error ?? "clip \(http.statusCode)")
             }
-            return decoded ?? CreateClipResult(slug: nil, shareUrl: nil, alreadySaved: nil, error: "parse")
+            // 2xx: use decoded result if available; otherwise treat as success (error: nil)
+            return decoded ?? CreateClipResult(slug: nil, shareUrl: nil, alreadySaved: nil, error: nil)
         } catch {
             return CreateClipResult(slug: nil, shareUrl: nil, alreadySaved: nil, error: "network")
         }

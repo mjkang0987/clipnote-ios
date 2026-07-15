@@ -105,4 +105,13 @@ private func stubbedClient() -> APIClient {
         #expect(StubURLProtocol.lastRequest?.httpMethod == "DELETE")
         #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer t")
     }
+
+    @Test func createClip2xxUnparseableBodyIsSuccess() async {
+        // 2xx with a body that cannot be decoded as CreateClipResult → error must be nil (success)
+        StubURLProtocol.handler = { _ in (200, Data()) }
+        let input = CreateClipInput(url: "https://x.com", title: "T",
+            description: nil, image: nil, siteName: nil, tags: nil, gradient: "grape", save: nil)
+        let res = await stubbedClient().createClip(input, accessToken: nil)
+        #expect(res.error == nil)
+    }
 }
