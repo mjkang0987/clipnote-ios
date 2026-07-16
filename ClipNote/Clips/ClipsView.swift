@@ -15,6 +15,12 @@ struct ClipsView: View {
     @State private var makingSharedID: String?
     @State private var safariURL: URL?
 
+    // 다중선택(로그인 전용)
+    @State private var selectMode = false
+    @State private var selected: Set<String> = []
+    @State private var showTagModal = false
+    @State private var showBulkDeleteConfirm = false
+
     var body: some View {
         Group {
             if let store {
@@ -23,13 +29,37 @@ struct ClipsView: View {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle("내 클립")
+        .navigationTitle(selectMode ? "\(selected.count)개 선택" : "내 클립")
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
+        .toolbar { toolbarContent }
+        .safeAreaInset(edge: .bottom) { if selectMode { bulkBar } }
         .task { await setup() }
-        .onChange(of: auth.loggedIn) { Task { await reloadWithAuth() } }
+        .onChange(of: auth.loggedIn) {
+            exitSelect()
+            Task { await reloadWithAuth() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: ClipsRefresh.name)) { _ in
             Task { await reloadWithAuth() }
+        }
+        .sheet(isPresented: $showTagModal) {
+            TagApplyModal(count: selected.count) { tags, mode in
+                Task {
+                    await store?.applyTags(ids: Array(selected), tags: tags, mode: mode)
+                    exitSelect()
+                }
+            }
+        }
+        .confirmationDialog("클립 삭제", isPresented: $showBulkDeleteConfirm) {
+            Button("삭제", role: .destructive) {
+                Task {
+                    await store?.bulkDelete(ids: Array(selected))
+                    exitSelect()
+                }
+            }
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("선택한 \(selected.count)개 클립을 삭제할까요?")
         }
         .sheet(item: $editing) { clip in
             EditClipModal(initialTitle: clip.title, initialTags: clip.tags) { title, tags in
@@ -46,6 +76,44 @@ struct ClipsView: View {
         } message: { clip in
             Text("‘\(clip.title)’ 클립을 삭제할까요?")
         }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            if selectMode {
+                Button("취소") { exitSelect() }
+            } else if auth.loggedIn, store?.clips?.isEmpty == false {
+                Button("선택") { selectMode = true }
+            }
+        }
+    }
+
+    /// 다중선택 하단 바 — 태그 적용 / 삭제(n).
+    private var bulkBar: some View {
+        HStack(spacing: 8) {
+            Button { showTagModal = true } label: {
+                Text("태그 적용")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColor.brandStrong)
+                    .frame(maxWidth: .infinity).frame(height: 48)
+                    .background(AppColor.brandSoft)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            }
+            Button { showBulkDeleteConfirm = true } label: {
+                Text("삭제 (\(selected.count))")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColor.white)
+                    .frame(maxWidth: .infinity).frame(height: 48)
+                    .background(AppColor.danger)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            }
+            .disabled(selected.isEmpty)
+            .opacity(selected.isEmpty ? 0.5 : 1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.regularMaterial)
     }
 
     // MARK: - Content
@@ -71,25 +139,39 @@ struct ClipsView: View {
                         .plainRow()
                 }
                 ForEach(store.filtered) { clip in
-                    ClipRow(
-                        clip: clip,
-                        copied: copiedID == clip.id,
-                        makingShared: makingSharedID == clip.id,
-                        onEdit: { editing = clip },
-                        onDelete: { pendingDelete = clip },
-                        onCopyShare: { copyShare(clip) },
-                        onMakeShared: { Task { await makeShared(clip) } },
-                        onOpen: { safariURL = URL(string: clip.url) }
-                    )
-                    .plainRow()
-                    .swipeActions(edge: .trailing) {
-                        Button("삭제", role: .destructive) { pendingDelete = clip }
-                        Button("편집") { editing = clip }.tint(AppColor.brand)
-                    }
+                    row(clip)
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+        }
+    }
+
+    @ViewBuilder
+    private func row(_ clip: UClip) -> some View {
+        let base = ClipRow(
+            clip: clip,
+            selectMode: selectMode,
+            isSelected: selected.contains(clip.id),
+            copied: copiedID == clip.id,
+            makingShared: makingSharedID == clip.id,
+            onToggle: { toggle(clip.id) },
+            onLongPress: { if auth.loggedIn { enterSelect(clip.id) } },
+            onEdit: { editing = clip },
+            onDelete: { pendingDelete = clip },
+            onCopyShare: { copyShare(clip) },
+            onMakeShared: { Task { await makeShared(clip) } },
+            onOpen: { safariURL = URL(string: clip.url) }
+        )
+        .plainRow()
+
+        if selectMode {
+            base
+        } else {
+            base.swipeActions(edge: .trailing) {
+                Button("삭제", role: .destructive) { pendingDelete = clip }
+                Button("편집") { editing = clip }.tint(AppColor.brand)
+            }
         }
     }
 
@@ -141,6 +223,20 @@ struct ClipsView: View {
         await store?.load(loggedIn: auth.loggedIn, accessToken: auth.accessToken)
     }
 
+    private func enterSelect(_ id: String) {
+        selectMode = true
+        selected = [id]
+    }
+
+    private func exitSelect() {
+        selectMode = false
+        selected = []
+    }
+
+    private func toggle(_ id: String) {
+        if selected.contains(id) { selected.remove(id) } else { selected.insert(id) }
+    }
+
     private func copyShare(_ c: UClip) {
         guard let text = store?.shareText(c) else { return }
         UIPasteboard.general.string = text
@@ -174,8 +270,12 @@ private extension View {
 /// 목록 카드 한 줄 — 썸네일·제목·호스트·태그 + ⋯메뉴 + 액션행(공유/바로가기).
 private struct ClipRow: View {
     let clip: UClip
+    let selectMode: Bool
+    let isSelected: Bool
     let copied: Bool
     let makingShared: Bool
+    let onToggle: () -> Void
+    let onLongPress: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onCopyShare: () -> Void
@@ -189,6 +289,7 @@ private struct ClipRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
+                if selectMode { checkbox }
                 thumbnail
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
@@ -209,23 +310,43 @@ private struct ClipRow: View {
                     }
                 }
                 Spacer(minLength: 0)
-                Menu {
-                    Button("편집", action: onEdit)
-                    Button("삭제", role: .destructive, action: onDelete)
-                } label: {
-                    Text("⋯")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(AppColor.fgMuted)
-                        .frame(width: 32, height: 32)
+                if !selectMode {
+                    Menu {
+                        Button("편집", action: onEdit)
+                        Button("삭제", role: .destructive, action: onDelete)
+                    } label: {
+                        Text("⋯")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(AppColor.fgMuted)
+                            .frame(width: 32, height: 32)
+                    }
                 }
             }
             .padding(12)
 
-            actionRow
+            if !selectMode { actionRow }
         }
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-        .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(AppColor.border, lineWidth: 0.5))
+        .overlay(RoundedRectangle(cornerRadius: Radius.md)
+            .stroke(isSelected ? AppColor.brand : AppColor.border, lineWidth: isSelected ? 1.5 : 0.5))
+        .contentShape(Rectangle())
+        .onTapGesture { if selectMode { onToggle() } }
+        .onLongPressGesture { if !selectMode { onLongPress() } }
+    }
+
+    private var checkbox: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(isSelected ? AppColor.brand : AppColor.border, lineWidth: 1.5)
+                .background(Circle().fill(isSelected ? AppColor.brand : Color.clear))
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppColor.white)
+            }
+        }
+        .frame(width: 24, height: 24)
     }
 
     @ViewBuilder
