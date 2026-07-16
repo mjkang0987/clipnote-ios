@@ -4,60 +4,21 @@
 
 ---
 
-## 예정 — Phase 4: ClipsView + 편집/공유/다중선택 + 로그인 마이그레이션 (에픽)
+## 완료 — Phase 4: ClipsView + 편집/공유/다중선택 + 로그인 마이그레이션 (에픽 #28)
 
-설계 §4.2·§4.3·§4.7·§5. RN `app/clips.tsx` + `components/{ShareResultModal,EditClipModal,TagApplyModal}` + `lib/clips-refresh` 이식.
-저장된 클립을 목록으로 보고(로컬/DB 통합), 편집·삭제·공유링크·다중선택 태그일괄, 로그인 시 로컬→DB 마이그레이션.
+설계 §4.2·§4.3·§4.7·§5. RN app/clips.tsx + 모달3종 + clips-refresh + 마이그레이션 이식. 서브 6개 전부 머지.
 
-> 착수 방식: CLAUDE.md Work Request Flow. 하위 3개↑ → **에픽 이슈 + 서브이슈**. 서브별 브랜치 `claude/issue-N-슬러그` → TDD → 빌드/테스트(`iPhone 17 Pro`) → `/code-review` → PR → CI → 머지. 새 세션은 index.md·plan.md 먼저 읽을 것. Phase 3 산출물 재사용: `UClip` 매핑·`parseTags`·`LocalClipStore`·`ClipCardView`·`TagChip`·`buildShareText`·`APIClient`.
+- #29(#A) `ClipsStore`(로컬/DB 통합 로드·삭제·편집·makeShared·applyTags add∪dedup·최대6/replace)·shareText(§4.3)·`ClipsRefresh`·`LocalClipStore.update`. 11 tests. (PR #35)
+- #30(#D1) `EditClipModal`·전체 `ShareResultModal`(복사§4.3·열기·DB저장). 홈 최소시트 교체. (PR #36)
+- #31(#B) `ClipsView`(List 스와이프·`FilterChip`·⋯메뉴·공유복사/만들기·바로가기), HomeView 툴바 "내 클립". 새로고침은 현재 auth로 load(캐시 ctx stale 방지). (PR #37)
+- #33(#D2) `TagApplyModal`(추가/교체). (PR #38)
+- #32(#C) 다중선택(로그인 전용, 롱프레스·체크박스·하단 바 태그일괄/삭제, 로그아웃 시 해제). (PR #39)
+- #34(#E) `MigrateLocalClips`(로그인 시 로컬→DB 업로드, **전량 성공 시에만** clear+refresh, 부분 실패 유지) + RootView 훅. 4 tests. (PR #40)
+- 전체 73 tests / 13 suites 그린(iPhone 17 Pro).
 
-### 서브 분할(의존순)
-
-**#A ClipsStore — 데이터 로직·순수·TDD**
-- 통합 로드: 로그인 → `APIClient.getClips` → `[UClip]`(DB, id=slug); 게스트 → `LocalClipStore.all()` → `[UClip]`(로컬, id=url). Phase 3 `UClip` 매핑 재사용.
-- 액션: `removeOne(UClip)`(로컬=LocalClipStore.delete / DB=deleteClip), `saveEdit(title,tags)`, `makeShared(slug)`(updateClip shared:true), `applyTags(ids, tags, mode:add|replace)` — add=기존∪신규 **dedup·최대6**, replace=신규 최대6.
-- 파생: `allTags`(dedup), 태그 필터, `shareText(clip)` = `buildShareText(title, description, "{API_BASE}/{slug}")` (§4.3).
-- `clips-refresh` 신호(NotificationCenter) — emit/subscribe(마이그레이션·편집 후 목록 갱신).
-- 검증: 매핑, applyTags add/replace·dedup·6캡, 태그필터, allTags, shareText 순수 테스트(APIClient 스텁).
-- 영향: 신규 `ClipNote/Clips/ClipsStore.swift`(@MainActor @Observable)·`ClipsRefresh.swift`, 테스트.
-
-**#D1 모달 — EditClipModal·(전체)ShareResultModal (B 이전 필요)**
-- `EditClipModal`: 제목·태그 단건 편집(저장은 호출부가 local/DB 결정).
-- `ShareResultModal`(전체): 복사(§4.3)·열기(SFSafari)·내 클립에 저장·닫기 — 홈의 최소 시트 교체.
-- 영향: 신규 `ClipNote/Views/EditClipModal.swift`·`ShareResultModal.swift`. HomeView 최소 시트 → ShareResultModal 교체.
-
-**#B ClipsView — 목록·필터칩·카드·스와이프·⋯메뉴**
-- 목록(List/ScrollView), `FilterChip` 가로 스크롤("전체"+태그별), loading("불러오는 중…")·empty("첫 클립 만들기") 상태.
-- 카드: 썸네일·제목(2줄)·호스트·태그 + `⋯` 메뉴(편집→#D1 / 삭제 confirm). `ClipCardView` 확장 또는 전용 행.
-- **스와이프**(`.swipeActions` 편집/삭제).
-- 액션 행: DB클립 `shared=true`→**"공유 링크 복사"**(§4.3)/`false`→**"공유 링크 만들기"**(makeShared 후 갱신), **"바로가기"**(SFSafari). 로컬은 공유 액션 없음.
-- 포커스 새로고침(`.task`/`onAppear`) + `clips-refresh` 구독.
-- 진입점: HomeView 툴바에 "내 클립" 링크(임시 — 전체 헤더 메뉴는 Phase 5). NavigationStack 목적지 등록.
-- 영향: 신규 `ClipNote/Clips/ClipsView.swift`·`FilterChip.swift`. HomeView 툴바 링크.
-
-**#C 다중선택 — 롱프레스 진입·하단 바 (로그인 전용)**
-- 롱프레스 → selectMode, 체크박스, 툴바(취소 / "n개 선택"). 게스트(로컬)는 비노출.
-- 하단 바: "태그 적용"(→#D2 TagApplyModal), "삭제(n)"(bulk confirm → removeOne 반복 → 갱신·해제).
-- 영향: `ClipsView` 확장.
-
-**#D2 TagApplyModal — 다중선택 태그 일괄 (C와 함께)**
-- 추가/교체 모드, `parseTags`. 적용은 #A `applyTags`.
-- 영향: 신규 `ClipNote/Views/TagApplyModal.swift`.
-
-**#E 로그인 마이그레이션 §5 — MigrateLocalClips**
-- 로그인 전환 감지(`AuthStore` 상태) → 로컬 클립 존재 시 1회 Alert("옮기기"/"나중에"). 중복 실행 가드.
-- "옮기기": 각 로컬 클립 `createClip(save:true)` 업로드 → `clearLocalClips()` → `clips-refresh` emit → 완료 알림. "나중에"면 유지.
-- 영향: 신규 `ClipNote/Clips/MigrateLocalClips.swift`(@MainActor), 앱 루트에 훅. 로직 분리 테스트(업로드 목록 생성·가드).
-
-### 범위 밖(후속)
-- 헤더 메뉴 전체(About/FAQ/로그아웃/회원탈퇴)·실제 온보딩 슬라이드·AdBanner·심사 대비 = Phase 5.
-- ⚠️ #7/#8 실제 OAuth 로그인 실기기 검증(사람만 가능) — 미해결 이월.
-
-### 리스크
-- 목록 갱신 일관성 — 편집/삭제/마이그레이션 후 `clips-refresh` 신호 누락 없이 반영.
-- 다중선택 로그인 전용 조건(로컬 UClip은 로그아웃 상태에서만 존재) — 진입 가드.
-- 마이그레이션 부분 실패(일부 업로드 실패) 시 `clearLocalClips` 타이밍 — 전부 성공 후 비우기 vs 성공분만. RN은 전량 업로드 후 clear. 부분 실패 처리 방침 확정 필요.
-- §4.3 공유복사 규칙을 홈(ShareResultModal)·클립목록·모달 3곳 동일 적용(`buildShareText` 단일 소스).
+### 이월(Phase 5)
+- 헤더 메뉴(About/FAQ/**로그아웃**/회원탈퇴)·실제 온보딩 슬라이드·AboutView/FaqView/AccountDeleteView·AdMob 배너·심사 대비(개인정보 매니페스트).
+- ⚠️ #7/#8 실제 OAuth 로그인 실기기 검증(사람만 가능) — 미해결.
 
 ---
 
