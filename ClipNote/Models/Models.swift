@@ -51,6 +51,11 @@ struct CreateClipInput: Codable {
     }
 }
 
+struct DeleteAccountResult: Codable, Equatable {
+    let ok: Bool
+    let error: String?
+}
+
 struct CreateClipResult: Codable {
     let slug: String?
     let shareUrl: String?

@@ -101,6 +101,31 @@ actor APIClient {
         return await is2xx(req)
     }
 
+    // DELETE /api/account — 계정·모든 클립 영구 삭제. RN `deleteAccount` 이식.
+    func deleteAccount(accessToken: String?) async -> DeleteAccountResult {
+        guard let token = accessToken else {
+            return DeleteAccountResult(ok: false, error: "no_token")
+        }
+        var req = URLRequest(url: baseURL.appendingPathComponent("api/account"))
+        req.httpMethod = "DELETE"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, resp) = try await session.data(for: req)
+            guard let http = resp as? HTTPURLResponse else {
+                return DeleteAccountResult(ok: false, error: "network")
+            }
+            if !(200..<300).contains(http.statusCode) {
+                let decoded = try? JSONDecoder().decode(ErrorBody.self, from: data)
+                return DeleteAccountResult(ok: false, error: decoded?.error ?? "account \(http.statusCode)")
+            }
+            return DeleteAccountResult(ok: true, error: nil)
+        } catch {
+            return DeleteAccountResult(ok: false, error: "network")
+        }
+    }
+
+    private struct ErrorBody: Decodable { let error: String? }
+
     private func is2xx(_ req: URLRequest) async -> Bool {
         do {
             let (_, resp) = try await session.data(for: req)

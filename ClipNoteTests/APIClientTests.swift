@@ -114,4 +114,27 @@ private func stubbedClient() -> APIClient {
         let res = await stubbedClient().createClip(input, accessToken: nil)
         #expect(res.error == nil)
     }
+
+    @Test func deleteAccountNoTokenShortCircuits() async {
+        let res = await stubbedClient().deleteAccount(accessToken: nil)
+        #expect(res.ok == false)
+        #expect(res.error == "no_token")
+    }
+
+    @Test func deleteAccountSuccessOn2xx() async {
+        StubURLProtocol.handler = { _ in (200, Data()) }
+        let res = await stubbedClient().deleteAccount(accessToken: "tok")
+        #expect(res.ok == true)
+        #expect(res.error == nil)
+        #expect(StubURLProtocol.lastRequest?.httpMethod == "DELETE")
+        #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer tok")
+        #expect(StubURLProtocol.lastRequest?.url?.absoluteString.hasSuffix("/api/account") == true)
+    }
+
+    @Test func deleteAccountErrorOnNon2xx() async {
+        StubURLProtocol.handler = { _ in (401, #"{"error":"unauthorized"}"#.data(using: .utf8)!) }
+        let res = await stubbedClient().deleteAccount(accessToken: "tok")
+        #expect(res.ok == false)
+        #expect(res.error == "unauthorized")
+    }
 }
