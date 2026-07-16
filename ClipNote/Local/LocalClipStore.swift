@@ -50,6 +50,18 @@ final class LocalClipStore {
         try? context.save()
     }
 
+    /// 단건 편집 — 주어진 필드만 갱신(제목·태그). RN `updateLocalClip` 이식.
+    func update(url: String, title: String?, tags: [String]?) {
+        let d = FetchDescriptor<LocalClip>(predicate: #Predicate { $0.url == url })
+        guard let clip = try? context.fetch(d).first else { return }
+        if let title { clip.title = title }
+        if let tags {
+            clip.tags = tags
+            recordTags(tags)
+        }
+        try? context.save()
+    }
+
     /// 로그인 마이그레이션 후 로컬 클립 전체 비우기.
     func clearLocalClips() {
         try? context.delete(model: LocalClip.self)
