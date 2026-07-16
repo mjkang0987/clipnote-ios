@@ -78,7 +78,12 @@ final class AuthStore: ObservableObject {
             try? await client.auth.session(from: url)
         case let .naver(tokenHash):
             guard markTokenHashConsumed(tokenHash) else { return }
-            try? await client.auth.verifyOTP(tokenHash: tokenHash, type: .magiclink)
+            do {
+                try await client.auth.verifyOTP(tokenHash: tokenHash, type: .magiclink)
+            } catch {
+                releaseTokenHash(tokenHash)  // 실패 시 재시도 허용(RN lib/naver.ts 동작)
+                lastError = error.localizedDescription
+            }
         case nil:
             break
         }
@@ -87,6 +92,11 @@ final class AuthStore: ObservableObject {
     /// token_hash를 소비 처리. 신규면 true(verify 진행), 중복이면 false. 가드 로직 분리(테스트용).
     func markTokenHashConsumed(_ tokenHash: String) -> Bool {
         consumedTokenHashes.insert(tokenHash).inserted
+    }
+
+    /// verify 실패 시 token_hash 소비를 취소해 재시도를 허용한다.
+    func releaseTokenHash(_ tokenHash: String) {
+        consumedTokenHashes.remove(tokenHash)
     }
 
     /// Google/Kakao 등 Supabase OAuth 로그인(ASWebAuthenticationSession PKCE).
@@ -105,6 +115,44 @@ final class AuthStore: ObservableObject {
     /// ASWebAuthenticationSession 유저 취소는 에러로 취급하지 않는다.
     static func isUserCancellation(_ error: Error) -> Bool {
         (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin
+    }
+
+    // MARK: - 네이버(커스텀 OAuth)
+
+    /// 네이버 웹 콜백. 서버가 magiclink token_hash를 만들어 `naverReturnURL`로 돌려보낸다.
+    static let naverCallback = "https://clipnote.co.kr/api/auth/naver/callback"
+    /// 콜백이 앱으로 복귀할 딥링크(#6 `clipnote://auth/naver`).
+    static let naverReturnURL = "clipnote://auth/naver"
+
+    /// state에 담기는 값. 서버가 returnUrl로 리다이렉트. RN `lib/naver.ts`와 동일 스키마.
+    struct NaverState: Codable, Equatable {
+        let returnUrl: String
+        let n: String
+    }
+
+    /// 네이버 authorize URL 조립(순수·테스트용). RN `lib/naver.ts` 이식.
+    static func makeNaverAuthURL(clientID: String, nonce: String) -> URL? {
+        let state = NaverState(returnUrl: naverReturnURL, n: nonce)
+        guard let data = try? JSONEncoder().encode(state),
+              let stateJSON = String(data: data, encoding: .utf8) else { return nil }
+        var comps = URLComponents(string: "https://nid.naver.com/oauth2.0/authorize")
+        comps?.queryItems = [
+            URLQueryItem(name: "response_type", value: "code"),
+            URLQueryItem(name: "client_id", value: clientID),
+            URLQueryItem(name: "redirect_uri", value: naverCallback),
+            URLQueryItem(name: "state", value: stateJSON),
+        ]
+        return comps?.url
+    }
+
+    /// 로그인 개시용 authorize URL. 설정된 client_id가 없으면 nil.
+    /// 실제 로그인은 SFSafariViewController로 이 URL을 열고, 복귀는 딥링크(#6 `handle`)가 완료한다.
+    func naverAuthURL(nonce: String) -> URL? {
+        guard let clientID = Config.naverClientID else {
+            lastError = "네이버 설정 없음"
+            return nil
+        }
+        return Self.makeNaverAuthURL(clientID: clientID, nonce: nonce)
     }
 
     func signOut() async {
