@@ -6,7 +6,7 @@ struct ClipNoteApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack { HomeView() }
+            RootView()
                 .environmentObject(auth)
                 .onOpenURL { url in
                     Task { await auth.handle(url: url) }
