@@ -29,6 +29,11 @@ struct HomeView: View {
         .background(AppColor.bg)
         .navigationTitle("ClipNote")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink("내 클립") { ClipsView() }
+            }
+        }
         .onChange(of: vm.url) { vm.urlChanged() }
         .sheet(isPresented: $showLogin) { LoginView() }
         .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
