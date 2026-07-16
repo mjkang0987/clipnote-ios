@@ -33,8 +33,9 @@ struct HomeView: View {
         .sheet(isPresented: $showLogin) { LoginView() }
         .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
                              set: { if $0 == nil { shareURL = nil } })) { item in
-            ShareResultSheet(title: vm.resolvedTitle,
-                             description: vm.previewDescription, url: item.url)
+            ShareResultModal(title: vm.resolvedTitle,
+                             description: vm.previewDescription, url: item.url,
+                             onSave: { await vm.saveToClips(accessToken: auth.accessToken) })
         }
     }
 
@@ -231,41 +232,3 @@ private struct ShareURLItem: Identifiable {
     var id: String { url }
 }
 
-/// 공유 링크 결과 최소 시트 — 링크 표시 + 복사(§4.3 규칙). 전체 ShareResultModal(열기·DB저장)은 Phase 4.
-private struct ShareResultSheet: View {
-    let title: String
-    let description: String?
-    let url: String
-    @Environment(\.dismiss) private var dismiss
-    @State private var copied = false
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("공유 링크가 만들어졌어요")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(AppColor.fg)
-            Text(url)
-                .font(.system(size: 14))
-                .foregroundStyle(AppColor.brandStrong)
-                .textSelection(.enabled)
-                .multilineTextAlignment(.center)
-            Button {
-                UIPasteboard.general.string = buildShareText(title: title, description: description, url: url)
-                copied = true
-                Task { try? await Task.sleep(for: .milliseconds(1500)); copied = false }
-            } label: {
-                Text(copied ? "복사됨 ✓" : "링크 복사")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppColor.white)
-                    .frame(maxWidth: .infinity).frame(height: 48)
-                    .background(AppColor.brand)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-            }
-            Button("닫기") { dismiss() }
-                .font(.system(size: 15))
-                .foregroundStyle(AppColor.fgMuted)
-        }
-        .padding(24)
-        .presentationDetents([.height(240)])
-    }
-}
