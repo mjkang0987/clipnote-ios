@@ -4,6 +4,60 @@
 
 ---
 
+## 예정 — Phase 5: 헤더 메뉴 · 정적 화면 · 온보딩 · AdMob · 심사 대비 (에픽)
+
+설계 §4.4~4.7·§3.6·마일스톤 7~9. RN `components/HeaderMenu·AdBanner` + `lib/ads·onboarding` + `app/{about,faq,onboarding,account/delete}.tsx` 이식.
+Phase 4까지 = 핵심 기능 완성. Phase 5 = 부가 화면·수익화·앱스토어 심사 준비.
+
+> 착수 방식: CLAUDE.md Work Request Flow. 에픽 + 서브이슈. 서브별 브랜치 → TDD(로직) / 빌드(UI) → 빌드·테스트(`iPhone 17 Pro`) → `/code-review` → PR → CI → 머지. 재사용: `AppColor`·`Radius`·`Config`·`AuthStore`·`LocalClipStore`·모달 스타일.
+
+### 서브 분할(의존순)
+
+**#A APIClient.deleteAccount + DeleteAccountResult — 순수 TDD (D 선행)**
+- Phase 1에서 누락된 `DELETE /api/account` 이식. `DeleteAccountResult { ok: Bool; error: String? }`.
+- 토큰 없으면 `(ok:false, "no_token")`, 비2xx면 서버 error, 네트워크 실패 `"network"` (RN 동일).
+- 검증: URLProtocol 스텁으로 200/401/토큰없음 유닛테스트.
+- 영향: `Models.swift`·`APIClient.swift` 확장, 테스트.
+
+**#B AboutView + FaqView — 정적 콘텐츠**
+- RN `about.tsx`(ClipNote 소개·동작·로그인 유무 안내)·`faq.tsx`(Q&A 5개) 이식. `BrandLogo` 컴포넌트 신규(아이콘+워드마크).
+- 영향: 신규 `ClipNote/Views/AboutView.swift`·`FaqView.swift`·`BrandLogo.swift`.
+
+**#C AccountDeleteView — 회원 탈퇴 (A 선행)**
+- 동의 체크박스 → 확인 Alert → `deleteAccount` → 성공 시 `clearLocalClips`+`signOut`+홈. 비로그인 가드.
+- 영향: 신규 `ClipNote/Views/AccountDeleteView.swift`.
+
+**#D OnboardingView — 실제 슬라이드(TabView 4)**
+- RN `onboarding.tsx` 4슬라이드(welcome/how/more/share) 이식. `TabView(.page)` 도트·건너뛰기·다음·시작하기.
+- 완료 시 `onboardingSeen=true`(Phase 3 게이트 키 공유) → 홈. RootView 플레이스홀더 교체.
+- 영향: 신규 `ClipNote/Views/OnboardingView.swift`, `RootView` 연결.
+
+**#E HeaderMenu — 공통 사이드 메뉴 + 로그아웃**
+- 좌측 햄버거 → 메뉴(새 클립/내 클립/사용법/소개/FAQ + 로그인/로그아웃/회원탈퇴 + 개인정보 웹). 로그인 상태별 항목 분기.
+- iOS: 상단 toolbar leading 버튼 → 사이드 시트/오버레이. Home·Clips 등 상위 화면 toolbar에 배선(재사용 modifier).
+- 로그아웃: `AuthStore.signOut` → 목록/홈 갱신. 회원탈퇴 → #C 화면.
+- 영향: 신규 `ClipNote/Views/HeaderMenu.swift`, Home/Clips toolbar 연결.
+
+**#F AdMob 배너 — GoogleMobileAds**
+- SPM `GoogleMobileAds` 추가(project.yml). `AdBannerView`(UIViewRepresentable, ANCHORED_ADAPTIVE). DEBUG=테스트 unit id, RELEASE=실 unit id `ca-app-pub-3019917862455282/4728467083`. 예약 높이 64.
+- 앱 시작 시 `MobileAds.shared.start()`. Home 키보드 시 숨김(Phase 3 이월). Home·Clips 하단 배선.
+- Secrets: `ADMOB_APP_ID`·`ADMOB_BANNER_UNIT_ID` 채움. Info.plist `GADApplicationIdentifier`·`SKAdNetworkItems`.
+- 영향: 신규 `ClipNote/Ads/AdBannerView.swift`·`AdConfig.swift`, project.yml·Info.plist·App·Home/Clips.
+
+**#G 심사 대비 — Privacy Manifest**
+- `PrivacyInfo.xcprivacy`(수집 데이터 유형·이유, Required Reason API). AdMob·Supabase SDK 요구사항 반영.
+- ATT/추적 도메인·개인정보 URL 점검. 앱 아이콘·런치스크린 확인.
+- 영향: 신규 `ClipNote/PrivacyInfo.xcprivacy`, project.yml 포함.
+
+### 리스크
+- **AdMob**: `GADApplicationIdentifier`가 빈값/무효면 SDK가 시작 시 크래시 → CI(Secrets 빈값)에서 앱 실행 위험. `start()` 가드 또는 구글 공개 테스트 App ID로 개발. CI는 빌드만이라 실행 없음 → 빌드 통과 우선.
+- SPM에 GoogleMobileAds 추가 → CI 패키지 해석 시간·바이너리 크기 증가.
+- HeaderMenu를 NavigationStack 구조에 자연스럽게(모든 상위 화면 진입점). expo-router replace 시맨틱 → iOS NavigationStack path.
+- 로그아웃/탈퇴 후 상태 정리(세션·로컬·목록 새로고침) 일관성.
+- 심사: 개인정보 처리방침 URL·계정 삭제 경로(App Store 필수) 확보 — 탈퇴 화면으로 충족.
+
+---
+
 ## 완료 — Phase 4: ClipsView + 편집/공유/다중선택 + 로그인 마이그레이션 (에픽 #28)
 
 설계 §4.2·§4.3·§4.7·§5. RN app/clips.tsx + 모달3종 + clips-refresh + 마이그레이션 이식. 서브 6개 전부 머지.
