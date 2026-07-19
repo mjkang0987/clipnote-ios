@@ -8,11 +8,27 @@ enum OnboardingFlags {
 /// 루트 게이트 — 최초 실행이면 온보딩, 아니면 홈. `@AppStorage`는 동기라 렌더 보류 불필요.
 struct RootView: View {
     @AppStorage(OnboardingFlags.seenKey) private var onboardingSeen = false
+    @State private var router = AppRouter()
 
     var body: some View {
+        @Bindable var router = router
         if onboardingSeen {
-            NavigationStack { HomeView() }
-                .modifier(LoginMigrationModifier())
+            NavigationStack(path: $router.path) {
+                HomeView()
+                    .navigationDestination(for: AppRoute.self) { route in
+                        switch route {
+                        case .clips: ClipsView()
+                        case .onboarding: OnboardingView { if !router.path.isEmpty { router.path.removeLast() } }
+                        case .about: AboutView()
+                        case .faq: FaqView()
+                        case .accountDelete: AccountDeleteView()
+                        }
+                    }
+            }
+            .environment(router)
+            .sheet(isPresented: $router.showLogin) { LoginView() }
+            .sheet(item: $router.safari) { item in SafariView(url: item.url) }
+            .modifier(LoginMigrationModifier())
         } else {
             OnboardingView { onboardingSeen = true }
         }

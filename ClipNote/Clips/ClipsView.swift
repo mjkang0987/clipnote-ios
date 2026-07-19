@@ -32,7 +32,12 @@ struct ClipsView: View {
         .navigationTitle(selectMode ? "\(selected.count)개 선택" : "내 클립")
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
-        .toolbar { toolbarContent }
+        .toolbar {
+            if !selectMode {
+                ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
+            }
+            toolbarContent
+        }
         .safeAreaInset(edge: .bottom) { if selectMode { bulkBar } }
         .task { await setup() }
         .onChange(of: auth.loggedIn) {

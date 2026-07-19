@@ -5,6 +5,7 @@ import SwiftData
 /// RN `app/index.tsx` 이식. 헤더 메뉴·배너·온보딩 게이트는 후속 페이즈.
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppRouter.self) private var router
     @EnvironmentObject private var auth: AuthStore
     @State private var vm = HomeViewModel()
 
@@ -13,7 +14,6 @@ struct HomeView: View {
     @State private var savingDirect = false
     @State private var directSaved = false
     @State private var shareURL: String?
-    @State private var showLogin = false
 
     var body: some View {
         ScrollView {
@@ -30,12 +30,12 @@ struct HomeView: View {
         .navigationTitle("ClipNote")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink("내 클립") { ClipsView() }
+                NavigationLink("내 클립", value: AppRoute.clips)
             }
         }
         .onChange(of: vm.url) { vm.urlChanged() }
-        .sheet(isPresented: $showLogin) { LoginView() }
         .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
                              set: { if $0 == nil { shareURL = nil } })) { item in
             ShareResultModal(title: vm.resolvedTitle,
@@ -107,7 +107,7 @@ struct HomeView: View {
             HStack(spacing: 0) {
                 Text("짧은 공유 링크는 ")
                 Text("로그인").foregroundStyle(AppColor.brandStrong).fontWeight(.semibold)
-                    .onTapGesture { showLogin = true }
+                    .onTapGesture { router.showLogin = true }
                 Text(" 후 만들 수 있어요.")
             }
             .font(.system(size: 12))
