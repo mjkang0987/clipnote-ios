@@ -39,21 +39,30 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장), `HomeViewModel` |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
+| `Views/AppRouter.swift` | 내비게이션 상태(@Observable): path·로그인·Safari |
+| `Views/HeaderMenu.swift` | 공통 좌측 메뉴(이동·로그인/로그아웃/회원탈퇴·개인정보) |
+| `Views/OnboardingView.swift` | 온보딩 슬라이드(TabView 4) |
+| `Views/AboutView·FaqView·BrandLogo.swift` | 소개·FAQ·브랜드 로고 |
+| `Views/AccountDeleteView.swift` | 회원 탈퇴(deleteAccount) |
 | `Views/LoginView.swift` | 로그인(Google/Kakao/네이버) |
-| `Views/SafariView.swift` | SFSafariViewController 래퍼(네이버·바로가기) |
+| `Views/SafariView.swift` | SFSafariViewController 래퍼(네이버·바로가기·개인정보) |
 | `Theme/Theme.swift` | 테마/스타일 |
 | `Info.plist` | 앱 설정 |
+| `PrivacyInfo.xcprivacy` | 개인정보 매니페스트(심사) |
 | `ClipNoteTests/` | 유닛 테스트 |
 
 ## 현재 상태
-- **Phase 1·2·3·4 완료** — 빌드/테스트 그린(73 tests / 13 suites, iPhone 17 Pro).
-  - Phase 1: `Theme`(pickGradient JS해시 동일)·`Models`(Codable)·`APIClient`(actor 6엔드포인트)·`ShareText`(§4.3)
-  - Phase 2: `AuthStore`(Supabase 2.51.0, 세션·토큰·`authStateChanges`)·`AuthDeepLink`·Google/Kakao OAuth(ASWebAuth PKCE)·네이버 커스텀 OAuth(SFSafari+magiclink)·`Config`
-  - Phase 3: `LocalClipStore`(SwiftData upsert·300캡·knownTags)·`UClip`매핑·`parseTags`·`HomeView`/`HomeViewModel`(600ms 디바운스 메타·게스트 로컬/로그인 DB 저장)·미리보기 카드·온보딩 게이트. 루트를 HomeView로.
-  - Phase 4: `ClipsStore`·`ClipsView`(목록·필터칩·스와이프·⋯메뉴)·다중선택(로그인 전용, 태그일괄/삭제)·`Edit/ShareResult/TagApply` 모달·공유복사(§4.3)·`MigrateLocalClips`(로그인 시 로컬→DB, 전량성공 시 clear). HomeView 툴바 "내 클립" 진입.
-  - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider(Supabase)·서버 콜백 설정에 따라 실동작은 별도 확인 필요.
-- **다음: Phase 5 — 헤더 메뉴**(About/FAQ/로그아웃/회원탈퇴)·실제 온보딩 슬라이드·AboutView/FaqView/AccountDeleteView·**AdMob 배너**·심사 대비(개인정보 매니페스트).
-  - 이월: 로그인 사용자 로그아웃 UI 없음(헤더 메뉴 대기). 온보딩은 플레이스홀더만.
+- **Phase 1·2·3·4·5 완료** — 빌드/테스트 그린(76 tests / 13 suites, iPhone 17 Pro). RN 기능 패리티 거의 완성(AdMob만 보류).
+  - Phase 1: `Theme`(pickGradient JS해시 동일)·`Models`(Codable)·`APIClient`(actor 7엔드포인트: 메타·클립·OG·목록·수정·삭제·계정삭제)·`ShareText`(§4.3)
+  - Phase 2: `AuthStore`(Supabase 2.51.0)·`AuthDeepLink`·Google/Kakao OAuth(ASWebAuth PKCE)·네이버 커스텀 OAuth(SFSafari+magiclink)·`Config`
+  - Phase 3: `LocalClipStore`(SwiftData upsert·300캡·knownTags)·`UClip`매핑·`parseTags`·`HomeView`/`HomeViewModel`(600ms 디바운스 메타·게스트 로컬/로그인 DB 저장)·미리보기 카드.
+  - Phase 4: `ClipsStore`·`ClipsView`(목록·필터·스와이프·⋯메뉴·다중선택)·`Edit/ShareResult/TagApply` 모달·공유복사(§4.3)·`MigrateLocalClips`.
+  - Phase 5: `HeaderMenu`+`AppRouter`(공통 메뉴·로그아웃·전 화면 라우팅)·`AboutView`/`FaqView`/`AccountDeleteView`·`OnboardingView`(실제 슬라이드)·`deleteAccount` API·`PrivacyInfo.xcprivacy`(심사).
+  - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider·서버 콜백 설정에 따라 실동작 별도 확인 필요.
+- **미완/이월**:
+  - **AdMob 배너(#F)** — iOS App ID 미확보로 보류(에픽 #42 하위 #48 close). 실 App ID 확보 후 별도 진행.
+  - **실기기 검증** — OAuth 3종 실제 로그인, 심사 제출 전 전체 QA.
+  - 앱 아이콘/런치스크린 에셋, 개인정보 처리방침 URL(clipnote.co.kr/privacy) 최종 확인.
 
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
