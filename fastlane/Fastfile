@@ -35,11 +35,16 @@ platform :ios do
       initial_build_number: 4
     ) + 1
 
+    # XcodeGen이 CFBundleVersion을 리터럴로 써넣어 xcargs 오버라이드가 안 먹으므로,
+    # generate된 Info.plist(앱·확장)에 빌드번호를 직접 써넣는다. 둘 다 동일 값이어야 업로드 통과.
+    ["ClipNote/Info.plist", "ClipNoteShare/Info.plist"].each do |plist|
+      set_info_plist_value(path: plist, key: "CFBundleVersion", value: next_build.to_s)
+    end
+
     # 5) 아카이브(수동 서명, match가 만든 프로파일 사용)
     build_app(
       scheme: "ClipNote",
       export_method: "app-store",
-      xcargs: "CURRENT_PROJECT_VERSION=#{next_build}",
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
