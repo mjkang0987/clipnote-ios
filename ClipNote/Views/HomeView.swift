@@ -32,9 +32,9 @@ struct HomeView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { HeaderMenu().tourAnchor(.menu) }
+            ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink("내 클립", value: AppRoute.clips).tourAnchor(.myClips)
+                NavigationLink("내 클립", value: AppRoute.clips)
             }
         }
         // 키보드가 뜨면 하단 배너 숨김(겹침 방지, RN 동작).

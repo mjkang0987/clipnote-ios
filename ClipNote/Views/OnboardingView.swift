@@ -27,13 +27,9 @@ struct OnboardingView: View {
                  title: "짧은 공유 링크 만들기",
                  desc: "로그인하면 예쁜 공유 카드와 짧은 링크를 한 번에 만들 수 있어요.",
                  audience: "로그인 필요", loginOnly: true),
-        TourStep(anchor: .myClips,
-                 title: "내 클립 목록",
-                 desc: "저장한 클립을 여기서 모아 보고 편집·공유해요.",
-                 audience: nil, loginOnly: false),
-        TourStep(anchor: .menu,
-                 title: "메뉴",
-                 desc: "로그인·사용법·개인정보 등 다른 화면으로 이동해요.",
+        TourStep(anchor: nil,
+                 title: "내 클립에서 모아 봐요",
+                 desc: "저장한 클립은 상단 ‘내 클립’에서 이렇게 모여요. 태그로 분류하고 편집·공유할 수 있어요.",
                  audience: nil, loginOnly: false),
     ]
 
