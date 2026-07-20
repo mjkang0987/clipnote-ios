@@ -52,17 +52,18 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `ClipNoteTests/` | 유닛 테스트 |
 
 ## 현재 상태
-- **Phase 1·2·3·4·5 완료** — 빌드/테스트 그린(76 tests / 13 suites, iPhone 17 Pro). RN 기능 패리티 거의 완성(AdMob만 보류).
+- **Phase 1~5 + AdMob 완료** — 빌드/테스트 그린(76 tests / 13 suites, iPhone 17 Pro). **RN 기능 패리티 완성**.
   - Phase 1: `Theme`(pickGradient JS해시 동일)·`Models`(Codable)·`APIClient`(actor 7엔드포인트: 메타·클립·OG·목록·수정·삭제·계정삭제)·`ShareText`(§4.3)
   - Phase 2: `AuthStore`(Supabase 2.51.0)·`AuthDeepLink`·Google/Kakao OAuth(ASWebAuth PKCE)·네이버 커스텀 OAuth(SFSafari+magiclink)·`Config`
   - Phase 3: `LocalClipStore`(SwiftData upsert·300캡·knownTags)·`UClip`매핑·`parseTags`·`HomeView`/`HomeViewModel`(600ms 디바운스 메타·게스트 로컬/로그인 DB 저장)·미리보기 카드.
   - Phase 4: `ClipsStore`·`ClipsView`(목록·필터·스와이프·⋯메뉴·다중선택)·`Edit/ShareResult/TagApply` 모달·공유복사(§4.3)·`MigrateLocalClips`.
   - Phase 5: `HeaderMenu`+`AppRouter`(공통 메뉴·로그아웃·전 화면 라우팅)·`AboutView`/`FaqView`/`AccountDeleteView`·`OnboardingView`(실제 슬라이드)·`deleteAccount` API·`PrivacyInfo.xcprivacy`(심사).
   - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider·서버 콜백 설정에 따라 실동작 별도 확인 필요.
+  - AdMob(#48 재개·완료): `AdConfig`(DEBUG 테스트/RELEASE Secrets)·`AdBannerView`(앵커 적응형)·App ID 가드 start. Home(키보드 숨김)·Clips 하단.
 - **미완/이월**:
-  - **AdMob 배너(#F)** — iOS App ID 미확보로 보류(에픽 #42 하위 #48 close). 실 App ID 확보 후 별도 진행.
-  - **실기기 검증** — OAuth 3종 실제 로그인, 심사 제출 전 전체 QA.
-  - 앱 아이콘/런치스크린 에셋, 개인정보 처리방침 URL(clipnote.co.kr/privacy) 최종 확인.
+  - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 심사 제출 전 전체 QA.
+  - 앱 아이콘/런치스크린 에셋, 개인정보 처리방침 URL(clipnote.co.kr/privacy) 최종 확인, TestFlight/심사 제출(수동).
+  - Privacy Manifest는 AdMob 미포함 기준으로 작성 — 광고 개인화 정책에 따라 `NSPrivacyTracking`/추적 도메인 재검토 여지.
 
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)

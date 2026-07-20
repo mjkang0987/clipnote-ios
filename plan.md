@@ -14,13 +14,13 @@
 - #46(#D) `OnboardingView`(TabView 4 슬라이드), RootView 플레이스홀더 교체. (PR #53)
 - #47(#E) `HeaderMenu`+`AppRouter`(전 화면 라우팅·로그인/로그아웃/회원탈퇴·개인정보), Home/Clips toolbar 배선. 시뮬 실행 스모크 확인. (PR #54)
 - #49(#G) `PrivacyInfo.xcprivacy`(수집유형·Required Reason CA92.1·추적 false), 앱 번들 포함 확인. (PR #55)
-- **#48(#F) AdMob 배너 = 보류(close)** — iOS AdMob App ID 미확보(RN도 androidAppId만). 사용자 결정으로 나중 별도 진행.
+- #48(#F) AdMob 배너 — 보류였다가 **iOS App ID 확보 후 재개·완료**(PR #56). GoogleMobileAds 12 SPM·AdConfig·AdBannerView·App ID 가드 start·SKAdNetwork 37종. 시뮬 스모크 확인.
 - 전체 76 tests / 13 suites 그린(iPhone 17 Pro).
 
 ### 남은 일 (Phase 5 이후)
-- AdMob 배너: 실 iOS App ID 확보 후 재개(GoogleMobileAds SPM·AdBannerView·start 가드·Info.plist GADApplicationIdentifier/SKAdNetwork).
-- 실기기 검증: OAuth 3종 실제 로그인, 제출 전 전체 QA.
+- 실기기 검증: OAuth 3종 실제 로그인·실광고 노출, 제출 전 전체 QA(사람만 가능).
 - 앱 아이콘·런치스크린 에셋, 개인정보 처리방침 URL 최종 확인, TestFlight/심사 제출(수동).
+- Privacy Manifest — 광고 개인화 정책에 따라 NSPrivacyTracking/추적 도메인 재검토 여지.
 
 ---
 
