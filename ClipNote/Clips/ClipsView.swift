@@ -38,7 +38,9 @@ struct ClipsView: View {
             }
             toolbarContent
         }
-        .safeAreaInset(edge: .bottom) { if selectMode { bulkBar } }
+        .safeAreaInset(edge: .bottom) {
+            if selectMode { bulkBar } else { AdBannerView() }
+        }
         .task { await setup() }
         .onChange(of: auth.loggedIn) {
             exitSelect()

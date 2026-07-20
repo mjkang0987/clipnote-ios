@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var savingDirect = false
     @State private var directSaved = false
     @State private var shareURL: String?
+    @State private var kbVisible = false
 
     var body: some View {
         ScrollView {
@@ -34,6 +35,14 @@ struct HomeView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink("내 클립", value: AppRoute.clips)
             }
+        }
+        // 키보드가 뜨면 하단 배너 숨김(겹침 방지, RN 동작).
+        .safeAreaInset(edge: .bottom) { if !kbVisible { AdBannerView() } }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            kbVisible = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            kbVisible = false
         }
         .onChange(of: vm.url) { vm.urlChanged() }
         .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
