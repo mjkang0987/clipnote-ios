@@ -8,6 +8,7 @@ enum OnboardingFlags {
 /// 루트 게이트 — 최초 실행이면 온보딩, 아니면 홈. `@AppStorage`는 동기라 렌더 보류 불필요.
 struct RootView: View {
     @AppStorage(OnboardingFlags.seenKey) private var onboardingSeen = false
+    @EnvironmentObject private var auth: AuthStore
     @State private var router = AppRouter()
 
     var body: some View {
@@ -18,7 +19,6 @@ struct RootView: View {
                     .navigationDestination(for: AppRoute.self) { route in
                         switch route {
                         case .clips: ClipsView()
-                        case .onboarding: OnboardingView { if !router.path.isEmpty { router.path.removeLast() } }
                         case .about: AboutView()
                         case .faq: FaqView()
                         case .privacy: PrivacyView()
@@ -36,6 +36,12 @@ struct RootView: View {
             }
             .sheet(isPresented: $router.showLogin) { LoginView() }
             .sheet(item: $router.safari) { item in SafariView(url: item.url) }
+            // 사용법 투어 — 모달로 띄워 NavigationStack 중첩(크래시)을 피한다. 첫 실행 온보딩과 동일 구조.
+            .fullScreenCover(isPresented: $router.showTour) {
+                // fullScreenCover는 조상의 @EnvironmentObject를 자동 상속하지 않을 수 있어 명시 재주입.
+                OnboardingView { router.showTour = false }
+                    .environmentObject(auth)
+            }
             .modifier(LoginMigrationModifier())
         } else {
             OnboardingView { onboardingSeen = true }

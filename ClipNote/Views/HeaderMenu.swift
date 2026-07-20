@@ -10,7 +10,7 @@ struct HeaderMenu: View {
         Menu {
             Button("+ 새 클립") { router.home() }
             Button("내 클립") { router.go(.clips) }
-            Button("사용법") { router.go(.onboarding) }
+            Button("사용법") { router.showTour = true }
             Button("소개") { router.go(.about) }
             Button("자주 묻는 질문") { router.go(.faq) }
 
