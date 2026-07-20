@@ -21,6 +21,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 0) {
                 hero
                 formCard
+                if vm.loading { metaLoadingRow }
                 if let e = vm.errorMessage { errorBox(e) }
                 if vm.noMeta, let reason = vm.metaReason { warnBox(reason) }
                 if vm.hasInput { previews }
@@ -104,9 +105,9 @@ struct HomeView: View {
         if auth.loggedIn {
             HStack(spacing: 8) {
                 primaryButton(creating ? "만드는 중…" : "공유 링크 만들기",
-                              disabled: !vm.hasInput || creating) { await createShare() }
+                              disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
                 secondaryButton(directSaved ? "저장됨 ✓" : (savingDirect ? "저장 중…" : "내 클립에 저장"),
-                                disabled: !vm.hasInput || savingDirect) { await saveToClips() }
+                                disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
             }
             .padding(.top, 4)
         } else {
@@ -172,10 +173,11 @@ struct HomeView: View {
         }
     }
 
-    private func primaryButton(_ label: String, disabled: Bool,
+    private func primaryButton(_ label: String, disabled: Bool, loading: Bool = false,
                                action: @escaping () async -> Void) -> some View {
         Button { Task { await action() } } label: {
-            Text(label).font(.system(size: 15, weight: .semibold))
+            SpinnerLabel(title: label, loading: loading, tint: AppColor.white)
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(AppColor.white)
                 .frame(maxWidth: .infinity).frame(height: 48)
                 .background(AppColor.brand)
@@ -185,10 +187,11 @@ struct HomeView: View {
         .opacity(disabled ? 0.5 : 1)
     }
 
-    private func secondaryButton(_ label: String, disabled: Bool,
+    private func secondaryButton(_ label: String, disabled: Bool, loading: Bool = false,
                                  action: @escaping () async -> Void) -> some View {
         Button { Task { await action() } } label: {
-            Text(label).font(.system(size: 15, weight: .semibold))
+            SpinnerLabel(title: label, loading: loading, tint: AppColor.brandStrong)
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(AppColor.brandStrong)
                 .frame(maxWidth: .infinity).frame(height: 48)
                 .background(AppColor.brandSoft)
@@ -197,6 +200,17 @@ struct HomeView: View {
         }
         .disabled(disabled)
         .opacity(disabled ? 0.5 : 1)
+    }
+
+    private var metaLoadingRow: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text("링크 정보를 읽는 중…")
+                .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(12)
+        .background(AppColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.sm)).padding(.top, 12)
     }
 
     private func errorBox(_ text: String) -> some View {
