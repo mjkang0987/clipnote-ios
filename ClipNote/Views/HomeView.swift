@@ -47,6 +47,9 @@ struct HomeView: View {
             kbVisible = false
         }
         .onChange(of: vm.url) { vm.urlChanged() }
+        // 공유 확장이 넘긴 URL을 입력칸에 채운다(setter가 메타 추출을 트리거).
+        .onChange(of: router.pendingSharedURL) { _, s in consumeSharedURL(s) }
+        .onAppear { consumeSharedURL(router.pendingSharedURL) }
         .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
                              set: { if $0 == nil { shareURL = nil } })) { item in
             ShareResultModal(title: vm.resolvedTitle,
@@ -274,6 +277,12 @@ struct HomeView: View {
         UIPasteboard.general.string = guestShareText
         copiedShare = true
         Task { try? await Task.sleep(for: .milliseconds(1500)); copiedShare = false }
+    }
+
+    private func consumeSharedURL(_ shared: String?) {
+        guard let shared, !shared.isEmpty else { return }
+        vm.url = shared
+        router.pendingSharedURL = nil
     }
 
     private func saveLocal() {
