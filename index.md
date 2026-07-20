@@ -36,13 +36,15 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Clips/ClipsRefresh.swift` | 목록 새로고침 신호(NotificationCenter) |
 | `Clips/MigrateLocalClips.swift` | 로그인 시 로컬→DB 마이그레이션(§5) |
 | `Views/RootView.swift` | 루트 게이트(온보딩 분기 + 로그인 마이그레이션 훅) |
-| `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장), `HomeViewModel` |
+| `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
+| `Views/SpinnerLabel.swift` | 공용 인라인 로딩 스피너 라벨 |
+| `Views/SpotlightTour.swift` | 온보딩 스포트라이트 투어(앵커·오버레이·역마스크·`ClipsPreviewMock`) |
 | `Views/AppRouter.swift` | 내비게이션 상태(@Observable): path·로그인·Safari |
 | `Views/HeaderMenu.swift` | 공통 좌측 메뉴(이동·로그인/로그아웃/회원탈퇴·개인정보) |
-| `Views/OnboardingView.swift` | 온보딩 슬라이드(TabView 4) |
-| `Views/AboutView·FaqView·BrandLogo.swift` | 소개·FAQ·브랜드 로고 |
+| `Views/OnboardingView.swift` | 온보딩 — 실제 홈 UI 스포트라이트 투어(URL·제목/태그·저장·공유 + 내 클립 미리보기 목업) |
+| `Views/AboutView·FaqView·BrandLogo.swift` | 소개·FAQ·브랜드 로고(BrandLogo = 앱 아이콘 `BrandIcon` 에셋) |
 | `Views/PrivacyView.swift` | 개인정보처리방침(네이티브 정적) |
 | `Views/AccountDeleteView.swift` | 회원 탈퇴(deleteAccount) |
 | `Ads/AdConfig·AdBannerView.swift` | AdMob 배너(GoogleMobileAds 12, 앵커 적응형) |
@@ -64,6 +66,8 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - AdMob(#48 재개·완료): `AdConfig`(DEBUG 테스트/RELEASE Secrets)·`AdBannerView`(앵커 적응형)·App ID 가드 start. Home(키보드 숨김)·Clips 하단. 실 App ID `~9380940221`, 배너 unit `/6008671423`(Secrets, gitignored).
 - **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `fastlane ios beta`로 빌드 **3까지 업로드**. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 섹션 참고**.
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
+- **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70). 투어 시각 검증은 사용자 직접.
+  - 보류: 다국어(KO/EN/JA/ZH, 에픽 필요)·내 클립 무한스크롤(임계 도달 시 cursor 방식).
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
