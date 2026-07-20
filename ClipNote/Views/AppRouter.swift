@@ -23,6 +23,8 @@ final class AppRouter {
     var path: [AppRoute] = []
     var showLogin = false
     var safari: SafariItem?
+    /// 공유 확장이 넘긴 URL — 홈 입력칸에 채우고 소비 후 nil. (§공유 확장)
+    var pendingSharedURL: String?
 
     func go(_ route: AppRoute) { path.append(route) }
     func home() { path.removeAll() }

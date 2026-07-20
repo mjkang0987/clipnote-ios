@@ -30,6 +30,7 @@ targets:
     sources:
       - ClipNote
     dependencies:
+      - target: ClipNoteShare
       - package: Supabase
         product: Supabase
       - package: GoogleMobileAds
@@ -100,6 +101,33 @@ targets:
         CODE_SIGN_IDENTITY: "Apple Distribution"
         PROVISIONING_PROFILE_SPECIFIER: "kr.co.clipnote.app AppStore"
         TARGETED_DEVICE_FAMILY: "1"
+  ClipNoteShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ClipNoteShare
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: kr.co.clipnote.app.Share
+        GENERATE_INFOPLIST_FILE: false
+        DEVELOPMENT_TEAM: "928S75PVRK"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Distribution"
+        PROVISIONING_PROFILE_SPECIFIER: "kr.co.clipnote.app.Share AppStore"
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: ClipNote
+    info:
+      path: ClipNoteShare/Info.plist
+      properties:
+        CFBundleDisplayName: ClipNote
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+
   ClipNoteTests:
     type: bundle.unit-test
     platform: iOS

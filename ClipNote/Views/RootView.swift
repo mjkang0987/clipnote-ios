@@ -27,6 +27,13 @@ struct RootView: View {
                     }
             }
             .environment(router)
+            // 공유 확장 딥링크(clipnote://share?url=) → 홈으로 이동 + 입력칸 채우기.
+            .onOpenURL { url in
+                if let shared = ShareDeepLink.parse(url) {
+                    router.home()
+                    router.pendingSharedURL = shared
+                }
+            }
             .sheet(isPresented: $router.showLogin) { LoginView() }
             .sheet(item: $router.safari) { item in SafariView(url: item.url) }
             .modifier(LoginMigrationModifier())
