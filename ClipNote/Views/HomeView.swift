@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var directSaved = false
     @State private var shareURL: String?
     @State private var kbVisible = false
+    @State private var copiedShare = false
 
     var body: some View {
         ScrollView {
@@ -123,11 +124,36 @@ struct HomeView: View {
                           disabled: !vm.hasInput) { saveLocal() }
                 .tourAnchor(.save)
                 .padding(.top, 4)
+            HStack(spacing: 8) {
+                ShareLink(item: guestShareText) {
+                    Text("공유하기")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColor.brandStrong)
+                        .frame(maxWidth: .infinity).frame(height: 48)
+                        .background(AppColor.brandSoft)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
+                }
+                .disabled(!vm.hasInput)
+                .opacity(vm.hasInput ? 1 : 0.5)
+
+                Button { copyGuestShare() } label: {
+                    Text(copiedShare ? "복사됨 ✓" : "복사하기")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColor.brandStrong)
+                        .frame(maxWidth: .infinity).frame(height: 48)
+                        .background(AppColor.brandSoft)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
+                }
+                .disabled(!vm.hasInput)
+                .opacity(vm.hasInput ? 1 : 0.5)
+            }
             HStack(spacing: 0) {
-                Text("짧은 공유 링크는 ")
+                Text("예쁜 공유 카드·짧은 링크는 ")
                 Text("로그인").foregroundStyle(AppColor.brandStrong).fontWeight(.semibold)
                     .onTapGesture { router.showLogin = true }
-                Text(" 후 만들 수 있어요.")
+                Text(" 하면 만들어져요.")
             }
             .font(.system(size: 12))
             .foregroundStyle(AppColor.fgMuted)
@@ -238,6 +264,17 @@ struct HomeView: View {
     }
 
     // MARK: - Actions
+
+    /// 게스트 공유/복사 텍스트 — 카드 생성 없이 스크랩된 제목 + 원본 URL.
+    private var guestShareText: String {
+        buildShareText(title: vm.effectiveTitle, description: nil, url: vm.url)
+    }
+
+    private func copyGuestShare() {
+        UIPasteboard.general.string = guestShareText
+        copiedShare = true
+        Task { try? await Task.sleep(for: .milliseconds(1500)); copiedShare = false }
+    }
 
     private func saveLocal() {
         let store = LocalClipStore(container: modelContext.container)
