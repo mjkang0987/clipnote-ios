@@ -28,7 +28,7 @@ struct HomeView: View {
             .padding(16)
         }
         .background(AppColor.bg)
-        .navigationTitle("ClipNote")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
