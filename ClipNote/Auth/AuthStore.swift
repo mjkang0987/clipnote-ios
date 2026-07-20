@@ -17,6 +17,9 @@ final class AuthStore: ObservableObject {
     @Published private(set) var state = AuthState(accessToken: nil, loading: true)
     /// 마지막 로그인 실패 메시지(유저 취소는 제외). LoginView가 표시.
     @Published var lastError: String?
+    /// 네이버 콜백 딥링크가 도착할 때마다 증가. LoginView가 이 변화에 맞춰 SFSafari 시트를 닫는다.
+    /// (scenePhase `.active`는 SFSafari 표시 정착 등으로도 떠서 로그인 완료 전 시트가 닫히는 문제 회피.)
+    @Published private(set) var naverCallbackCount = 0
 
     var accessToken: String? { state.accessToken }
     var loggedIn: Bool { state.loggedIn }
@@ -77,6 +80,8 @@ final class AuthStore: ObservableObject {
             // session(from:)이 URL에서 code를 추출·교환한다.
             try? await client.auth.session(from: url)
         case let .naver(tokenHash):
+            // 콜백이 앱으로 복귀했으니(성공·실패·중복 무관) SFSafari 시트를 닫도록 신호.
+            naverCallbackCount &+= 1
             guard markTokenHashConsumed(tokenHash) else { return }
             do {
                 try await client.auth.verifyOTP(tokenHash: tokenHash, type: .magiclink)
