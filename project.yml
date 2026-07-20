@@ -101,6 +101,10 @@ targets:
         CODE_SIGN_IDENTITY: "Apple Distribution"
         PROVISIONING_PROFILE_SPECIFIER: "kr.co.clipnote.app AppStore"
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        # 릴리스(TestFlight)는 fastlane match가 만든 프로파일 사용. Debug/로컬은 base 그대로.
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore kr.co.clipnote.app"
   ClipNoteShare:
     type: app-extension
     platform: iOS
@@ -116,6 +120,10 @@ targets:
         PROVISIONING_PROFILE_SPECIFIER: "kr.co.clipnote.app.Share AppStore"
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_CFBundleDisplayName: ClipNote
+      configs:
+        # 릴리스(TestFlight)는 fastlane match가 만든 프로파일 사용. Debug/로컬은 base 그대로.
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: "match AppStore kr.co.clipnote.app.Share"
     info:
       path: ClipNoteShare/Info.plist
       properties:
