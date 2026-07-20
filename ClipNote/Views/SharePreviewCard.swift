@@ -7,6 +7,12 @@ struct SharePreviewCard: View {
     let description: String?
     let siteName: String?
     let gradient: ClipGradient
+    /// 원본 대표 이미지(있으면 배경으로 사용, 없으면 그라디언트). 프록시 경유 로드.
+    var imageURL: String? = nil
+
+    private var hasImage: Bool {
+        !(imageURL?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -20,8 +26,19 @@ struct SharePreviewCard: View {
             ZStack(alignment: .bottomLeading) {
                 LinearGradient(colors: [gradient.from, gradient.to],
                                startPoint: .topLeading, endPoint: .bottomTrailing)
-                // 하단 스크림(가독성)
-                LinearGradient(colors: [.clear, .black.opacity(0.28)],
+                // 원본 대표 이미지가 있으면 배경으로 깔고, 로드 실패 시 그라디언트가 보이게 폴백.
+                if let url = proxiedImageURL(imageURL) {
+                    AsyncImage(url: url) { phase in
+                        if let img = phase.image {
+                            img.resizable().scaledToFill()
+                        } else {
+                            Color.clear
+                        }
+                    }
+                    .clipped()
+                }
+                // 하단 스크림(가독성). 이미지 위에서도 텍스트가 보이도록, 이미지가 있으면 더 진하게.
+                LinearGradient(colors: [.clear, .black.opacity(hasImage ? 0.55 : 0.28)],
                                startPoint: .center, endPoint: .bottom)
 
                 VStack(alignment: .leading, spacing: w * 0.012) {
