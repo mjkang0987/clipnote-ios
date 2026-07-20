@@ -11,6 +11,7 @@ private struct IdentifiedURL: Identifiable {
 struct LoginView: View {
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
     @State private var naverAuth: IdentifiedURL?
 
     var body: some View {
@@ -41,6 +42,10 @@ struct LoginView: View {
         // (성공·실패 무관 — 실패 시 시트가 열린 채 멈추는 것 방지).
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { naverAuth = nil }
+        }
+        // 로그인 성공 시 시트(로그인 화면)를 닫는다.
+        .onChange(of: auth.loggedIn) { _, now in
+            if now { dismiss() }
         }
     }
 

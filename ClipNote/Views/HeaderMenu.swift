@@ -25,7 +25,7 @@ struct HeaderMenu: View {
 
             Divider()
 
-            Button("개인정보 처리방침") { router.openPrivacy() }
+            Button("개인정보 처리방침") { router.go(.privacy) }
         } label: {
             Image(systemName: "line.3.horizontal")
                 .foregroundStyle(AppColor.fg)

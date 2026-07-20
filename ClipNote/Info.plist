@@ -35,6 +35,8 @@
 	<string>1</string>
 	<key>GADApplicationIdentifier</key>
 	<string>$(ADMOB_APP_ID)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NAVER_CLIENT_ID</key>
 	<string>$(NAVER_CLIENT_ID)</string>
 	<key>SKAdNetworkItems</key>
