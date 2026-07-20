@@ -78,6 +78,8 @@ struct HomeView: View {
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    .foregroundStyle(AppColor.fg)   // 링크처럼 파랗게 보이지 않도록 텍스트 검정 고정
+                    .tint(AppColor.fg)               // 커서도 검정
             }
             .tourAnchor(.url)
             VStack(alignment: .leading, spacing: 12) {
