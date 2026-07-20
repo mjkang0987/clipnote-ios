@@ -1,0 +1,42 @@
+# TestFlight 배포 — 수동 실행(workflow_dispatch). 클라우드 맥 러너에서 빌드·서명·업로드.
+# 로컬 맥 불필요. 필요한 GitHub Secrets는 docs/DEPLOY.md 참고.
+name: Deploy TestFlight
+
+on:
+  workflow_dispatch:
+
+# match가 서명 저장 브랜치(match-storage)에 push하므로 쓰기 권한 필요.
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby (fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Write Secrets.xcconfig
+        run: printf '%s\n' "${{ secrets.SECRETS_XCCONFIG }}" > Secrets.xcconfig
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Deploy to TestFlight
+        run: bundle exec fastlane beta
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: https://github.com/mjkang0987/clipnote-ios.git
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

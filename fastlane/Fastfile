@@ -1,0 +1,58 @@
+default_platform(:ios)
+
+# 앱·확장 번들 ID (둘 다 AppStore 배포 서명 필요)
+APP_ID = "kr.co.clipnote.app"
+EXT_ID = "kr.co.clipnote.app.Share"
+
+platform :ios do
+  desc "TestFlight 배포 — 서명 동기화(match) → 빌드 → 업로드. 클라우드 맥 러너에서 실행(로컬 맥 불필요)."
+  lane :beta do
+    # 1) CI용 임시 keychain 생성(match가 인증서를 여기 설치)
+    setup_ci
+
+    # 2) App Store Connect API 키 인증(.p8은 base64로 저장된 값)
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_P8"],
+      is_key_content_base64: true
+    )
+
+    # 3) 서명 동기화 — Apple Distribution 인증서 + AppStore 프로파일 생성/설치.
+    #    저장소 브랜치 push용 인증은 워크플로 기본 토큰(GITHUB_TOKEN) 사용.
+    match(
+      type: "appstore",
+      app_identifier: [APP_ID, EXT_ID],
+      api_key: api_key,
+      readonly: false,
+      git_basic_authorization: Base64.strict_encode64("x-access-token:#{ENV['GITHUB_TOKEN']}")
+    )
+
+    # 4) 빌드번호 = 현재 TestFlight 최신 + 1 (업로드 거부 방지)
+    next_build = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: APP_ID,
+      initial_build_number: 4
+    ) + 1
+
+    # 5) 아카이브(수동 서명, match가 만든 프로파일 사용)
+    build_app(
+      scheme: "ClipNote",
+      export_method: "app-store",
+      xcargs: "CURRENT_PROJECT_VERSION=#{next_build}",
+      export_options: {
+        signingStyle: "manual",
+        provisioningProfiles: {
+          APP_ID => "match AppStore #{APP_ID}",
+          EXT_ID => "match AppStore #{EXT_ID}"
+        }
+      }
+    )
+
+    # 6) TestFlight 업로드(처리 대기 없이 종료)
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+end

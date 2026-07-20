@@ -18,8 +18,14 @@ Secrets.xcconfig
 # JetBrains IDE
 .idea/
 
-# fastlane / 서명 아티팩트(비밀)
-fastlane/
+# fastlane 산출물(설정 파일 Fastfile/Appfile/Matchfile은 커밋)
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+*.ipa
+*.dSYM.zip
+
+# 서명 아티팩트(비밀)
 *.p12
 *.cer
 *.certSigningRequest

@@ -1,0 +1,8 @@
+# 서명 인증서·프로파일을 이 저장소의 전용 브랜치(match-storage)에 암호화 저장한다.
+# 별도 저장소·PAT 불필요 — 워크플로의 기본 GITHUB_TOKEN으로 push (Fastfile에서 인증 주입).
+git_url(ENV["MATCH_GIT_URL"] || "https://github.com/mjkang0987/clipnote-ios.git")
+git_branch("match-storage")
+storage_mode("git")
+
+type("appstore")
+app_identifier(["kr.co.clipnote.app", "kr.co.clipnote.app.Share"])
