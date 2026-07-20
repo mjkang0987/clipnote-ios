@@ -54,7 +54,8 @@ struct ShareResultModal: View {
             Button {
                 Task { await save() }
             } label: {
-                Text(saved ? "내 클립에 저장됨 ✓" : (saving ? "저장 중…" : "내 클립에 저장"))
+                SpinnerLabel(title: saved ? "내 클립에 저장됨 ✓" : (saving ? "저장 중…" : "내 클립에 저장"),
+                             loading: saving, tint: AppColor.brandStrong)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
                     .frame(maxWidth: .infinity).frame(height: 46)

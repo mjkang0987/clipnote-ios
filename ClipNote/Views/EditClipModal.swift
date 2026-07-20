@@ -33,7 +33,7 @@ struct EditClipModal: View {
                 Button {
                     Task { await save() }
                 } label: {
-                    Text(saving ? "저장 중…" : "저장")
+                    SpinnerLabel(title: saving ? "저장 중…" : "저장", loading: saving)
                 }
                 .buttonStyle(ModalPrimaryButton())
                 .disabled(saving)

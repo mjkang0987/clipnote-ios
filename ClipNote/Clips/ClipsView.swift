@@ -20,6 +20,7 @@ struct ClipsView: View {
     @State private var selected: Set<String> = []
     @State private var showTagModal = false
     @State private var showBulkDeleteConfirm = false
+    @State private var bulkBusy = false
 
     var body: some View {
         Group {
@@ -29,6 +30,7 @@ struct ClipsView: View {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .overlay { if bulkBusy { blockingOverlay } }
         .navigationTitle(selectMode ? "\(selected.count)개 선택" : "내 클립")
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
@@ -52,7 +54,9 @@ struct ClipsView: View {
         .sheet(isPresented: $showTagModal) {
             TagApplyModal(count: selected.count) { tags, mode in
                 Task {
+                    bulkBusy = true
                     await store?.applyTags(ids: Array(selected), tags: tags, mode: mode)
+                    bulkBusy = false
                     exitSelect()
                 }
             }
@@ -60,7 +64,9 @@ struct ClipsView: View {
         .confirmationDialog("클립 삭제", isPresented: $showBulkDeleteConfirm) {
             Button("삭제", role: .destructive) {
                 Task {
+                    bulkBusy = true
                     await store?.bulkDelete(ids: Array(selected))
+                    bulkBusy = false
                     exitSelect()
                 }
             }
@@ -214,6 +220,17 @@ struct ClipsView: View {
 
     // MARK: - Helpers
 
+    private var blockingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.25).ignoresSafeArea()
+            ProgressView()
+                .controlSize(.large)
+                .padding(24)
+                .background(AppColor.surface)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        }
+    }
+
     private var deleteBinding: Binding<Bool> {
         Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
     }
@@ -362,9 +379,10 @@ private struct ClipRow: View {
         HStack(spacing: 0) {
             if !clip.local {
                 Button(action: clip.shared ? onCopyShare : onMakeShared) {
-                    Text(clip.shared
-                         ? (copied ? "복사됨 ✓" : "공유 링크 복사")
-                         : (makingShared ? "켜는 중…" : "공유 링크 만들기"))
+                    SpinnerLabel(title: clip.shared
+                                 ? (copied ? "복사됨 ✓" : "공유 링크 복사")
+                                 : (makingShared ? "켜는 중…" : "공유 링크 만들기"),
+                                 loading: makingShared, tint: AppColor.brandStrong)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
                         .frame(maxWidth: .infinity).frame(height: 44)
