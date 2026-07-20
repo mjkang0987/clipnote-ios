@@ -6,9 +6,12 @@ struct BrandLogo: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "link.circle.fill")
-                .font(.system(size: size + 2))
-                .foregroundStyle(AppColor.brand)
+            Image("BrandIcon")
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: size + 4, height: size + 4)
+                .clipShape(RoundedRectangle(cornerRadius: (size + 4) * 0.22))
             HStack(spacing: 0) {
                 Text("Clip").foregroundStyle(AppColor.fg)
                 Text("Note").foregroundStyle(AppColor.brand)
