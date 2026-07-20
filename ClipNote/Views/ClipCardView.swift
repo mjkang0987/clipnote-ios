@@ -64,7 +64,7 @@ struct ClipCardView: View {
         ZStack {
             LinearGradient(colors: [gradient.from, gradient.to],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
-            if let s = imageURL, let url = URL(string: s) {
+            if let url = proxiedImageURL(imageURL) {
                 AsyncImage(url: url) { phase in
                     if let img = phase.image {
                         img.resizable().scaledToFill()

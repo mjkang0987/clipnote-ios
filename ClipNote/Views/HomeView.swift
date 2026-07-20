@@ -144,8 +144,9 @@ struct HomeView: View {
                 }
                 Text("링크를 공유하면 이렇게 보여요").font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
                 SharePreviewCard(title: vm.effectiveTitle, description: vm.previewDescription,
-                                 siteName: vm.previewSiteName, gradient: vm.gradient)
-                Text("실제 공유 시 뜨는 이미지예요. 배경색은 제목에 따라 자동으로 정해져요.")
+                                 siteName: vm.previewSiteName, gradient: vm.gradient,
+                                 imageURL: vm.previewImage)
+                Text("실제 공유 시 뜨는 이미지예요. 원본 대표 이미지가 있으면 배경으로 쓰고, 없으면 제목에 따라 정해지는 그라디언트로 채워져요.")
                     .font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
             }
             VStack(alignment: .leading, spacing: 8) {
