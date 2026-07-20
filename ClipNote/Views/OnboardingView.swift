@@ -1,117 +1,54 @@
 import SwiftUI
 
-/// 온보딩 슬라이드(4장) — 기능 설명. RN `app/onboarding.tsx` 이식.
-/// 완료 시 `onDone`(호출부가 onboardingSeen 저장).
+/// 온보딩 — 실제 홈 UI 위에 스포트라이트 투어로 "어느 영역=어느 기능 / 플로우"를 안내.
+/// 슬라이드 이미지 방식 대체(§온보딩 개편). 완료 시 `onDone`(호출부가 onboardingSeen 저장/pop).
 struct OnboardingView: View {
     let onDone: () -> Void
 
-    private struct Slide: Identifiable {
-        let key: String
-        let emoji: String
-        let title: String
-        let body: [String]
-        let steps: [(Int, String)]
-        var id: String { key }
-    }
+    @State private var index = 0
+    @State private var anchors: [TourAnchor: CGRect] = [:]
+    /// 임베드한 HomeView용 라우터(투어는 비상호작용이라 실제 이동은 발생하지 않음).
+    @State private var tourRouter = AppRouter()
 
-    private let slides: [Slide] = [
-        Slide(key: "welcome", emoji: "🔗", title: "링크만 붙여넣으면\n예쁜 공유 카드",
-              body: ["ClipNote가 밋밋한 링크를 클릭하고 싶은 카드로 바꿔 줘요."], steps: []),
-        Slide(key: "how", emoji: "✨", title: "이렇게 동작해요", body: [],
-              steps: [(1, "공유할 URL을 붙여넣어요."),
-                      (2, "제목·설명·이미지를 자동으로 읽어 카드를 완성해요."),
-                      (3, "로그인하면 짧은 공유 링크까지 만들어져요.")]),
-        Slide(key: "more", emoji: "📚", title: "이런 것도 돼요",
-              body: ["인스타·네이버 카페처럼 미리보기가 안 잡히는 링크도 알아서 정리해요.",
-                     "로그인만 하면 어느 기기·브라우저에서든 내 북마크를 볼 수 있어요."], steps: []),
-        Slide(key: "share", emoji: "🚀", title: "공유는 클릭 한 번",
-              body: ["공유용 페이지를 자동으로 만들어 줘요.",
-                     "굳이 설명을 안 써도 받는 사람이 한눈에 알아봐요."], steps: []),
+    private let steps: [TourStep] = [
+        TourStep(anchor: .url,
+                 title: "여기에 링크를 붙여넣어요",
+                 desc: "공유하고 싶은 페이지 URL만 넣으면 시작돼요.",
+                 audience: "누구나", loginOnly: false),
+        TourStep(anchor: .options,
+                 title: "제목·태그는 선택이에요",
+                 desc: "제목을 비우면 링크에서 자동으로 채워요. 태그로 분류할 수 있어요.",
+                 audience: "누구나", loginOnly: false),
+        TourStep(anchor: .save,
+                 title: "내 클립에 저장",
+                 desc: "저장하면 목록에 쌓여요. 게스트는 이 기기에, 로그인하면 내 계정에 저장돼요.",
+                 audience: "누구나", loginOnly: false),
+        TourStep(anchor: .share,
+                 title: "짧은 공유 링크 만들기",
+                 desc: "로그인하면 예쁜 공유 카드와 짧은 링크를 한 번에 만들 수 있어요.",
+                 audience: "로그인 필요", loginOnly: true),
+        TourStep(anchor: .myClips,
+                 title: "내 클립 목록",
+                 desc: "저장한 클립을 여기서 모아 보고 편집·공유해요.",
+                 audience: nil, loginOnly: false),
+        TourStep(anchor: .menu,
+                 title: "메뉴",
+                 desc: "로그인·사용법·개인정보 등 다른 화면으로 이동해요.",
+                 audience: nil, loginOnly: false),
     ]
 
-    @State private var index = 0
-
-    private var isLast: Bool { index == slides.count - 1 }
-
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                if !isLast {
-                    Button("건너뛰기") { onDone() }
-                        .font(.system(size: 14))
-                        .foregroundStyle(AppColor.fgMuted)
-                }
+        ZStack {
+            NavigationStack {
+                HomeView()
+                    .environment(tourRouter)
             }
-            .frame(height: 44)
-            .padding(.horizontal, 16)
+            .allowsHitTesting(false)          // 투어 중 실제 UI 조작 차단
+            .coordinateSpace(.named("tour"))
+            .onPreferenceChange(TourAnchorKey.self) { anchors = $0 }
 
-            TabView(selection: $index) {
-                ForEach(Array(slides.enumerated()), id: \.element.id) { i, slide in
-                    slideView(slide).tag(i)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
-
-            Button {
-                if isLast { onDone() }
-                else { withAnimation { index += 1 } }
-            } label: {
-                Text(isLast ? "시작하기" : "다음")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppColor.white)
-                    .frame(maxWidth: .infinity).frame(height: 52)
-                    .background(AppColor.brand)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-            }
-            .padding(24)
+            SpotlightOverlay(steps: steps, anchors: anchors, index: $index, onDone: onDone)
         }
-        .background(AppColor.bg)
-    }
-
-    private func slideView(_ slide: Slide) -> some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Text(slide.emoji).font(.system(size: 64))
-            Text(slide.title)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(AppColor.fg)
-                .multilineTextAlignment(.center)
-
-            if !slide.steps.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(slide.steps, id: \.0) { n, text in
-                        HStack(alignment: .top, spacing: 12) {
-                            Text("\(n)")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(AppColor.white)
-                                .frame(width: 26, height: 26)
-                                .background(Circle().fill(AppColor.brand))
-                            Text(text)
-                                .font(.system(size: 15)).lineSpacing(3)
-                                .foregroundStyle(AppColor.fgMuted)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                }
-                .padding(.horizontal, 40)
-                .padding(.top, 8)
-            } else {
-                VStack(spacing: 10) {
-                    ForEach(slide.body, id: \.self) { line in
-                        Text(line)
-                            .font(.system(size: 15)).lineSpacing(4)
-                            .foregroundStyle(AppColor.fgMuted)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .padding(.horizontal, 40)
-                .padding(.top, 8)
-            }
-            Spacer()
-            Spacer()
-        }
-        .padding(.horizontal, 24)
+        .toolbar(.hidden, for: .navigationBar)  // 메뉴 경유 진입 시 상위 내비바 숨김
     }
 }

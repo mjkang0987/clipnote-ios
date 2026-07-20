@@ -32,9 +32,9 @@ struct HomeView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
+            ToolbarItem(placement: .topBarLeading) { HeaderMenu().tourAnchor(.menu) }
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink("내 클립", value: AppRoute.clips)
+                NavigationLink("내 클립", value: AppRoute.clips).tourAnchor(.myClips)
             }
         }
         // 키보드가 뜨면 하단 배너 숨김(겹침 방지, RN 동작).
@@ -79,13 +79,17 @@ struct HomeView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
-            field(label: "제목", muted: "(안 쓰면 자동으로 채워져요)") {
-                TextField("공유 카드에 보일 제목", text: $vm.title)
+            .tourAnchor(.url)
+            VStack(alignment: .leading, spacing: 12) {
+                field(label: "제목", muted: "(안 쓰면 자동으로 채워져요)") {
+                    TextField("공유 카드에 보일 제목", text: $vm.title)
+                }
+                field(label: "태그", muted: "(선택 · 쉼표로 구분)") {
+                    TextField("개발, 디자인, 읽을거리", text: $vm.tagInput)
+                        .textInputAutocapitalization(.never)
+                }
             }
-            field(label: "태그", muted: "(선택 · 쉼표로 구분)") {
-                TextField("개발, 디자인, 읽을거리", text: $vm.tagInput)
-                    .textInputAutocapitalization(.never)
-            }
+            .tourAnchor(.options)
             if !vm.tags.isEmpty {
                 HStack(spacing: 6) {
                     ForEach(vm.tags, id: \.self) { TagChip(text: $0) }
@@ -106,13 +110,16 @@ struct HomeView: View {
             HStack(spacing: 8) {
                 primaryButton(creating ? "만드는 중…" : "공유 링크 만들기",
                               disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
+                    .tourAnchor(.share)
                 secondaryButton(directSaved ? "저장됨 ✓" : (savingDirect ? "저장 중…" : "내 클립에 저장"),
                                 disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
+                    .tourAnchor(.save)
             }
             .padding(.top, 4)
         } else {
             primaryButton(savedLocal ? "저장됨 ✓" : "이 기기에 저장",
                           disabled: !vm.hasInput) { saveLocal() }
+                .tourAnchor(.save)
                 .padding(.top, 4)
             HStack(spacing: 0) {
                 Text("짧은 공유 링크는 ")
