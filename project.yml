@@ -92,6 +92,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: kr.co.clipnote.app
         GENERATE_INFOPLIST_FILE: false
+        DEVELOPMENT_TEAM: "928S75PVRK"
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
   ClipNoteTests:
     type: bundle.unit-test
     platform: iOS
