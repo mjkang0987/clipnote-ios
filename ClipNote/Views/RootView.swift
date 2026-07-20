@@ -21,6 +21,7 @@ struct RootView: View {
                         case .onboarding: OnboardingView { if !router.path.isEmpty { router.path.removeLast() } }
                         case .about: AboutView()
                         case .faq: FaqView()
+                        case .privacy: PrivacyView()
                         case .accountDelete: AccountDeleteView()
                         }
                     }

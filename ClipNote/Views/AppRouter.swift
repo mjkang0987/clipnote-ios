@@ -6,6 +6,7 @@ enum AppRoute: Hashable {
     case onboarding
     case about
     case faq
+    case privacy
     case accountDelete
 }
 
