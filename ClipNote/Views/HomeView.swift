@@ -78,12 +78,20 @@ struct HomeView: View {
     private var formCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             field(label: "URL", required: true) {
-                TextField("https://example.com/article", text: $vm.url)
-                    .keyboardType(.URL)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .foregroundStyle(AppColor.fg)   // 링크처럼 파랗게 보이지 않도록 텍스트 검정 고정
-                    .tint(AppColor.fg)               // 커서도 검정
+                // 플레이스홀더를 시스템 기본색에 맡기면 URL 필드가 시스템 tint(파랑)로 링크처럼 보임.
+                // 회색 오버레이로 직접 그려 다른 필드와 동일한 회색으로 고정(#73은 타이핑 글자만 처리했음).
+                ZStack(alignment: .leading) {
+                    if vm.url.isEmpty {
+                        Text("https://example.com/article")
+                            .foregroundStyle(AppColor.fgMuted)
+                    }
+                    TextField("", text: $vm.url)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .foregroundStyle(AppColor.fg)   // 타이핑 글자 검정
+                        .tint(AppColor.fg)               // 커서도 검정
+                }
             }
             .tourAnchor(.url)
             VStack(alignment: .leading, spacing: 12) {
