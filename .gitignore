@@ -17,3 +17,12 @@ Secrets.xcconfig
 
 # JetBrains IDE
 .idea/
+
+# fastlane / 서명 아티팩트(비밀)
+fastlane/
+*.p12
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.p8
+build/
