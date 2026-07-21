@@ -78,11 +78,12 @@ struct HomeView: View {
     private var formCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             field(label: "URL", required: true) {
-                // 플레이스홀더를 시스템 기본색에 맡기면 URL 필드가 시스템 tint(파랑)로 링크처럼 보임.
-                // 회색 오버레이로 직접 그려 다른 필드와 동일한 회색으로 고정(#73은 타이핑 글자만 처리했음).
+                // 회색 오버레이로 플레이스홀더를 직접 그린다. 단, URL 문자열을 그냥 Text에 넣으면
+                // SwiftUI가 마크다운으로 해석해 링크(파랑)로 칠하고 foregroundStyle을 무시한다.
+                // verbatim으로 감싸 링크 해석을 막아 회색으로 고정(#73·#88의 잔여 파랑 원인).
                 ZStack(alignment: .leading) {
                     if vm.url.isEmpty {
-                        Text("https://example.com/article")
+                        Text(verbatim: "https://example.com/article")
                             .foregroundStyle(AppColor.fgMuted)
                     }
                     TextField("", text: $vm.url)
