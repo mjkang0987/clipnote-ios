@@ -59,7 +59,13 @@ struct LoginView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            Text("ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
+            HStack(spacing: 8) {
+                Image("BrandIcon")
+                    .resizable().interpolation(.high).scaledToFit()
+                    .frame(width: 34, height: 34)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                Text("ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
+            }
             Text("로그인").font(.system(size: 20, weight: .bold)).foregroundStyle(AppColor.fg)
             Text("Google·카카오 계정으로 간편하게 시작하세요.")
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
