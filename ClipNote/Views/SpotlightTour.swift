@@ -95,9 +95,10 @@ struct SpotlightOverlay: View {
                 }
 
                 // 콜아웃은 상태바·홈 인디케이터를 침범하지 않도록 safe area만큼 패딩.
+                // 상단에 놓일 때(하단 요소 강조 단계)는 헤더(메뉴·내 클립)와 겹치지 않게 여백을 더 준다.
                 calloutStack(calloutAtTop: calloutAtTop)
                     .padding(16)
-                    .padding(.top, geo.safeAreaInsets.top)
+                    .padding(.top, geo.safeAreaInsets.top + (calloutAtTop ? 64 : 0))
                     .padding(.bottom, geo.safeAreaInsets.bottom)
             }
         }
