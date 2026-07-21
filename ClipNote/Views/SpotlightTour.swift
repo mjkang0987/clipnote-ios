@@ -18,13 +18,15 @@ struct TourAnchorKey: PreferenceKey {
 }
 
 extension View {
-    /// 이 뷰의 프레임을 투어 앵커로 발행. 투어 미표시 시 무해(소비자 없으면 무시됨).
+    /// 이 뷰의 프레임을 투어 앵커로 발행(화면 절대좌표 .global).
+    /// 스포트라이트 오버레이도 .global 기준으로 변환해 그리므로 좌표계가 일치한다.
+    /// 투어 미표시 시 무해(소비자 없으면 무시됨).
     func tourAnchor(_ anchor: TourAnchor) -> some View {
         background(
             GeometryReader { geo in
                 Color.clear.preference(
                     key: TourAnchorKey.self,
-                    value: [anchor: geo.frame(in: .named("tour"))]
+                    value: [anchor: geo.frame(in: .global)]
                 )
             }
         )
@@ -67,22 +69,24 @@ struct SpotlightOverlay: View {
 
     var body: some View {
         GeometryReader { geo in
-            let calloutAtTop = (rect?.midY ?? .infinity) > geo.size.height * 0.5
+            // 앵커는 .global(화면 절대좌표)로 수집. GeometryReader를 safe area 무시로 전체 화면에
+            // 맞춰 좌표계를 .global과 일치시킨다 → position에 별도 오프셋 보정 불필요.
+            let r = rect
+            let calloutAtTop = (r?.midY ?? .infinity) > geo.size.height * 0.5
 
             ZStack {
                 Color.black.opacity(0.62)
                     .reverseMask {
-                        if let r = rect {
+                        if let r {
                             RoundedRectangle(cornerRadius: Radius.sm)
                                 .frame(width: r.width, height: r.height)
                                 .position(x: r.midX, y: r.midY)
                         }
                     }
-                    .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { if !isPreview { advance() } }
 
-                if let r = rect {
+                if let r {
                     RoundedRectangle(cornerRadius: Radius.sm)
                         .stroke(AppColor.brand, lineWidth: 2)
                         .frame(width: r.width, height: r.height)
@@ -90,22 +94,30 @@ struct SpotlightOverlay: View {
                         .allowsHitTesting(false)
                 }
 
-                if isPreview {
-                    VStack(spacing: 16) {
-                        Spacer()
-                        ClipsPreviewMock()
-                        callout
-                        Spacer()
-                    }
+                // 콜아웃은 상태바·홈 인디케이터를 침범하지 않도록 safe area만큼 패딩.
+                calloutStack(calloutAtTop: calloutAtTop)
                     .padding(16)
-                } else {
-                    VStack {
-                        if !calloutAtTop { Spacer() }
-                        callout
-                        if calloutAtTop { Spacer() }
-                    }
-                    .padding(16)
-                }
+                    .padding(.top, geo.safeAreaInsets.top)
+                    .padding(.bottom, geo.safeAreaInsets.bottom)
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private func calloutStack(calloutAtTop: Bool) -> some View {
+        if isPreview {
+            VStack(spacing: 16) {
+                Spacer()
+                ClipsPreviewMock()
+                callout
+                Spacer()
+            }
+        } else {
+            VStack {
+                if !calloutAtTop { Spacer() }
+                callout
+                if calloutAtTop { Spacer() }
             }
         }
     }

@@ -7,6 +7,7 @@ enum AppRoute: Hashable {
     case faq
     case privacy
     case accountDelete
+    case settings
 }
 
 /// `.sheet(item:)`용 URL 래퍼(개인정보 웹뷰 등).
