@@ -14,7 +14,7 @@ struct AboutView: View {
                 sectionTitle("이렇게 동작해요").padding(.top, 24)
                 step("1. 공유할 URL을 붙여넣어요. 붙여넣기만 하면 끝이에요.")
                 step("2. 제목·설명·대표 이미지를 자동으로 읽어와 카드를 완성해요.")
-                step("3. 로그인하면 짧은 공유 링크까지 — 어디에 올려도 예쁜 카드로 떠요.")
+                step("3. 로그인하면 짧은 공유 링크까지 — 어디에 올려도 깔끔한 카드로 떠요.")
 
                 infoBox(title: "로그인 하면", titleColor: AppColor.brandStrong,
                         background: AppColor.brandSoft, border: AppColor.brand.opacity(0.35),

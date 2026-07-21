@@ -25,7 +25,7 @@ struct OnboardingView: View {
                  audience: "누구나", loginOnly: false),
         TourStep(anchor: .share,
                  title: "짧은 공유 링크 만들기",
-                 desc: "로그인하면 예쁜 공유 카드와 짧은 링크를 한 번에 만들 수 있어요.",
+                 desc: "로그인하면 공유 카드와 짧은 링크를 한 번에 만들 수 있어요.",
                  audience: "로그인 필요", loginOnly: true),
         TourStep(anchor: nil,
                  title: "내 클립에서 모아 봐요",
