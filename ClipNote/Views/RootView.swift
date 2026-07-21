@@ -9,6 +9,7 @@ enum OnboardingFlags {
 struct RootView: View {
     @AppStorage(OnboardingFlags.seenKey) private var onboardingSeen = false
     @EnvironmentObject private var auth: AuthStore
+    @Environment(\.scenePhase) private var scenePhase
     @State private var router = AppRouter()
 
     var body: some View {
@@ -28,13 +29,18 @@ struct RootView: View {
                     }
             }
             .environment(router)
-            // 공유 확장 딥링크(clipnote://share?url=) → 홈으로 이동 + 입력칸 채우기.
+            // 공유 확장 딥링크(clipnote://share?url=) → 홈으로 이동 + 입력칸 채우기(열기 hack 성공 시 즉시).
             .onOpenURL { url in
                 if let shared = ShareDeepLink.parse(url) {
                     router.home()
                     router.pendingSharedURL = shared
                 }
             }
+            // App Group 폴백: 확장이 저장한 URL을 포그라운드 진입 시 소비(열기 hack 실패해도 유실 없음).
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { consumeSharedFromAppGroup() }
+            }
+            .onAppear { consumeSharedFromAppGroup() }
             .sheet(isPresented: $router.showLogin) { LoginView() }
             .sheet(item: $router.safari) { item in SafariView(url: item.url) }
             // 사용법 투어 — 모달로 띄워 NavigationStack 중첩(크래시)을 피한다. 첫 실행 온보딩과 동일 구조.
@@ -46,6 +52,14 @@ struct RootView: View {
             .modifier(LoginMigrationModifier())
         } else {
             OnboardingView { onboardingSeen = true }
+        }
+    }
+
+    /// 공유 확장이 App Group에 저장한 URL이 있으면 홈 입력칸에 채운다(1회 소비).
+    private func consumeSharedFromAppGroup() {
+        if let shared = SharedURLStore.consume() {
+            router.home()
+            router.pendingSharedURL = shared
         }
     }
 }
