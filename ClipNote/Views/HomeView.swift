@@ -82,7 +82,7 @@ struct HomeView: View {
                 // 회색 오버레이로 직접 그려 다른 필드와 동일한 회색으로 고정(#73은 타이핑 글자만 처리했음).
                 ZStack(alignment: .leading) {
                     if vm.url.isEmpty {
-                        Text("https://example.com/article")
+                        Text("공유할 링크 붙여넣기")
                             .foregroundStyle(AppColor.fgMuted)
                     }
                     TextField("", text: $vm.url)

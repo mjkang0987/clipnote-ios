@@ -37,34 +37,38 @@ struct SharePreviewCard: View {
                     }
                     .clipped()
                 }
-                // 하단 스크림(가독성). 이미지 위에서도 텍스트가 보이도록, 이미지가 있으면 더 진하게.
-                LinearGradient(colors: [.clear, .black.opacity(hasImage ? 0.55 : 0.28)],
-                               startPoint: .center, endPoint: .bottom)
+                // 원본 이미지가 있으면 실제 공유 시 그 이미지가 그대로 뜬다(ClipNote 텍스트 오버레이 없음).
+                // 이미지 위 텍스트는 가독성이 떨어지므로, 이미지가 있을 땐 스크림·텍스트를 그리지 않는다.
+                if !hasImage {
+                    // 하단 스크림(그라디언트 카드 텍스트 가독성).
+                    LinearGradient(colors: [.clear, .black.opacity(0.28)],
+                                   startPoint: .center, endPoint: .bottom)
 
-                VStack(alignment: .leading, spacing: w * 0.012) {
-                    if let s = siteName, !s.isEmpty {
-                        Text(s.uppercased())
-                            .font(.system(size: fsSite, weight: .bold))
-                            .kerning(1)
-                            .foregroundStyle(.white.opacity(0.92))
-                            .lineLimit(1)
+                    VStack(alignment: .leading, spacing: w * 0.012) {
+                        if let s = siteName, !s.isEmpty {
+                            Text(s.uppercased())
+                                .font(.system(size: fsSite, weight: .bold))
+                                .kerning(1)
+                                .foregroundStyle(.white.opacity(0.92))
+                                .lineLimit(1)
+                        }
+                        Text(title)
+                            .font(.system(size: fsTitle, weight: .bold))
+                            .foregroundStyle(.white)
+                            .lineLimit(3)
+                        if let d = description, !d.isEmpty {
+                            Text(d)
+                                .font(.system(size: fsDesc))
+                                .foregroundStyle(.white.opacity(0.9))
+                                .lineLimit(2)
+                        }
+                        Text("ClipNote")
+                            .font(.system(size: fsMark, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.95))
+                            .padding(.top, w * 0.008)
                     }
-                    Text(title)
-                        .font(.system(size: fsTitle, weight: .bold))
-                        .foregroundStyle(.white)
-                        .lineLimit(3)
-                    if let d = description, !d.isEmpty {
-                        Text(d)
-                            .font(.system(size: fsDesc))
-                            .foregroundStyle(.white.opacity(0.9))
-                            .lineLimit(2)
-                    }
-                    Text("ClipNote")
-                        .font(.system(size: fsMark, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.95))
-                        .padding(.top, w * 0.008)
+                    .padding(pad)
                 }
-                .padding(pad)
             }
         }
         .aspectRatio(1200.0 / 630.0, contentMode: .fit)
