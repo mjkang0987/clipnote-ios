@@ -26,7 +26,11 @@ jobs:
         run: brew install xcodegen
 
       - name: Write Secrets.xcconfig
-        run: printf '%s\n' "${{ secrets.SECRETS_XCCONFIG }}" > Secrets.xcconfig
+        # 시크릿을 스크립트에 직접 박으면 bash가 값 안의 $()·백틱을 실행해 xcconfig의 //주석 회피
+        # 트릭($())을 깨뜨림 → URL이 https:로 잘려 앱이 켜자마자 크래시. 환경변수로 넘겨 원문 그대로 기록.
+        env:
+          SECRETS_XCCONFIG: ${{ secrets.SECRETS_XCCONFIG }}
+        run: printf '%s\n' "$SECRETS_XCCONFIG" > Secrets.xcconfig
 
       - name: Generate Xcode project
         run: xcodegen generate
