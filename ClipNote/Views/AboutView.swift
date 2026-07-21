@@ -20,7 +20,7 @@ struct AboutView: View {
                         background: AppColor.brandSoft, border: AppColor.brand.opacity(0.35),
                         items: [
                             "· 짧은 공유 링크로 카카오톡·SNS에 바로 보낼 수 있어요.",
-                            "· 공유한 링크가 클릭을 부르는 미리보기 카드로 떠요.",
+                            "· 공유한 링크가 제목·이미지가 담긴 미리보기 카드로 떠요.",
                             "· 클립이 계정에 쌓여 어느 기기에서나 그대로 보이고, 태그로 깔끔하게 정리돼요.",
                         ])
                     .padding(.top, 16)

@@ -62,11 +62,11 @@ struct HomeView: View {
 
     private var hero: some View {
         VStack(spacing: 8) {
-            Text("붙여넣으면 끝, 예쁜 공유 카드")
+            Text("밋밋한 링크를 카드 한 장으로")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(AppColor.fg)
                 .multilineTextAlignment(.center)
-            Text("링크만 넣으면 미리보기 카드와 짧은 공유 링크가 한 번에 만들어져요.")
+            Text("제목·대표 이미지가 담긴 카드와 짧은 링크를 한 번에. 카카오톡·SNS에서 깔끔하게 보여요.")
                 .font(.system(size: 14))
                 .foregroundStyle(AppColor.fgMuted)
                 .multilineTextAlignment(.center)
@@ -153,7 +153,7 @@ struct HomeView: View {
                 .opacity(vm.hasInput ? 1 : 0.5)
             }
             HStack(spacing: 0) {
-                Text("예쁜 공유 카드·짧은 링크는 ")
+                Text("공유 카드·짧은 링크는 ")
                 Text("로그인").foregroundStyle(AppColor.brandStrong).fontWeight(.semibold)
                     .onTapGesture { router.showLogin = true }
                 Text(" 하면 만들어져요.")
@@ -175,7 +175,7 @@ struct HomeView: View {
                 SharePreviewCard(title: vm.effectiveTitle, description: vm.previewDescription,
                                  siteName: vm.previewSiteName, gradient: vm.gradient,
                                  imageURL: vm.previewImage)
-                Text("실제 공유 시 뜨는 이미지예요. 원본 대표 이미지가 있으면 배경으로 쓰고, 없으면 제목에 따라 정해지는 그라디언트로 채워져요.")
+                Text("실제 공유 시 뜨는 이미지예요. 원본 대표 이미지가 있으면 배경으로 쓰고, 없으면 제목에 맞춰 만든 그라디언트로 채워져요.")
                     .font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
             }
             VStack(alignment: .leading, spacing: 8) {
