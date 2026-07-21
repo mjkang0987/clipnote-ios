@@ -17,8 +17,7 @@ struct HeaderMenu: View {
             Divider()
 
             if auth.loggedIn {
-                Button("로그아웃") { Task { await auth.signOut() } }
-                Button("회원 탈퇴", role: .destructive) { router.go(.accountDelete) }
+                Button("설정") { router.go(.settings) }
             } else {
                 Button("로그인") { router.showLogin = true }
             }

@@ -23,6 +23,7 @@ struct RootView: View {
                         case .faq: FaqView()
                         case .privacy: PrivacyView()
                         case .accountDelete: AccountDeleteView()
+                        case .settings: SettingsView()
                         }
                     }
             }
