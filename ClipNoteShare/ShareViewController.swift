@@ -9,9 +9,16 @@ final class ShareViewController: UIViewController {
         super.viewDidLoad()
         Task { [weak self] in
             let shared = await self?.extractSharedURL()
-            if let shared, let deepLink = Self.deepLink(for: shared) {
-                self?.openHostApp(deepLink)
+            if let shared {
+                // 확실한 전달: App Group에 저장 → 앱이 포그라운드에서 읽는다(열기 실패해도 URL 유실 없음).
+                SharedURLStore.save(shared)
+                if let deepLink = Self.deepLink(for: shared) {
+                    self?.openHostApp(deepLink)
+                }
             }
+            // 즉시 completeRequest를 부르면 시스템이 앱을 열기 전에 확장이 종료돼
+            // open이 취소될 수 있다 → 짧게 대기한 뒤 확장을 닫는다.
+            try? await Task.sleep(nanoseconds: 300_000_000)
             self?.extensionContext?.completeRequest(returningItems: nil)
         }
     }

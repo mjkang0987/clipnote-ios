@@ -18,6 +18,7 @@ struct HeaderMenu: View {
 
             if auth.loggedIn {
                 Button("설정") { router.go(.settings) }
+                Button("로그아웃") { Task { await auth.signOut() } }
             } else {
                 Button("로그인") { router.showLogin = true }
             }
