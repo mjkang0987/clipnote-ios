@@ -29,7 +29,10 @@ struct HomeView: View {
             }
             .padding(16)
         }
-        .background(AppColor.bg)
+        // 스크롤 드래그로 키보드 내림.
+        .scrollDismissesKeyboard(.interactively)
+        // 빈 영역(backdrop) 탭 시 키보드 내림. 버튼·입력칸은 탭을 소비하므로 영향 없음.
+        .background(AppColor.bg.onTapGesture { hideKeyboard() })
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -285,6 +288,12 @@ struct HomeView: View {
         UIPasteboard.general.string = guestShareText
         copiedShare = true
         Task { try? await Task.sleep(for: .milliseconds(1500)); copiedShare = false }
+    }
+
+    /// 현재 first responder를 내려 키보드를 닫는다.
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
     }
 
     private func consumeSharedURL(_ shared: String?) {
