@@ -17,6 +17,9 @@ struct HomeView: View {
     @State private var kbVisible = false
     @State private var copiedShare = false
 
+    private enum FocusField { case url, title, tag }
+    @FocusState private var focus: FocusField?
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -28,11 +31,14 @@ struct HomeView: View {
                 if vm.hasInput { previews }
             }
             .padding(16)
+            // 빈 영역(backdrop) 탭 시 포커스 해제 → 키보드 내림.
+            // 버튼·입력칸은 자체 탭을 소비하므로 영향 없음.
+            .contentShape(Rectangle())
+            .onTapGesture { focus = nil }
         }
-        // 스크롤 드래그로 키보드 내림.
+        // 스크롤 드래그로도 키보드 내림.
         .scrollDismissesKeyboard(.interactively)
-        // 빈 영역(backdrop) 탭 시 키보드 내림. 버튼·입력칸은 탭을 소비하므로 영향 없음.
-        .background(AppColor.bg.onTapGesture { hideKeyboard() })
+        .background(AppColor.bg)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -89,6 +95,7 @@ struct HomeView: View {
                             .foregroundStyle(AppColor.fgMuted)
                     }
                     TextField("", text: $vm.url)
+                        .focused($focus, equals: .url)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -100,9 +107,11 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 12) {
                 field(label: "제목", muted: "(안 쓰면 자동으로 채워져요)") {
                     TextField("공유 카드에 보일 제목", text: $vm.title)
+                        .focused($focus, equals: .title)
                 }
                 field(label: "태그", muted: "(선택 · 쉼표로 구분)") {
                     TextField("개발, 디자인, 읽을거리", text: $vm.tagInput)
+                        .focused($focus, equals: .tag)
                         .textInputAutocapitalization(.never)
                 }
             }
@@ -288,12 +297,6 @@ struct HomeView: View {
         UIPasteboard.general.string = guestShareText
         copiedShare = true
         Task { try? await Task.sleep(for: .milliseconds(1500)); copiedShare = false }
-    }
-
-    /// 현재 first responder를 내려 키보드를 닫는다.
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                        to: nil, from: nil, for: nil)
     }
 
     private func consumeSharedURL(_ shared: String?) {
