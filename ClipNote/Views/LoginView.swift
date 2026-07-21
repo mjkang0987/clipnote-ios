@@ -89,6 +89,8 @@ struct LoginView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 이메일, 프로필 닉네임·이미지)가 수집되는 데 동의합니다.")
                     .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted)
+                    .contentShape(Rectangle())
+                    .onTapGesture { agreed.toggle(); if agreed { consentError = false } }
                 Button("개인정보처리방침 확인") { privacy = IdentifiedURL(url: privacyURL) }
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.brandStrong)
             }
