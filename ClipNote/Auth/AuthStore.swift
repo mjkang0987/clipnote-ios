@@ -9,6 +9,23 @@ struct AuthState: Equatable {
     var loggedIn: Bool { accessToken != nil }
 }
 
+/// 설정 화면 표시용 현재 로그인 계정 정보.
+struct AccountInfo: Equatable {
+    var email: String?
+    var provider: String?
+    /// 표시 라벨: 이메일 우선, 없으면 provider 한글명.
+    var label: String { email ?? providerLabel }
+    /// provider 한글명(웹 설정과 동일 매핑).
+    var providerLabel: String {
+        switch provider {
+        case "google": return "Google"
+        case "kakao": return "카카오"
+        case "naver": return "네이버"
+        default: return "소셜"
+        }
+    }
+}
+
 /// Wraps `supabase-swift` auth. Session persistence (Keychain) and token refresh are
 /// handled by the Supabase client; this store mirrors the session into observable state.
 /// Ports RN `lib/auth.tsx`. OAuth flows (Google/Kakao/네이버) land in later sub-issues.
@@ -20,6 +37,8 @@ final class AuthStore: ObservableObject {
     /// 네이버 콜백 딥링크가 도착할 때마다 증가. LoginView가 이 변화에 맞춰 SFSafari 시트를 닫는다.
     /// (scenePhase `.active`는 SFSafari 표시 정착 등으로도 떠서 로그인 완료 전 시트가 닫히는 문제 회피.)
     @Published private(set) var naverCallbackCount = 0
+    /// 현재 로그인 계정(이메일·provider). 설정 화면 표시용.
+    @Published private(set) var account: AccountInfo?
 
     var accessToken: String? { state.accessToken }
     var loggedIn: Bool { state.loggedIn }
@@ -62,6 +81,7 @@ final class AuthStore: ObservableObject {
             guard let self else { return }
             for await change in self.client.auth.authStateChanges {
                 self.apply(accessToken: change.session?.accessToken)
+                self.account = Self.accountInfo(from: change.session?.user)
             }
         }
     }
@@ -69,6 +89,14 @@ final class AuthStore: ObservableObject {
     /// Maps an optional access token into observable state. Extracted for testability.
     func apply(accessToken: String?) {
         state = AuthState(accessToken: accessToken, loading: false)
+    }
+
+    /// Supabase 세션 유저에서 표시용 계정 정보를 뽑는다. provider는 app_metadata에서.
+    static func accountInfo(from user: User?) -> AccountInfo? {
+        guard let user else { return nil }
+        var provider: String?
+        if case let .string(p)? = user.appMetadata["provider"] { provider = p }
+        return AccountInfo(email: user.email, provider: provider)
     }
 
     /// `.onOpenURL` 진입점. auth 딥링크면 라우팅해 세션을 만든다.
