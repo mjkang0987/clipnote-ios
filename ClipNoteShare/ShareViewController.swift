@@ -12,6 +12,9 @@ final class ShareViewController: UIViewController {
             if let shared, let deepLink = Self.deepLink(for: shared) {
                 self?.openHostApp(deepLink)
             }
+            // 즉시 completeRequest를 부르면 시스템이 앱을 열기 전에 확장이 종료돼
+            // open이 취소될 수 있다 → 짧게 대기한 뒤 확장을 닫는다.
+            try? await Task.sleep(nanoseconds: 300_000_000)
             self?.extensionContext?.completeRequest(returningItems: nil)
         }
     }
