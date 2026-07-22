@@ -94,13 +94,26 @@ struct HomeView: View {
                         Text("공유할 링크 붙여넣기")
                             .foregroundStyle(AppColor.fgMuted)
                     }
-                    TextField("", text: $vm.url)
-                        .focused($focus, equals: .url)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .foregroundStyle(AppColor.fg)   // 타이핑 글자 검정
-                        .tint(AppColor.fg)               // 커서도 검정
+                    HStack(spacing: 8) {
+                        TextField("", text: $vm.url)
+                            .focused($focus, equals: .url)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .foregroundStyle(AppColor.fg)   // 타이핑 글자 검정
+                            .tint(AppColor.fg)               // 커서도 검정
+                        if !vm.url.isEmpty {
+                            Button {
+                                vm.url = ""
+                                focus = .url
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(AppColor.fgMuted)
+                            }
+                            .accessibilityLabel("입력 지우기")
+                        }
+                    }
                 }
             }
             .tourAnchor(.url)
