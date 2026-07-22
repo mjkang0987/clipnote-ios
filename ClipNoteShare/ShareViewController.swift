@@ -83,10 +83,12 @@ final class ShareViewController: UIViewController {
         view.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            // 콘텐츠를 시트 상단부터 채운다(시트 크기는 detent가 결정).
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            // iOS가 공유 확장 시트 크기를 크게 강제(detent 무시) → 콘텐츠를 세로 중앙에 두어
+            // 빈 흰 영역이 의도된 다이얼로그처럼 보이게 한다.
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            stack.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             openButton.heightAnchor.constraint(equalToConstant: 50),
             closeButton.heightAnchor.constraint(equalToConstant: 50),
         ])
