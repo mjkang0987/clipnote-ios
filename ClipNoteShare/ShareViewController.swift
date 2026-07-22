@@ -8,7 +8,6 @@ import UniformTypeIdentifiers
 final class ShareViewController: UIViewController {
     private var deepLink: URL?
 
-    private let card = UIView()
     private let titleLabel = UILabel()
     private let bodyLabel = UILabel()
     private let openButton = UIButton(type: .system)
@@ -17,7 +16,18 @@ final class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .clear   // 딤 없이 하단 시트만 표시
+        view.backgroundColor = .systemBackground
+        // iOS가 확장을 큰 시트로 감싸 흰 여백이 크게 남던 문제 →
+        // 시스템 시트 자체를 작은 detent(하단 1/3쯤)로 줄여 콘텐츠만큼만 보이게 한다.
+        if let sheet = sheetPresentationController {
+            if #available(iOS 16.0, *) {
+                sheet.detents = [.custom { _ in 300 }]
+            } else {
+                sheet.detents = [.medium()]
+            }
+            sheet.preferredCornerRadius = 24
+            sheet.prefersGrabberVisible = true
+        }
         buildUI()
 
         Task { [weak self] in
@@ -37,18 +47,6 @@ final class ShareViewController: UIViewController {
     // MARK: - UI
 
     private func buildUI() {
-        card.backgroundColor = .systemBackground
-        card.layer.cornerRadius = 24
-        // 상단 모서리만 둥글게(하단 바텀시트).
-        card.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        card.translatesAutoresizingMaskIntoConstraints = false
-        // 딤이 없으므로 그림자로 배경과 분리.
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.15
-        card.layer.shadowRadius = 16
-        card.layer.shadowOffset = CGSize(width: 0, height: -2)
-        view.addSubview(card)
-
         titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 0
@@ -82,18 +80,13 @@ final class ShareViewController: UIViewController {
         stack.spacing = 12
         stack.setCustomSpacing(18, after: bodyLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(stack)
+        view.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            // 하단 바텀시트 — 좌우·하단 화면 끝에 붙이고 내용 높이만큼.
-            card.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            card.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            card.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 24),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            // 홈 인디케이터 위로 여백.
-            stack.bottomAnchor.constraint(equalTo: card.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+            // 콘텐츠를 시트 상단부터 채운다(시트 크기는 detent가 결정).
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             openButton.heightAnchor.constraint(equalToConstant: 50),
             closeButton.heightAnchor.constraint(equalToConstant: 50),
         ])
