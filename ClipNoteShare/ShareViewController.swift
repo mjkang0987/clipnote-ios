@@ -17,7 +17,7 @@ final class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        view.backgroundColor = .clear   // 딤 없이 하단 시트만 표시
         buildUI()
 
         Task { [weak self] in
@@ -38,8 +38,15 @@ final class ShareViewController: UIViewController {
 
     private func buildUI() {
         card.backgroundColor = .systemBackground
-        card.layer.cornerRadius = 20
+        card.layer.cornerRadius = 24
+        // 상단 모서리만 둥글게(하단 바텀시트).
+        card.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         card.translatesAutoresizingMaskIntoConstraints = false
+        // 딤이 없으므로 그림자로 배경과 분리.
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.15
+        card.layer.shadowRadius = 16
+        card.layer.shadowOffset = CGSize(width: 0, height: -2)
         view.addSubview(card)
 
         titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
@@ -78,23 +85,25 @@ final class ShareViewController: UIViewController {
         card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            card.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            card.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            card.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
-            card.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24),
-            card.widthAnchor.constraint(lessThanOrEqualToConstant: 360),
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 20),
+            // 하단 바텀시트 — 좌우·하단 화면 끝에 붙이고 내용 높이만큼.
+            card.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            card.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            card.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 24),
             stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20),
-            openButton.heightAnchor.constraint(equalToConstant: 48),
-            closeButton.heightAnchor.constraint(equalToConstant: 48),
+            // 홈 인디케이터 위로 여백.
+            stack.bottomAnchor.constraint(equalTo: card.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+            openButton.heightAnchor.constraint(equalToConstant: 50),
+            closeButton.heightAnchor.constraint(equalToConstant: 50),
         ])
     }
 
     private func showFound() {
-        titleLabel.text = "ClipNote에 전달했어요 🎉"
-        bodyLabel.text = "‘앱 열기’를 누르거나 ClipNote를 열면 입력칸에 링크가 채워져 있어요."
+        titleLabel.text = "ClipNote에 담았어요 🎉"
+        bodyLabel.text = "ClipNote 앱을 열면 홈 입력칸에 링크가 자동으로 채워져 있어요. "
+            + "거기서 바로 저장하거나 공유 카드를 만들 수 있어요.\n"
+            + "‘앱 열기’가 안 되면 홈 화면에서 ClipNote를 직접 열어 주세요."
         openButton.isHidden = (deepLink == nil)
     }
 
@@ -158,8 +167,12 @@ final class ShareViewController: UIViewController {
         return comps.url
     }
 
-    /// 확장에서 호스트 앱을 여는 responder-chain 우회(확장은 UIApplication.shared 사용 불가).
+    /// 확장에서 호스트 앱 열기 시도(둘 다 best-effort, iOS 버전에 따라 동작 여부 다름).
+    /// 어느 것도 안 되면 App Group에 저장돼 있으므로 사용자가 앱을 직접 열면 채워진다.
     private func openHostApp(_ url: URL) {
+        // 1) 확장 컨텍스트 open — iOS 버전에 따라 호스트 앱을 열어준다.
+        extensionContext?.open(url, completionHandler: nil)
+        // 2) responder-chain openURL: 우회(확장은 UIApplication.shared 사용 불가).
         var responder: UIResponder? = self
         let selector = sel_registerName("openURL:")
         while let r = responder {
