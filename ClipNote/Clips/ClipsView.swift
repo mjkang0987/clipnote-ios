@@ -1,6 +1,23 @@
 import SwiftUI
 import SwiftData
 
+/// 저장된 URL을 SFSafariViewController로 열 수 있는 형태로 정규화.
+/// SFSafari는 http/https만 허용하므로 스킴이 없으면 https를 붙이고, 그대로 파싱 실패 시
+/// 퍼센트 인코딩으로 재시도한다. 열 수 없으면 nil.
+func openableWebURL(_ raw: String) -> URL? {
+    let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !s.isEmpty else { return nil }
+    let withScheme = s.hasPrefix("http://") || s.hasPrefix("https://") ? s : "https://\(s)"
+    if let u = URL(string: withScheme), (u.scheme == "http" || u.scheme == "https") {
+        return u
+    }
+    if let encoded = withScheme.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed),
+       let u = URL(string: encoded), (u.scheme == "http" || u.scheme == "https") {
+        return u
+    }
+    return nil
+}
+
 /// 내 클립 목록 — 로컬(게스트)/DB(로그인) 통합. 필터·편집·삭제·공유·바로가기.
 /// RN `app/clips.tsx` 이식. 다중선택은 #C에서 추가.
 struct ClipsView: View {
@@ -174,7 +191,7 @@ struct ClipsView: View {
             onDelete: { pendingDelete = clip },
             onCopyShare: { copyShare(clip) },
             onMakeShared: { Task { await makeShared(clip) } },
-            onOpen: { safariURL = URL(string: clip.url) }
+            onOpen: { safariURL = openableWebURL(clip.url) }
         )
         .plainRow()
 
