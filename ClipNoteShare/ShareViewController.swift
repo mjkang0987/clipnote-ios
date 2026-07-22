@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 final class ShareViewController: UIViewController {
     private var deepLink: URL?
 
+    private let card = UIView()
     private let titleLabel = UILabel()
     private let bodyLabel = UILabel()
     private let openButton = UIButton(type: .system)
@@ -16,18 +17,7 @@ final class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        // iOS가 확장을 큰 시트로 감싸 흰 여백이 크게 남던 문제 →
-        // 시스템 시트 자체를 작은 detent(하단 1/3쯤)로 줄여 콘텐츠만큼만 보이게 한다.
-        if let sheet = sheetPresentationController {
-            if #available(iOS 16.0, *) {
-                sheet.detents = [.custom { _ in 300 }]
-            } else {
-                sheet.detents = [.medium()]
-            }
-            sheet.preferredCornerRadius = 24
-            sheet.prefersGrabberVisible = true
-        }
+        view.backgroundColor = .clear
         buildUI()
 
         Task { [weak self] in
@@ -44,9 +34,30 @@ final class ShareViewController: UIViewController {
         }
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // iOS가 확장을 감싸는 시스템 시트/컨테이너의 흰 배경 때문에 하단 레이어 뒤가 흰색으로
+        // 꽉 찼음 → 상위 뷰 계층의 배경을 모두 투명화해 호스트 위에 뜬 레이어처럼 보이게 한다.
+        var v: UIView? = view
+        while let cur = v {
+            cur.backgroundColor = .clear
+            v = cur.superview
+        }
+    }
+
     // MARK: - UI
 
     private func buildUI() {
+        card.backgroundColor = .systemBackground
+        card.layer.cornerRadius = 24
+        card.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.18
+        card.layer.shadowRadius = 16
+        card.layer.shadowOffset = CGSize(width: 0, height: -2)
+        view.addSubview(card)
+
         titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 0
@@ -80,13 +91,17 @@ final class ShareViewController: UIViewController {
         stack.spacing = 12
         stack.setCustomSpacing(18, after: bodyLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
+        card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            // 콘텐츠를 시트 상단부터 채운다(시트 크기는 detent가 결정).
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            // 하단 카드 — 좌우·하단 화면 끝, 내용 높이만큼(위쪽은 투명해 호스트가 비침).
+            card.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            card.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            card.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 22),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: card.safeAreaLayoutGuide.bottomAnchor, constant: -12),
             openButton.heightAnchor.constraint(equalToConstant: 50),
             closeButton.heightAnchor.constraint(equalToConstant: 50),
         ])
