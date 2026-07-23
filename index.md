@@ -68,6 +68,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 다국어(KO/EN/JA/ZH, 에픽 필요)·내 클립 무한스크롤(임계 도달 시 cursor 방식).
+- **로그인 첫 진입 깜빡임 수정(2026-07-23)**: 로그인 사용자가 처음 진입 시 홈 액션이 게스트→로그인 UI로 튀던 문제. `AuthStore`가 지난 실행 로그인 여부를 `UserDefaults`에 저장하고 세션 확정 전(loading)엔 `displayLoggedIn` 힌트로 렌더, `HomeView.actions`가 이를 사용. CI(`pr-review.yml`)에 `claude/**` push 트리거 추가. (PR #107)
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
@@ -76,4 +77,4 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
 - `Secrets.example.xcconfig` — 시크릿 템플릿 (실제 `Secrets.xcconfig`는 gitignored)
-- `.github/workflows/pr-review.yml` — PR CI(macOS 빌드)
+- `.github/workflows/pr-review.yml` — CI(macOS 빌드): PR + `claude/**` 브랜치 push 트리거

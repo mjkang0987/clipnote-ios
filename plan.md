@@ -4,22 +4,6 @@
 
 ---
 
-## 진행 중 — 로그인 상태에서 첫 진입 화면 깜빡임 수정
-
-**배경**: 이미 로그인한 사용자가 앱에 처음 진입하면 홈 액션 영역이 게스트 UI(이 기기에 저장·공유/복사·"로그인 하면 만들어져요")로 한 번 그려졌다가 로그인 UI(공유 링크 만들기·내 클립에 저장)로 바뀌며 화면이 튄다.
-
-**원인**: `AuthStore.state`가 `AuthState(accessToken: nil, loading: true)`로 시작 → `loggedIn`이 첫 프레임에 `false`. Supabase가 Keychain 세션을 비동기 복원해 `authStateChanges` → `apply`로 `loggedIn = true`가 되기 전까지 `HomeView.actions`가 `auth.loggedIn` 기준으로 게스트 UI를 먼저 렌더 → 복원 후 로그인 UI로 재렌더(깜빡임).
-
-**구현**:
-- `AuthStore`에 지난 실행의 로그인 여부를 `UserDefaults`에 저장(`apply` 시). 세션 확정 전(loading)에는 이 힌트로 UI를 결정하는 `displayLoggedIn` 노출. 확정 후에는 실제 `loggedIn` 사용. 토큰 필요한 동작은 여전히 `accessToken`(진실값)으로 가드.
-- `HomeView.actions` 분기를 `auth.loggedIn` → `auth.displayLoggedIn`으로 교체.
-
-**영향 파일**: `Auth/AuthStore.swift`, `Views/HomeView.swift`, `ClipNoteTests/AuthStoreTests.swift`.
-
-**기대 결과**: 복귀 로그인 사용자는 첫 프레임부터 로그인 UI를 보여 깜빡임 없음. 첫 설치/게스트는 그대로 게스트 UI(힌트 false). 세션 만료 등 예외 시에만 짧게 반대 UI 후 보정(첫 진입은 입력 없음 → 버튼 비활성이라 안전).
-
----
-
 ## 진행 중 — 배포(TestFlight) + 실기기 QA + App Store 출시
 
 **마이그레이션 코드는 완료**(Phase 1~5 + AdMob, RN 기능 패리티 달성, 76 tests 그린). 남은 건 배포·QA·출시.
@@ -50,6 +34,17 @@
 
 ### 파리티 감사 결과
 RN `app/`·`components/`·`lib/` 전부 네이티브에 매핑됨. 빠진 기능 없음. `getKnownTags`(태그 자동완성)는 RN에서도 미사용(기록만) — iOS도 동일.
+
+---
+
+## 완료 — 로그인 상태 첫 진입 화면 깜빡임 수정 (2026-07-23)
+
+이미 로그인한 사용자가 처음 진입할 때 홈 액션이 게스트 UI→로그인 UI로 튀던 문제.
+
+- **원인**: `AuthStore.state`가 `loading:true, accessToken:nil`로 시작 → 첫 프레임 `loggedIn=false`. Supabase Keychain 세션 비동기 복원(`authStateChanges`→`apply`) 전까지 `HomeView.actions`가 게스트 UI를 먼저 렌더 → 복원 후 재렌더.
+- **수정**: `AuthStore`에 지난 실행 로그인 여부를 `UserDefaults`에 저장, 세션 확정 전(loading)엔 이 힌트로 판단하는 `displayLoggedIn` 추가. `HomeView.actions` 분기를 `displayLoggedIn`으로 교체. 토큰 필요한 동작은 여전히 `accessToken`으로 가드. 유닛 테스트 4개 추가. (PR #107)
+- **CI**: `claude/**` 브랜치 push에도 iOS 빌드가 돌도록 `pr-review.yml`에 push 트리거 추가(+concurrency 중복 방지, `if` 가드 push 허용). (PR #107)
+- ⚠️ CI는 `xcodebuild build`(컴파일)만 → 추가 유닛 테스트는 CI 미실행. 실행 시 로컬 `xcodebuild test`. 실제 깜빡임 제거는 실기기/시뮬 시각 확인 권장.
 
 ---
 
