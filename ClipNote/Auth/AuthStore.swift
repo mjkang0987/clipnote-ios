@@ -43,16 +43,29 @@ final class AuthStore: ObservableObject {
     var accessToken: String? { state.accessToken }
     var loggedIn: Bool { state.loggedIn }
 
+    /// 첫 프레임 깜빡임 방지용 표시 상태. 세션이 확정되기 전(`loading`)에는 지난 실행에서
+    /// 저장해 둔 로그인 여부(persisted hint)를, 확정 후에는 실제 `loggedIn`을 쓴다.
+    /// 로그인 상태로 재진입하면 Keychain 세션 복원 전에도 로그인 UI가 바로 떠 깜빡이지 않는다.
+    /// 토큰이 필요한 동작은 여전히 진실값 `accessToken`으로 가드(첫 진입은 입력이 없어 버튼 비활성).
+    var displayLoggedIn: Bool {
+        state.loading ? defaults.bool(forKey: Self.lastLoggedInKey) : state.loggedIn
+    }
+
     /// Supabase OAuth 콜백 리다이렉트. 딥링크 스킴(#6 AuthDeepLink)과 일치.
     static let oauthRedirect = URL(string: "clipnote://auth/callback")!
 
+    /// 지난 실행의 로그인 여부를 담는 UserDefaults 키(`displayLoggedIn` 힌트).
+    static let lastLoggedInKey = "clipnote.auth.lastLoggedIn"
+
     let client: SupabaseClient
+    private let defaults: UserDefaults
     private var observeTask: Task<Void, Never>?
     /// token_hash는 1회용. 딥링크 중복 도착 시 재verify 방지(설계 §3.3).
     private var consumedTokenHashes = Set<String>()
 
-    init(client: SupabaseClient, autoStart: Bool = true) {
+    init(client: SupabaseClient, autoStart: Bool = true, defaults: UserDefaults = .standard) {
         self.client = client
+        self.defaults = defaults
         if autoStart { start() }
     }
 
@@ -87,8 +100,10 @@ final class AuthStore: ObservableObject {
     }
 
     /// Maps an optional access token into observable state. Extracted for testability.
+    /// 확정된 로그인 여부를 저장해 다음 실행 첫 프레임의 `displayLoggedIn` 힌트로 쓴다.
     func apply(accessToken: String?) {
         state = AuthState(accessToken: accessToken, loading: false)
+        defaults.set(state.loggedIn, forKey: Self.lastLoggedInKey)
     }
 
     /// Supabase 세션 유저에서 표시용 계정 정보를 뽑는다. provider는 app_metadata에서.
