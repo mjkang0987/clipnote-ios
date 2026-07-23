@@ -145,7 +145,8 @@ struct HomeView: View {
 
     @ViewBuilder
     private var actions: some View {
-        if auth.loggedIn {
+        // 세션 복원 전 첫 프레임은 지난 실행 값(displayLoggedIn)으로 그려 깜빡임을 막는다.
+        if auth.displayLoggedIn {
             HStack(spacing: 8) {
                 primaryButton(creating ? "만드는 중…" : "공유 링크 만들기",
                               disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
