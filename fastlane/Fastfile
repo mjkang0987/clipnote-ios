@@ -20,14 +20,11 @@ platform :ios do
 
     # 3) 서명 동기화 — Apple Distribution 인증서 + AppStore 프로파일 생성/설치.
     #    저장소 브랜치 push용 인증은 워크플로 기본 토큰(GITHUB_TOKEN) 사용.
-    # force: true — App Group capability 추가 후 프로파일에 반영되도록 1회 강제 재생성.
-    #   (재생성·업로드 성공 후에는 이 옵션을 제거해도 된다.)
     match(
       type: "appstore",
       app_identifier: [APP_ID, EXT_ID],
       api_key: api_key,
       readonly: false,
-      force: true,
       git_basic_authorization: Base64.strict_encode64("x-access-token:#{ENV['GITHUB_TOKEN']}")
     )
 
