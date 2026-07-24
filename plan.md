@@ -48,6 +48,16 @@ RN `app/`·`components/`·`lib/` 전부 네이티브에 매핑됨. 빠진 기능
 
 ---
 
+## 완료 — TestFlight 배포 자동 트리거(main push) (2026-07-24)
+
+`deploy.yml`을 수동(`workflow_dispatch`) 전용에서 **main push 자동 배포**로 확장.
+
+- `on.push.branches: [main]` 추가(+`paths-ignore: **/*.md`로 문서만 바뀐 머지는 스킵). 수동 실행 유지.
+- `concurrency: deploy-testflight`(cancel-in-progress: false)로 배포 직렬화 — 짧은 간격 머지가 같은 빌드번호(TestFlight 최신+1)를 계산해 업로드 거부되는 충돌 방지.
+- 빌드번호는 fastlane이 TestFlight 최신+1로 계산하고 git에 커밋하지 않으므로 배포가 자기 자신을 재트리거하지 않음(무한루프 없음).
+
+---
+
 ## 완료 — CI에 유닛 테스트 자동 실행 추가 (2026-07-24)
 
 CI 게이트를 `xcodebuild build`(컴파일만) → `xcodebuild test`로 확장. push(`claude/**`)·PR 모두에서 build+test 실행. (PR #109)
