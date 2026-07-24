@@ -77,4 +77,4 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
 - `Secrets.example.xcconfig` — 시크릿 템플릿 (실제 `Secrets.xcconfig`는 gitignored)
-- `.github/workflows/pr-review.yml` — CI(macOS 빌드): PR + `claude/**` 브랜치 push 트리거
+- `.github/workflows/pr-review.yml` — CI(macOS): `xcodebuild test`(build+유닛 테스트), PR + `claude/**` 브랜치 push 트리거
