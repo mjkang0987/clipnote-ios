@@ -53,7 +53,7 @@ final class ClipsStore {
         return clips
     }
 
-    /// 공유 복사 텍스트(§4.3) — 제목+설명+브릿지 링크. 로컬 클립은 slug 없어 nil.
+    /// 공유 복사 텍스트(§4.3) — 제목+브릿지 링크(설명 제외, #74/PR #75). 로컬 클립은 slug 없어 nil.
     func shareText(_ c: UClip) -> String? {
         guard let slug = c.slug else { return nil }
         let url = shareBase.appendingPathComponent(slug).absoluteString
