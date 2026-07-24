@@ -44,7 +44,19 @@ RN `app/`·`components/`·`lib/` 전부 네이티브에 매핑됨. 빠진 기능
 - **원인**: `AuthStore.state`가 `loading:true, accessToken:nil`로 시작 → 첫 프레임 `loggedIn=false`. Supabase Keychain 세션 비동기 복원(`authStateChanges`→`apply`) 전까지 `HomeView.actions`가 게스트 UI를 먼저 렌더 → 복원 후 재렌더.
 - **수정**: `AuthStore`에 지난 실행 로그인 여부를 `UserDefaults`에 저장, 세션 확정 전(loading)엔 이 힌트로 판단하는 `displayLoggedIn` 추가. `HomeView.actions` 분기를 `displayLoggedIn`으로 교체. 토큰 필요한 동작은 여전히 `accessToken`으로 가드. 유닛 테스트 4개 추가. (PR #107)
 - **CI**: `claude/**` 브랜치 push에도 iOS 빌드가 돌도록 `pr-review.yml`에 push 트리거 추가(+concurrency 중복 방지, `if` 가드 push 허용). (PR #107)
-- ⚠️ CI는 `xcodebuild build`(컴파일)만 → 추가 유닛 테스트는 CI 미실행. 실행 시 로컬 `xcodebuild test`. 실제 깜빡임 제거는 실기기/시뮬 시각 확인 권장.
+- ⚠️ 실제 깜빡임 제거는 실기기/시뮬 시각 확인 권장(빌드/테스트로는 검증 불가).
+
+---
+
+## 완료 — CI에 유닛 테스트 자동 실행 추가 (2026-07-24)
+
+CI 게이트를 `xcodebuild build`(컴파일만) → `xcodebuild test`로 확장. push(`claude/**`)·PR 모두에서 build+test 실행. (PR #109)
+
+- `pr-review.yml`: `xcodebuild test`. 시뮬레이터는 `xcrun simctl`로 사용 가능한 iPhone UDID 동적 선택(러너 Xcode별 차이에 강건).
+- 테스트 추가로 드러난 **선재 이슈 2건 수정**(둘 다 기능 결함 아님):
+  - AdMob 빈 App ID → GoogleMobileAds SDK 자동 검증에서 테스트 호스트 앱이 부팅 중 크래시. `Secrets.example.xcconfig`에 구글 공식 테스트 App ID 지정(실배포 무관).
+  - `shareTextUsesBuildShareTextForDbClip` 기대값이 옛 동작(설명 포함)에 머물러 실패 → 현재 동작(설명 제외, #74/PR #75)에 맞게 수정. `ClipsStore.shareText` 주석도 정정.
+- 검증: 80 tests / 13 suites 그린.
 
 ---
 
