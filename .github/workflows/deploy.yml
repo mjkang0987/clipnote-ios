@@ -1,9 +1,22 @@
-# TestFlight 배포 — 수동 실행(workflow_dispatch). 클라우드 맥 러너에서 빌드·서명·업로드.
+# TestFlight 배포 — main 머지 시 자동 + 수동 실행(workflow_dispatch). 클라우드 맥 러너에서 빌드·서명·업로드.
 # 로컬 맥 불필요. 필요한 GitHub Secrets는 docs/DEPLOY.md 참고.
+# 빌드번호는 fastlane이 TestFlight 최신+1로 계산(git 커밋 안 함) → 배포가 자기 자신을 재트리거하지 않음.
 name: Deploy TestFlight
 
 on:
+  push:
+    branches:
+      - main
+    # 문서만 바뀐 머지는 배포하지 않는다(불필요한 TestFlight 빌드 방지). CI와 동일 정책.
+    paths-ignore:
+      - "**/*.md"
   workflow_dispatch:
+
+# 배포를 직렬화 — 짧은 간격의 두 머지가 같은 빌드번호(TestFlight 최신+1)를 계산해
+# 업로드가 거부되는 충돌을 막는다. 진행 중 업로드는 취소하지 않고 큐잉한다.
+concurrency:
+  group: deploy-testflight
+  cancel-in-progress: false
 
 # match가 서명 저장 브랜치(match-storage)에 push하므로 쓰기 권한 필요.
 permissions:
