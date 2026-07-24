@@ -1,7 +1,7 @@
-# 자동 검증 (iOS 빌드) — XcodeGen 생성 + xcodebuild build.
+# 자동 검증 (iOS 빌드 + 유닛 테스트) — XcodeGen 생성 + xcodebuild test.
 # AI 코드리뷰는 작성자(Claude)가 절차 5단계(/code-review)에서 세션 내에서 수행한다.
-# 이 CI는 자동 게이트: 컴파일 오류를 머지 전에 잡는다.
-# 트리거: PR(opened/synchronize/reopened) + `claude/**` 작업 브랜치 push(PR 없이도 빌드 확인).
+# 이 CI는 자동 게이트: 컴파일 오류·테스트 실패를 머지 전에 잡는다.
+# 트리거: PR(opened/synchronize/reopened) + `claude/**` 작업 브랜치 push(PR 없이도 검증).
 # 주의: macOS 러너 사용 — 비공개 저장소에서는 분(minutes)이 Linux의 10배로 차감된다.
 name: CI
 
@@ -43,11 +43,24 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build
+      # 러너에 설치된 Xcode마다 사용 가능한 시뮬레이터가 달라 이름 하드코딩은 깨지기 쉽다.
+      # 사용 가능한 iPhone 시뮬레이터 UDID를 동적으로 골라 test 대상 destination으로 쓴다.
+      - name: Select iOS Simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))] | last | .udid')
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "사용 가능한 iPhone 시뮬레이터를 찾지 못함"; exit 1
+          fi
+          echo "시뮬레이터 $UDID 사용"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Build & Test
         run: |
           set -o pipefail
-          xcodebuild build \
+          xcodebuild test \
             -project ClipNote.xcodeproj \
             -scheme ClipNote \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
             CODE_SIGNING_ALLOWED=NO

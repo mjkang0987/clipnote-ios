@@ -113,7 +113,9 @@ final class ClipsStubURLProtocol: URLProtocol, @unchecked Sendable {
                         image: nil, siteName: nil, gradient: "grape", tags: [],
                         saved: true, shared: true, createdAt: "2026-01-01T00:00:00Z")
         let text = store.shareText(UClip(db))
-        #expect(text == "제목\n설명\nhttps://clipnote.co.kr/s1")
+        // 설명(description)은 붙여넣기 글이 길어져 제외한다(#74/PR #75, buildShareText).
+        // DbClip에 description을 넣어도 결과엔 빠지는지 확인.
+        #expect(text == "제목\nhttps://clipnote.co.kr/s1")
     }
 
     @MainActor
