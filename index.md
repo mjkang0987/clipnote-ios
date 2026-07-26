@@ -69,10 +69,13 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 다국어(KO/EN/JA/ZH, 에픽 필요)·내 클립 무한스크롤(임계 도달 시 cursor 방식).
 - **로그인 첫 진입 깜빡임 수정(2026-07-23)**: 로그인 사용자가 처음 진입 시 홈 액션이 게스트→로그인 UI로 튀던 문제. `AuthStore`가 지난 실행 로그인 여부를 `UserDefaults`에 저장하고 세션 확정 전(loading)엔 `displayLoggedIn` 힌트로 렌더, `HomeView.actions`가 이를 사용. CI(`pr-review.yml`)에 `claude/**` push 트리거 추가. (PR #107)
-- **미완/이월(사람만 가능)**:
-  - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
-  - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
-  - Privacy Manifest는 AdMob 포함 상태 재검토 여지(`NSPrivacyTracking`/추적 도메인 — 현재 false).
+- **App Store 심사 제출 완료(2026-07-26)** — App Store Connect 메타데이터 전부 입력 후 심사 제출. 상태: **심사 대기**.
+  - 입력 완료: 한/영 설명·부제·키워드·프로모션·심사메모, 스크린샷 6.5"(1284×2778, 6.3" 원본 리사이즈), 개인정보 URL 한/영(`https://clipnote.co.kr/privacy`), 연령등급 4+(전 항목 None·웹접근 No), Content Rights(제3자 콘텐츠 있음), App Privacy 게시(이메일·userID·기타콘텐츠=앱기능/미추적, 기기ID=제3자광고/미추적), 가격 무료.
+  - 실기기 QA: **로그인 3종 실제 동작 확인됨**(사용자 확인, #7/#8 리스크 해소). 실광고는 출시 후 재확인 예정(미출시 앱 광고 제한 추정).
+- **출시 후속(사람/코드)**:
+  - 심사 결과 대기 → 승인 시 릴리스(자동/수동 여부 확인). 반려 시 사유 대응(Sign in with Apple 4.8 가능성 — 게스트 사용 가능 + 심사메모로 방어).
+  - 출시 후: 실광고 재확인·AdMob `app-ads.txt`(`clipnote.co.kr/app-ads.txt`) 설정·AdMob 앱 "Ready" 확인.
+  - 코드 후속: `AdConfig.enabled`가 배너 unit ID 미검사(비면 배너 조용히 안 뜸) 보강 여지, Sign in with Apple 선제 추가 여지, Privacy Manifest AdMob 재검토(`NSPrivacyTracking` 현재 false).
 
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
