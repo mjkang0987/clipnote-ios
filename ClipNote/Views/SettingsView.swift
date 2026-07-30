@@ -76,17 +76,22 @@ struct SettingsView: View {
                 Text(i18n.t("settings.language"))
                     .font(.system(size: 14, weight: .semibold)).foregroundStyle(AppColor.fg)
                 Spacer()
-                Picker(
-                    i18n.t("settings.language"),
-                    selection: Binding(get: { i18n.language }, set: { i18n.select($0) })
-                ) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.label).tag(language)
+                // Picker 를 그대로 쓰면 기본 본문 크기(17pt)로 그려져 다른 행보다 커진다.
+                // Menu 라벨을 직접 만들어 linkRow·contactRow 의 보조 텍스트와 같은 모양으로 맞춘다.
+                Menu {
+                    Picker(
+                        i18n.t("settings.language"),
+                        selection: Binding(get: { i18n.language }, set: { i18n.select($0) })
+                    ) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.label).tag(language)
+                        }
                     }
+                } label: {
+                    Text("\(i18n.language.label) ›")
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppColor.fgMuted)
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .tint(AppColor.fgMuted)
             }
             .padding(.vertical, 16)
         }
