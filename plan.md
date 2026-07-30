@@ -4,6 +4,47 @@
 
 ---
 
+## 진행 중 — 출시 후 기능 업데이트 (2026-07-30)
+
+> **브랜치 규칙(이번 지시)**: 앱이 이미 스토어에 출시됐으므로 배포 안정성 우선.
+> 모든 작업은 `develop`까지만 병합한다. `main` 머지는 지시자의 명시적 승인이 있을 때만.
+> (`CLAUDE.md`의 "CI 그린이면 main 자동 머지" 절차보다 이 지시가 우선한다.)
+
+### ✅ 공유 텍스트 제목 길이 제한 (웹·앱 공통)
+
+인스타 어댑터가 `og:title`(=캡션 전문)을 제목으로 쓰기 때문에(웹 `lib/adapters/instagram.ts`)
+공유 텍스트가 캡션 통째로 길어졌다. 제목을 자르고 말줄임(`…`)으로 처리한다.
+
+- `ClipNote/Util/ShareText.swift` — `shareTitleMaxLength = 80`(말줄임표 포함), `truncateShareTitle`
+  추가. 공백·개행을 한 칸으로 정리(캡션 개행이 `제목\nURL` 포맷을 깨뜨려 링크 줄을 못 찾게 된다).
+  호출부 3곳(`ShareResultModal`·`HomeView`·`ClipsStore`)이 이미 `buildShareText`로 모여 있어 수정은 1곳.
+- `ClipNoteTests/ShareTextTests.swift` — 3 → 12케이스(상한 경계·개행 정리·이모지 비분할·인스타 캡션).
+- 웹은 `lib/shareText.ts`가 같은 규칙·같은 상수(`SHARE_TITLE_MAX=80`)를 구현. **한쪽만 바꾸지 않는다.**
+  웹은 `Intl.Segmenter`로 그래핌 단위를 맞춘다(`Array.from`은 코드포인트라 `☕️`가 쪼개져 iOS와 어긋남).
+
+### 🟡 광고 미게재 해소
+
+출시 후 실광고가 나오지 않는 문제. 원인 후보를 순서대로 정리:
+
+1. **app-ads.txt 인증 실패** — 웹 저장소에 `public/app-ads.txt`가 없었다(있던 건 퍼블리셔 ID가 다른
+   `ads.txt`). → 웹 `develop`에 `google.com, pub-3019917862455282, DIRECT, f08c47fec0942fa0` 추가 완료.
+   AdMob 은 App Store 등록정보의 개발자 웹사이트 도메인 루트를 크롤링하므로 **iOS 저장소에는 넣을 자리가 없다.**
+2. 🔒 **Release 빌드의 실 AdMob ID 주입 미확인** — `AdConfig`는 DEBUG에 구글 테스트 unit ID를
+   하드코딩하고 RELEASE만 `Secrets.xcconfig` 값을 쓴다. 그 값은 CI에서 GitHub Secret
+   `SECRETS_XCCONFIG`로 주입된다(`deploy.yml`). 이 시크릿이 비었거나 `Secrets.example.xcconfig`의
+   테스트 ID(`ca-app-pub-3940256099942544`) 그대로면 광고가 안 나온다. **개발 중엔 항상 DEBUG
+   경로였으므로 실 ID 경로는 한 번도 검증된 적이 없다.**
+   - 게다가 `AdBannerView`는 로드 실패 시 높이 0으로 숨기고(빈 공간 방지) App ID가 없으면 아예
+     렌더하지 않아, **실패가 조용하다.** 진단은 Console.app `clipnote.ads` 로그로만 가능.
+3. ⬜ 후속 검토: 신규 광고 단위 활성 대기, AdMob 계정 지급 정보, UMP/ATT 동의(미구현 — 개인화 광고 불가).
+
+### ⬜ 내부 언어 변경 (한국어·영어·일본어·중국어)
+
+현재 로컬라이제이션 파일이 **하나도 없고**(한글 리터럴 226개) 문자열이 전부 하드코딩이다. 신규 구축.
+⚠️ `PrivacyView`(리터럴 35개)는 법적 문서라 기계 번역 게시가 위험 — 범위 확정 필요.
+
+---
+
 ## 진행 중 — 배포(TestFlight) + 실기기 QA + App Store 출시
 
 **마이그레이션 코드는 완료**(Phase 1~5 + AdMob, RN 기능 패리티 달성, 76 tests 그린). 남은 건 배포·QA·출시.
