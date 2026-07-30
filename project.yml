@@ -48,6 +48,10 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         ITSAppUsesNonExemptEncryption: false
+        # 앱 내 언어 전환(LocalizationStore)이 언어별 .lproj 번들을 직접 열기 때문에,
+        # 지원 언어가 번들에 실려 있어야 한다. 빠지면 조용히 전부 한국어로 폴백한다.
+        # LocalizationStoreTests 가 이 목록과 문자열 카탈로그의 일치를 검증한다.
+        CFBundleLocalizations: [ko, en, ja, zh-Hans]
         API_BASE: $(API_BASE)
         SUPABASE_URL: $(SUPABASE_URL)
         SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
