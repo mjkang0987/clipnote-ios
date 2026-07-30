@@ -21,17 +21,24 @@
 - 문서와 구현이 다르면 불일치를 보고하고 확인받은 뒤 진행한다.
 
 ## Development Workflow
-- 작업 전에 `plan.md`에 요구사항·구현 방식·영향 파일·기대 결과를 적고 확정한 뒤 코드를 만진다.
-- **프로젝트는 XcodeGen 기반**: `.xcodeproj`는 커밋하지 않고 `project.yml`에서 생성한다(`xcodegen generate`). 타깃/스킴/설정 변경은 `project.yml`에서 한다.
-- **빌드에 `Secrets.xcconfig` 필요**(gitignored). 로컬은 `Secrets.example.xcconfig`를 복사해 채운다. 시크릿을 소스/커밋에 넣지 않는다.
-- 버전은 `project.yml`의 `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION`으로 관리(릴리스 시 수동 범프).
+- **작업 계획 수립:** 모든 작업을 시작하기 전 `plan.md`를 작성할 것. 요구사항, 구현 방식, 영향받는 파일,
+  예상 결과를 기록하고 검토가 끝난 후 코드를 수정할 것. (개발 중 범위가 변경되면 `plan.md` 즉시 업데이트)
+- **작업 분할 및 브랜치 생성:** 작업 요청 시 가장 작은 단위의 이슈로 나누고, `develop` 브랜치 파생으로
+  개별 `feature` 브랜치를 생성하여 시작할 것.
+- **Feature 검증 사이클:** `작업` > `코드리뷰` > `개선` > `검증` > `수정작업` > `코드리뷰` > `개선` > `검증`
+  — 이 프로세스를 `feature` 브랜치 내에서 완벽히 완료할 것. 리뷰를 건너뛰고 푸시하지 않는다.
+- **Dev 병합 및 2차 검증:** 단일 `feature` 검증이 끝나면 `develop` 브랜치에 머지 + 푸시할 것.
+  `develop` 에서도 동일한 사이클을 거쳐 통합 부작용을 해결할 것.
+- **Main 배포:** `develop` 진행이 완료되면 PR을 생성하고 `main` 머지를 **요청**할 것.
+  지시자의 명시적 승인 없이 `main`에 머지하지 않는다.
+- **버전 펌핑:** PR 머지 시 변경 규모(Patch / Minor / Major)를 판단하여 버전을 올릴 것. (iOS: `project.yml` 의 `MARKETING_VERSION`)
 
 ## Work Request Flow (업무 처리 절차)
 > 사용자가 업무를 요청하면 아래 순서를 따른다.
 
 **세부 규약:**
-- **이슈당 브랜치 · 이슈당 PR.** 브랜치명 `claude/issue-<번호>-<짧은슬러그>`, `main`에서 분기·`main`으로 PR. 한 번에 한 이슈.
-- **자동 머지.** 8단계(코드검증·자동리뷰·CI)가 그린이면 사용자 승인 없이 머지.
+- **이슈당 브랜치 · 이슈당 PR.** 브랜치명 `feature/<짧은슬러그>`(또는 `claude/issue-<번호>-<슬러그>`), `develop`에서 분기·`develop`으로 머지. 한 번에 한 이슈.
+- **`develop` 까지만 자동 진행.** 검증·리뷰가 그린이면 `develop` 에 머지. `main` 머지는 지시자의 명시적 승인이 있을 때만.
 - **라벨**: `feature`/`fix`/`chore`/`refactor`/`docs`(없으면 생성). 하위 3개 이상이면 에픽+서브이슈.
 - **검증 범위**: 항상 빌드(`xcodebuild build`). 로직 변경은 테스트(`xcodebuild test`)까지.
 
@@ -44,7 +51,7 @@
 6. **재검증** — 리팩토링 후 다시 빌드/테스트.
 7. **PR 생성** — 본문에 `Closes #<이슈>`. PR 생성 시 자동 CI(`.github/workflows/pr-review.yml`, macOS 빌드)가 실행된다.
 8. **코드 검증** — PR 상태에서 CI(빌드) 결과 확인. 지적이 있으면 4~6 반복.
-9. **머지** — 그린이면 `main`으로 자동 머지. 이슈 자동 종료, `index.md`·`plan.md` 갱신.
+9. **머지** — 그린이면 `develop`으로 머지(`main` 머지는 지시자 승인 후). 이슈 자동 종료, `index.md`·`plan.md` 갱신.
 10. **릴리스·배포** — App Store/TestFlight 배포는 수동(Xcode Archive 또는 fastlane). 릴리스 시 `project.yml` 버전 범프.
 
 ## iOS/Swift Standards
