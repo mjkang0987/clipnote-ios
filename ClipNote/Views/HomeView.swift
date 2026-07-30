@@ -14,6 +14,9 @@ struct HomeView: View {
     @State private var savingDirect = false
     @State private var directSaved = false
     @State private var shareURL: String?
+    /// 결과 시트 표시 여부. `shareURL` 과 분리해 두어 시트를 닫아도 링크가 남는다.
+    @State private var shareSheetOpen = false
+    @State private var copiedLink = false
     @State private var kbVisible = false
     @State private var copiedShare = false
 
@@ -55,15 +58,23 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             kbVisible = false
         }
-        .onChange(of: vm.url) { vm.urlChanged() }
+        // URL 이 바뀌면 이전 링크는 이 입력과 맞지 않으므로 버린다 → 1차 버튼이 `링크 만들기` 로 복귀.
+        .onChange(of: vm.url) {
+            vm.urlChanged()
+            shareURL = nil
+            shareSheetOpen = false
+        }
         // 공유 확장이 넘긴 URL을 입력칸에 채운다(setter가 메타 추출을 트리거).
         .onChange(of: router.pendingSharedURL) { _, s in consumeSharedURL(s) }
         .onAppear { consumeSharedURL(router.pendingSharedURL) }
-        .sheet(item: Binding(get: { shareURL.map(ShareURLItem.init) },
-                             set: { if $0 == nil { shareURL = nil } })) { item in
-            ShareResultModal(title: vm.resolvedTitle,
-                             description: vm.previewDescription, url: item.url,
-                             onSave: { await vm.saveToClips(accessToken: auth.accessToken) })
+        // 시트 표시 여부를 shareURL 과 분리한다 — `.sheet(item:)` 은 닫힐 때 바인딩을 nil 로
+        // 되돌려 링크를 잃는다. 링크는 남아 있어야 1차 버튼이 `링크 복사` 로 바뀔 수 있다.
+        .sheet(isPresented: $shareSheetOpen) {
+            if let url = shareURL {
+                ShareResultModal(title: vm.resolvedTitle,
+                                 description: vm.previewDescription, url: url,
+                                 onSave: { await vm.saveToClips(accessToken: auth.accessToken) })
+            }
         }
     }
 
@@ -147,10 +158,22 @@ struct HomeView: View {
     private var actions: some View {
         // 세션 복원 전 첫 프레임은 지난 실행 값(displayLoggedIn)으로 그려 깜빡임을 막는다.
         if auth.displayLoggedIn {
-            HStack(spacing: 8) {
-                primaryButton(creating ? "만드는 중…" : "공유 링크 만들기",
-                              disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
-                    .tourAnchor(.share)
+            // 버튼 3개 → 링크·복사를 한 줄에 묶고, 저장은 자기 줄을 전부 쓴다(웹과 동일 배치).
+            // 1차: 링크가 없으면 `링크 만들기`, 있으면 `링크 복사`(짧은 주소).
+            // `원본 복사`(제목+원본 URL)는 링크 유무와 무관하게 항상 노출.
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    if shareURL != nil {
+                        primaryButton(copiedLink ? "복사됨 ✓" : "링크 복사",
+                                      disabled: false) { copyShareLink() }
+                    } else {
+                        primaryButton(creating ? "만드는 중…" : "링크 만들기",
+                                      disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
+                            .tourAnchor(.share)
+                    }
+                    secondaryButton(copiedShare ? "복사됨 ✓" : "원본 복사",
+                                    disabled: !vm.hasInput) { copyGuestShare() }
+                }
                 secondaryButton(directSaved ? "저장됨 ✓" : (savingDirect ? "저장 중…" : "내 클립에 저장"),
                                 disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
                     .tourAnchor(.save)
@@ -175,7 +198,7 @@ struct HomeView: View {
                 .opacity(vm.hasInput ? 1 : 0.5)
 
                 Button { copyGuestShare() } label: {
-                    Text(copiedShare ? "복사됨 ✓" : "복사하기")
+                    Text(copiedShare ? "복사됨 ✓" : "원본 복사")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
                         .frame(maxWidth: .infinity).frame(height: 48)
@@ -331,7 +354,16 @@ struct HomeView: View {
         defer { creating = false }
         if let res = await vm.createShare(accessToken: auth.accessToken) {
             shareURL = res.shareUrl
+            shareSheetOpen = true
         }
+    }
+
+    /// 생성된 짧은 링크를 복사(`원본 복사` 와 달리 공유 링크만 담는다).
+    private func copyShareLink() {
+        guard let shareURL else { return }
+        UIPasteboard.general.string = shareURL
+        copiedLink = true
+        Task { try? await Task.sleep(for: .milliseconds(1500)); copiedLink = false }
     }
 
     private func saveToClips() async {
