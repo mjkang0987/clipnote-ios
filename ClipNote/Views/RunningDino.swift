@@ -20,14 +20,16 @@ import SwiftUI
 ///
 /// 도는 자리는 **호출부가 준 사각형**이 정한다. 그 안에서만 그려지므로 어디에 얹어도 안전하다.
 struct RunningDino: View {
-    /// 한 바퀴에 걸리는 시간(초). **속도가 아니라 이것을 고정한다.**
+    /// 목표 속도(pt/초)와 한 바퀴 시간의 상·하한(초).
     ///
-    /// 속도를 고정했더니 도는 자리에 따라 체감이 완전히 달라졌다 — 입력칸 둘레는 4초인데
-    /// 폼 카드 둘레는 2.5배라 한 바퀴에 10초가 걸렸다. 로딩이 1~2초면 공룡은 모서리에서
-    /// 조금 꿈틀대다 사라진다. 상자가 커지면 그만큼 빨리 달리는 게 맞다.
-    private static let lap = 4.0
-    /// 뜀박질 한 번에 걸리는 시간(초). 짧을수록 종종거린다.
-    private static let hopPeriod = 0.44
+    /// 둘 중 하나만 고정하면 도는 자리가 바뀔 때 망가진다. 속도만 고정하면 화면 둘레에서
+    /// 한 바퀴가 10초씩 걸려 로딩이 끝날 때까지 모서리에서 꿈틀대고, 시간만 고정하면
+    /// 큰 상자에서 총알처럼 날아간다. 목표 속도로 시간을 정하되 범위를 벗어나지 않게 자른다.
+    private static let targetSpeed = 150.0
+    private static let lapRange = 3.0...7.0
+    /// 한 걸음의 보폭(pt). 뜀박질을 시간이 아니라 **걸은 거리**에 맞춰야 속도가 달라져도
+    /// 보폭이 유지된다 — 시간에 맞추면 빨리 달릴수록 성큼성큼 미끄러진다.
+    private static let stride = 34.0
     /// 뜀박질 높이(pt). 밟고 있는 벽에서 **떨어지는 쪽**으로 튄다(천장이면 아래로).
     private static let hopHeight: CGFloat = 5
     private static let size: CGFloat = 32
@@ -93,11 +95,13 @@ struct RunningDino: View {
             return Spot(center: CGPoint(x: box.width / 2, y: 0), angle: 0, hop: 0)
         }
 
+        let lap = min(max(Double(total) / Self.targetSpeed, Self.lapRange.lowerBound),
+                      Self.lapRange.upperBound)
+        let progress = (elapsed / lap).truncatingRemainder(dividingBy: 1)
         // 멈춰 세울 때는 첫 면 한가운데에 세운다 — 모서리에 걸치면 잘린 것처럼 보인다.
-        // 한 바퀴 시간이 고정이라 진행도는 둘레와 무관한 비율이 된다.
-        let progress = (elapsed / Self.lap).truncatingRemainder(dividingBy: 1)
-        var walked = reduceMotion ? lengths[0] / 2 : total * CGFloat(progress)
+        let distance = reduceMotion ? lengths[0] / 2 : total * CGFloat(progress)
 
+        var walked = distance
         var index = 0
         while index < lengths.count - 1, walked >= lengths[index] {
             walked -= lengths[index]
@@ -114,7 +118,7 @@ struct RunningDino: View {
             center: CGPoint(x: edge.x + into.dx * standoff, y: edge.y + into.dy * standoff),
             // 180° 를 더해 발이 바깥(벽)을 향하게 한다. 천장 면에서는 거꾸로 매달린다.
             angle: Double(side) * 90 + 180,
-            hop: hop(elapsed: elapsed)
+            hop: hop(after: distance)
         )
     }
 
@@ -144,9 +148,9 @@ struct RunningDino: View {
 
     /// 살짝 튀는 높이. 사인 곡선의 위쪽 반만 써서 **땅에 닿는 순간**을 만든다 —
     /// 계속 오르내리기만 하면 떠다니는 것처럼 보인다.
-    private func hop(elapsed: TimeInterval) -> CGFloat {
+    private func hop(after distance: CGFloat) -> CGFloat {
         guard !reduceMotion else { return 0 }
-        let phase = elapsed.truncatingRemainder(dividingBy: Self.hopPeriod) / Self.hopPeriod
+        let phase = Double(distance).truncatingRemainder(dividingBy: Self.stride) / Self.stride
         return CGFloat(sin(phase * .pi)) * Self.hopHeight
     }
 }

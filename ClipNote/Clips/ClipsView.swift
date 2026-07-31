@@ -46,12 +46,8 @@ struct ClipsView: View {
             if let store {
                 content(store)
             } else {
-                // 목록을 불러오는 동안 공룡이 **화면 가장자리**를 돈다.
-                //
-                // 홈에서는 카드 테두리를 밟지만 여기엔 밟을 상자가 없다. 화면 자체를 상자로
-                // 삼는다. 안쪽에서 밟으므로 여백은 벽에서 살짝 떼어 놓는 용도만 한다.
+                // 목록을 불러오는 동안 공룡이 **화면 가장자리**를 돈다(홈과 같은 자리).
                 RunningDino()
-                    .padding(20)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }

@@ -76,6 +76,14 @@ struct HomeView: View {
                                  onSave: { await vm.saveToClips(accessToken: auth.accessToken) })
             }
         }
+        // 메타를 읽는 동안 공룡이 **화면 가장자리**를 돈다.
+        //
+        // 카드 테두리에 묶어 뒀더니 좁아서 갇힌 것처럼 보였다. 화면 전체를 상자로 삼으면
+        // 헤더 바로 아래를 밟고 양옆 가장자리를 타고 다닌다. 오버레이라 자리를 차지하지
+        // 않아, 스크롤·입력·광고 배너 어느 것도 밀리지 않는다.
+        //
+        // 세이프 에어리어는 그대로 존중한다 — 노치·홈 인디케이터 밑으로 들어가면 잘린다.
+        .overlay { if vm.loading { RunningDino() } }
     }
 
     // MARK: - Sections
@@ -154,12 +162,6 @@ struct HomeView: View {
         .background(AppColor.surface)
         .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(AppColor.border, lineWidth: 0.5))
-        // 메타를 읽는 동안 공룡이 **카드 테두리 안쪽**을 돈다.
-        //
-        // URL 칸(높이 46pt)에 두면 32pt 공룡이 칸을 거의 채워 입력한 주소를 가린다. 카드는
-        // 넉넉해서 여백 위주로 지나간다. 오버레이라 자리를 차지하지 않아, 나타났다 사라져도
-        // 아래 내용이 밀리지 않는다.
-        .overlay { if vm.loading { RunningDino() } }
         .padding(.top, 8)
     }
 
