@@ -58,6 +58,10 @@ struct ConfirmLayer: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
+        // 높이 제안을 무시하고 **본래 높이**를 갖게 한다. 이게 없으면 시트가 초기 detent 만큼만
+        // 공간을 제안하고, 내용은 거기 맞춰 눌려서 측정값도 그 값이 나온다 — 초기값에 갇혀
+        // 영영 커지지 않는다. 폭은 그대로 둬야 글줄이 정상적으로 접힌다.
+        .fixedSize(horizontal: false, vertical: true)
         .background(heightReader)
         .presentationDetents([.height(contentHeight)])
     }
