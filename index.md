@@ -37,7 +37,8 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Clips/MigrateLocalClips.swift` | 로그인 시 로컬→DB 마이그레이션(§5) |
 | `Views/RootView.swift` | 루트 게이트(온보딩 분기 + 로그인 마이그레이션 훅) |
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
-| `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip). 원본 대표 이미지 있으면 프록시 경유 배경/썸네일, 없으면 그라디언트 |
+| `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
+| `Views/ClipThumbnail.swift` | 공용 썸네일(그라디언트 + **프록시 경유** 원본 이미지). 홈 카드·목록 행이 함께 쓴다 — 전에 따로 그리다 목록만 프록시가 빠졌었다 |
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
 | `Views/ConfirmLayer.swift` | 공용 확인 레이어(제목·본문·확인/취소) + `emphasized()` 강조 텍스트. 웹 `ModalShell` 대응 — 확인 계열은 액션 시트가 아니라 레이어로 띄운다 |
 | `Views/SpinnerLabel.swift` | 공용 인라인 로딩 스피너 라벨 |

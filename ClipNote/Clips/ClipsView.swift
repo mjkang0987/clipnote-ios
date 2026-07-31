@@ -360,7 +360,7 @@ private struct ClipRow: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 if selectMode { checkbox }
-                thumbnail
+                ClipThumbnail(imageURL: clip.image, gradient: gradient)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 VStack(alignment: .leading, spacing: 2) {
@@ -446,24 +446,4 @@ private struct ClipRow: View {
         }
     }
 
-    /// 썸네일 — 그라디언트 위에 원본 대표 이미지.
-    ///
-    /// **이미지 프록시(`/api/image?url=`)를 거친다.** 원본 URL 을 직접 불러오면 hotlink 차단·
-    /// referer 요구(네이버 CDN)·혼합 콘텐츠에 걸려 조용히 실패하고, 스크롤할 때마다 실패 요청이
-    /// 반복된다. 서버가 referer 를 붙여 대신 받아 준다(#76 에서 도입한 정책).
-    ///
-    /// 홈 미리보기(`ClipCardView`)는 처음부터 프록시를 탔는데 이 목록만 빠져 있었다 —
-    /// 같은 그림을 두 곳에 따로 적어 둔 탓이다.
-    @ViewBuilder
-    private var thumbnail: some View {
-        ZStack {
-            LinearGradient(colors: [gradient.from, gradient.to],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            if let url = proxiedImageURL(clip.image) {
-                AsyncImage(url: url) { phase in
-                    if let img = phase.image { img.resizable().scaledToFill() } else { Color.clear }
-                }
-            }
-        }
-    }
 }

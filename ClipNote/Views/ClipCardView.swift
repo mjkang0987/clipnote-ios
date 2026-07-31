@@ -26,7 +26,7 @@ struct ClipCardView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            thumbnail
+            ClipThumbnail(imageURL: imageURL, gradient: gradient)
                 .frame(width: 56, height: 56)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
@@ -59,22 +59,6 @@ struct ClipCardView: View {
         )
     }
 
-    @ViewBuilder
-    private var thumbnail: some View {
-        ZStack {
-            LinearGradient(colors: [gradient.from, gradient.to],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            if let url = proxiedImageURL(imageURL) {
-                AsyncImage(url: url) { phase in
-                    if let img = phase.image {
-                        img.resizable().scaledToFill()
-                    } else {
-                        Color.clear
-                    }
-                }
-            }
-        }
-    }
 }
 
 #Preview {

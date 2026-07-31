@@ -9,6 +9,13 @@ enum TagMode { case add, replace }
 final class ClipsStore {
     /// nil = 로딩 중.
     private(set) var clips: [UClip]?
+
+    /// 목록에 있는 모든 태그(순서 보존·중복 제거).
+    ///
+    /// **목록이 바뀔 때 한 번만 계산한다.** 전에는 계산 프로퍼티라 접근할 때마다 전체를 훑었는데,
+    /// 필터 칩과 `filtered` 가 각각 읽어서 렌더 한 번에 클립 수만큼을 두 번씩 순회했다.
+    private(set) var allTags: [String] = []
+
     var activeTag: String?
 
     private let api: APIClient
@@ -29,10 +36,16 @@ final class ClipsStore {
         ctx = (loggedIn, accessToken)
         if loggedIn {
             let (_, db) = await api.getClips(accessToken: accessToken)
-            clips = db.map(UClip.init)
+            apply(db.map(UClip.init))
         } else {
-            clips = localStore.all().map(UClip.init)
+            apply(localStore.all().map(UClip.init))
         }
+    }
+
+    /// 목록과 그로부터 나오는 값을 함께 갱신한다. 목록은 여기서만 바뀐다.
+    private func apply(_ next: [UClip]) {
+        clips = next
+        allTags = orderedUnique(next.flatMap(\.tags))
     }
 
     func reload() async {
@@ -40,10 +53,6 @@ final class ClipsStore {
     }
 
     // MARK: - Derived
-
-    var allTags: [String] {
-        orderedUnique((clips ?? []).flatMap(\.tags))
-    }
 
     var filtered: [UClip] {
         guard let clips else { return [] }
@@ -75,12 +84,44 @@ final class ClipsStore {
         await reload()
     }
 
+    /// 다중선택 일괄 삭제.
+    ///
+    /// 서버 왕복을 **동시에** 보낸다. 전에는 순차 `await` 라 10개를 지우면 왕복 10번을 줄줄이
+    /// 기다렸다 — 모바일 네트워크에서 체감이 크다. 대상 조회도 매번 배열을 훑는 대신 사전을 쓴다.
     func bulkDelete(ids: [String]) async {
-        guard let clips else { return }
-        for id in ids {
-            if let c = clips.first(where: { $0.id == id }) { await removeOne(c) }
-        }
+        let targets = lookup(ids)
+        guard !targets.isEmpty else { return }
+        await forEachConcurrently(targets) { await self.removeOne($0) }
         await reload()
+    }
+
+    /// id 목록을 클립으로 바꾼다. `ids` 하나마다 배열을 훑으면 선택이 늘수록 제곱으로 느려진다.
+    private func lookup(_ ids: [String]) -> [UClip] {
+        guard let clips else { return [] }
+        let byID = Dictionary(clips.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return ids.compactMap { byID[$0] }
+    }
+
+    /// 동시에 띄울 요청 수 상한. 무제한으로 풀면 선택이 많을 때(로컬 캡 300개) 서버를 때린다.
+    private static let maxInFlight = 6
+
+    /// 각 클립에 대해 `work` 를 **동시에, 그러나 상한을 두고** 실행한다.
+    /// 하나 끝날 때마다 다음 하나를 띄운다.
+    private func forEachConcurrently(
+        _ clips: [UClip],
+        _ work: @escaping @Sendable (UClip) async -> Void
+    ) async {
+        await withTaskGroup(of: Void.self) { group in
+            var pending = clips.makeIterator()
+            for _ in 0..<min(Self.maxInFlight, clips.count) {
+                guard let clip = pending.next() else { break }
+                group.addTask { await work(clip) }
+            }
+            while await group.next() != nil {
+                guard let clip = pending.next() else { continue }
+                group.addTask { await work(clip) }
+            }
+        }
     }
 
     func saveEdit(_ c: UClip, title: String, tags: [String]) async {
@@ -101,22 +142,27 @@ final class ClipsStore {
     }
 
     /// 다중선택 태그 일괄. add=기존∪신규(dedup·최대6), replace=신규(최대6).
+    /// 삭제와 같은 이유로 서버 왕복을 동시에 보낸다.
     func applyTags(ids: [String], tags: [String], mode: TagMode) async {
-        guard let clips else { return }
-        for id in ids {
-            guard let c = clips.first(where: { $0.id == id }) else { continue }
+        let targets = lookup(ids)
+        guard !targets.isEmpty else { return }
+        await forEachConcurrently(targets) { clip in
             let next: [String]
             switch mode {
-            case .add: next = Array(orderedUnique(c.tags + tags).prefix(6))
+            case .add: next = Array(orderedUnique(clip.tags + tags).prefix(6))
             case .replace: next = Array(tags.prefix(6))
             }
-            if c.local {
-                localStore.update(url: c.url, title: nil, tags: next)
-            } else if let slug = c.slug {
-                _ = await api.updateClip(slug: slug, title: nil, tags: next, shared: nil, accessToken: ctx.token)
-            }
+            await self.applyTags(to: clip, tags: next)
         }
         await reload()
+    }
+
+    private func applyTags(to clip: UClip, tags: [String]) async {
+        if clip.local {
+            localStore.update(url: clip.url, title: nil, tags: tags)
+        } else if let slug = clip.slug {
+            _ = await api.updateClip(slug: slug, title: nil, tags: tags, shared: nil, accessToken: ctx.token)
+        }
     }
 }
 
