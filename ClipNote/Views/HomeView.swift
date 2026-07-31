@@ -164,21 +164,25 @@ struct HomeView: View {
             // 버튼 3개 → 링크·복사를 한 줄에 묶고, 저장은 자기 줄을 전부 쓴다(웹과 동일 배치).
             // 1차: 링크가 없으면 `createLink`, 있으면 `copyLink`(짧은 주소).
             // `copyOriginal`(제목+원본 URL)은 링크 유무와 무관하게 항상 노출.
+            //
+            // **채운 버튼은 저장 하나뿐이다**(웹 `b824002`). 링크·복사·공유는 테두리+연보라.
+            // 게스트 화면도 같은 규칙이라 거기서는 `이 기기에 저장` 이 채운 버튼이다.
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
                     if shareURL != nil {
-                        primaryButton(i18n.t(copiedLink ? "homeActions.copied" : "homeActions.copyLink"),
-                                      disabled: false) { copyShareLink() }
+                        secondaryButton(i18n.t(copiedLink ? "homeActions.copied" : "homeActions.copyLink"),
+                                        disabled: false) { copyShareLink() }
                     } else {
-                        primaryButton(i18n.t(creating ? "homeActions.creating" : "homeActions.createLink"),
-                                      disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
+                        secondaryButton(i18n.t(creating ? "homeActions.creating" : "homeActions.createLink"),
+                                        disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
                             .tourAnchor(.share)
                     }
                     secondaryButton(i18n.t(copiedShare ? "homeActions.copied" : "homeActions.copyOriginal"),
                                     disabled: !vm.hasInput) { copyGuestShare() }
+                        .tourAnchor(.copyOriginal)
                 }
-                secondaryButton(i18n.t(directSaved ? "homeActions.saved" : (savingDirect ? "homeActions.saving" : "homeActions.saveToClips")),
-                                disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
+                primaryButton(i18n.t(directSaved ? "homeActions.saved" : (savingDirect ? "homeActions.saving" : "homeActions.saveToClips")),
+                              disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
                     .tourAnchor(.save)
             }
             .padding(.top, 4)
@@ -211,6 +215,7 @@ struct HomeView: View {
                 }
                 .disabled(!vm.hasInput)
                 .opacity(vm.hasInput ? 1 : 0.5)
+                .tourAnchor(.copyOriginal)
             }
             guestHint
         }

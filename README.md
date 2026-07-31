@@ -39,7 +39,7 @@ Swift 6 · SwiftUI · iOS 17+ · SwiftData · Supabase · GoogleMobileAds · Xco
 
 iOS 기본 동작은 시스템 설정에서만 앱 언어가 바뀌는 구조(`Bundle.main` 이 실행 시점 언어로 고정)라,
 `LocalizationStore` 가 선택 언어의 `.lproj` 번들을 직접 열어 문자열을 읽는다. 문구는
-`ClipNote/Localization/Localizable.xcstrings` 에 있고, 번역이 없는 키는 한국어로 폴백한다.
+`Shared/Localization/Localizable.xcstrings` 에 있고, 번역이 없는 키는 한국어로 폴백한다.
 키 이름은 웹 저장소의 `lib/i18n/messages/ko.ts` 와 맞춘다.
 
 자세한 내용은 `plan.md` "앱 다국어" 절.

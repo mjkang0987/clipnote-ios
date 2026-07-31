@@ -6,7 +6,7 @@ import SwiftUI
 
 /// 강조 대상 영역 식별자. 실제 UI 요소에 `.tourAnchor(_:)`로 부착한다.
 enum TourAnchor: String, CaseIterable {
-    case url, options, save, share
+    case url, options, save, share, copyOriginal
 }
 
 /// 각 영역의 프레임을 named coordinate space "tour"에서 수집.

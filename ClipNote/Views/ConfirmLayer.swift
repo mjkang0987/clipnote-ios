@@ -12,12 +12,22 @@ import SwiftUI
 /// **높이를 재서 detent 로 쓴다.** 고정 높이(`.height(320)`)로 두면 번역문이 한국어보다 긴
 /// 언어에서 잘린다(영어가 특히 길다). 내용 높이를 재어 그만큼만 띄운다.
 struct ConfirmLayer: View {
+    /// 두 버튼 중 어느 쪽을 시각적으로 무겁게 둘지. 웹이 레이어마다 다르게 준 강조를 그대로 옮긴다.
+    enum Emphasis {
+        /// 확인이 기본 동작 — 확인을 브랜드색으로 채운다(옮기기).
+        case normal
+        /// 되돌릴 수 없다 — 확인을 위험색으로 채운다(클립 삭제).
+        case destructive
+        /// 되돌릴 수 없고 **서버 사본도 없다** — 취소를 채워 기본 동작으로 만들고,
+        /// 확인은 테두리만 남긴다. 손이 미끄러져 눌리는 쪽이 안전해야 한다(로컬 클립 삭제).
+        case cautious
+    }
+
     let title: String
     let message: Text
     /// 확인 버튼 라벨.
     let confirmLabel: String
-    /// 되돌릴 수 없는 동작인가. 확인 버튼을 위험 색으로 그린다.
-    var destructive: Bool = false
+    var emphasis: Emphasis = .normal
     /// 진행 중이면 버튼을 잠그고 스피너를 보여 준다.
     var busy: Bool = false
     var busyLabel: String?
@@ -41,16 +51,8 @@ struct ConfirmLayer: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 8) {
-                Button(cancelLabel, action: onCancel)
-                    .buttonStyle(ModalGhostButton())
-                    .disabled(busy)
-                Button(action: onConfirm) {
-                    SpinnerLabel(title: busy ? (busyLabel ?? confirmLabel) : confirmLabel,
-                                 loading: busy,
-                                 tint: AppColor.white)
-                }
-                .buttonStyle(ModalConfirmButton(destructive: destructive))
-                .disabled(busy)
+                cancelButton
+                confirmButton
             }
             .padding(.top, 12)
         }
@@ -58,6 +60,37 @@ struct ConfirmLayer: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(heightReader)
         .presentationDetents([.height(contentHeight)])
+    }
+
+    @ViewBuilder
+    private var cancelButton: some View {
+        let button = Button(cancelLabel, action: onCancel).disabled(busy)
+        // 가장 위험한 경우에만 취소를 채운다 — 나머지는 확인 쪽이 기본 동작이다.
+        if emphasis == .cautious {
+            button.buttonStyle(ModalFilledButton(color: AppColor.brand))
+        } else {
+            button.buttonStyle(ModalGhostButton())
+        }
+    }
+
+    @ViewBuilder
+    private var confirmButton: some View {
+        let label = SpinnerLabel(
+            title: busy ? (busyLabel ?? confirmLabel) : confirmLabel,
+            loading: busy,
+            tint: emphasis == .cautious ? AppColor.danger : AppColor.white
+        )
+        switch emphasis {
+        case .normal:
+            Button(action: onConfirm) { label }
+                .buttonStyle(ModalFilledButton(color: AppColor.brand)).disabled(busy)
+        case .destructive:
+            Button(action: onConfirm) { label }
+                .buttonStyle(ModalFilledButton(color: AppColor.danger)).disabled(busy)
+        case .cautious:
+            Button(action: onConfirm) { label }
+                .buttonStyle(ModalOutlinedDangerButton()).disabled(busy)
+        }
     }
 
     /// 내용 높이를 재서 detent 에 넘긴다. 시트 폭은 detent 와 무관하게 고정이라
@@ -71,18 +104,30 @@ struct ConfirmLayer: View {
     }
 }
 
-/// 확인 버튼 — 보통은 브랜드색, 되돌릴 수 없는 동작이면 위험색.
-struct ModalConfirmButton: ButtonStyle {
-    let destructive: Bool
+/// 채운 버튼 — 색만 갈아 끼운다(브랜드 / 위험).
+struct ModalFilledButton: ButtonStyle {
+    let color: Color
 
     func makeBody(configuration: Configuration) -> some View {
-        let base = destructive ? AppColor.danger : AppColor.brand
-        return configuration.label
+        configuration.label
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(AppColor.white)
             .frame(maxWidth: .infinity).frame(height: 46)
-            .background(configuration.isPressed ? base.opacity(0.85) : base)
+            .background(configuration.isPressed ? color.opacity(0.85) : color)
             .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+    }
+}
+
+/// 테두리만 있는 위험 버튼 — 취소가 기본 동작인 레이어에서 확인 쪽에 쓴다.
+struct ModalOutlinedDangerButton: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(AppColor.danger)
+            .frame(maxWidth: .infinity).frame(height: 46)
+            .background(configuration.isPressed ? AppColor.danger.opacity(0.1) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.danger, lineWidth: 1))
     }
 }
 

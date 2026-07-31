@@ -247,7 +247,7 @@ struct ClipsView: View {
             title: i18n.t("clips.deleteTitle"),
             message: emphasized(i18n.t("clips.deleteBody", args: clip.title), [clip.title]),
             confirmLabel: i18n.t("common.delete"),
-            destructive: true,
+            emphasis: .destructive,
             cancelLabel: i18n.t("common.cancel"),
             onConfirm: {
                 pendingDelete = nil
@@ -263,7 +263,7 @@ struct ClipsView: View {
             title: i18n.t("clips.bulkDeleteTitle", args: count),
             message: Text(i18n.t("clips.irreversible")),
             confirmLabel: i18n.t("common.delete"),
-            destructive: true,
+            emphasis: .destructive,
             cancelLabel: i18n.t("common.cancel"),
             onConfirm: {
                 showBulkDeleteConfirm = false

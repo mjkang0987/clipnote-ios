@@ -32,6 +32,13 @@ struct OnboardingView: View {
                      title: i18n.t("onboarding.shareTitle"),
                      desc: i18n.t("onboarding.shareDesc"),
                      audience: i18n.t("onboarding.audienceLogin"), loginOnly: true),
+            // 홈 버튼 셋 중 `원본 복사` 만 설명이 없었다. 로그인 없이도 쓸 수 있는 기능이라
+            // 게스트에게 특히 알려줄 값어치가 있다.
+            TourStep(anchor: .copyOriginal,
+                     title: i18n.t("onboarding.copyOriginalTitle"),
+                     desc: i18n.t("onboarding.copyOriginalDesc",
+                                  args: i18n.t("homeActions.copyOriginal")),
+                     audience: i18n.t("onboarding.audienceAnyone"), loginOnly: false),
             TourStep(anchor: nil,
                      title: i18n.t("onboarding.clipsTitle"),
                      desc: i18n.t("onboarding.clipsDesc", args: i18n.t("common.myClips")),

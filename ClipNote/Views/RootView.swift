@@ -143,7 +143,9 @@ private struct LoginMigrationModifier: ViewModifier {
             message: emphasized(i18n.t("clips.discardBody", args: count, irreversible),
                                 [count, irreversible]),
             confirmLabel: i18n.t("common.delete"),
-            destructive: true,
+            // 로컬 클립은 서버 사본이 없다 — 웹과 같이 취소를 기본 동작으로 채우고
+            // 삭제는 테두리만 남긴다. 미끄러져 눌리는 쪽이 안전해야 한다.
+            emphasis: .cautious,
             cancelLabel: i18n.t("common.cancel"),
             onConfirm: { discard(); showDiscard = false },
             onCancel: { showDiscard = false }
