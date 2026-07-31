@@ -19,7 +19,10 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 ## 구조 (`ClipNote/`)
 | 경로 | 역할 |
 |------|------|
-| `App/ClipNoteApp.swift` | 앱 진입점(@main), `.onOpenURL` 딥링크, AuthStore 주입, `modelContainer(LocalClip)` |
+| `App/ClipNoteApp.swift` | 앱 진입점(@main), `.onOpenURL` 딥링크, AuthStore·LocalizationStore 주입, `modelContainer(LocalClip)` |
+| `Localization/AppLanguage.swift` | 지원 언어 enum(ko·en·ja·zh-Hans) + 시스템 선호 언어 매칭 |
+| `Localization/LocalizationStore.swift` | 표시 언어 상태·문자열 조회(@MainActor @Observable). 언어별 `.lproj` 직접 조회 → **재시작 없이 전환**, 번역 없으면 한국어 폴백 |
+| `Localization/Localizable.xcstrings` | 문자열 카탈로그(원본 `ko`). 키 이름은 웹 `lib/i18n/messages/ko.ts` 와 맞춘다 |
 | `Auth/AuthStore.swift` | 인증(@MainActor): 세션·토큰·OAuth·네이버 |
 | `Auth/AuthDeepLink.swift` | `clipnote://auth/...` 파싱 |
 | `Models/Models.swift` | 도메인 모델 |
@@ -67,7 +70,12 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 - **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `fastlane ios beta`로 빌드 **3까지 업로드**. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 섹션 참고**.
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
-  - 보류: 다국어(KO/EN/JA/ZH, 에픽 필요)·내 클립 무한스크롤(임계 도달 시 cursor 방식).
+  - 보류: 내 클립 무한스크롤(임계 도달 시 cursor 방식). 다국어는 보류 해제 — 아래 항목 참고.
+- **다국어 진행 중(2026-07-30~)**: 한국어(원본)·영어·일본어·중국어 간체. `Localization/` 3파일 +
+  `project.yml` `CFBundleLocalizations` + 설정의 표시 언어 선택까지 완료(`e5091c8`·`218df1f`).
+  **나머지 화면 문자열은 아직 하드코딩**(한글 리터럴 264개/20파일) — 화면 단위로 진행 중.
+  키 이름·문구는 웹 `clipnote` 사전이 소스오브트루스이고, 개인정보 처리방침 본문은 번역하지 않는다.
+  범위·결정·순서는 `plan.md` "앱 다국어" 절 참고.
 - **로그인 첫 진입 깜빡임 수정(2026-07-23)**: 로그인 사용자가 처음 진입 시 홈 액션이 게스트→로그인 UI로 튀던 문제. `AuthStore`가 지난 실행 로그인 여부를 `UserDefaults`에 저장하고 세션 확정 전(loading)엔 `displayLoggedIn` 힌트로 렌더, `HomeView.actions`가 이를 사용. CI(`pr-review.yml`)에 `claude/**` push 트리거 추가. (PR #107)
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.

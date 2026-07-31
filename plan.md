@@ -38,10 +38,95 @@
      렌더하지 않아, **실패가 조용하다.** 진단은 Console.app `clipnote.ads` 로그로만 가능.
 3. ⬜ 후속 검토: 신규 광고 단위 활성 대기, AdMob 계정 지급 정보, UMP/ATT 동의(미구현 — 개인화 광고 불가).
 
-### ⬜ 내부 언어 변경 (한국어·영어·일본어·중국어)
+### 🟡 앱 다국어 (한국어·영어·일본어·중국어 간체) — 웹 완료분 이식
 
-현재 로컬라이제이션 파일이 **하나도 없고**(한글 리터럴 226개) 문자열이 전부 하드코딩이다. 신규 구축.
-⚠️ `PrivacyView`(리터럴 35개)는 법적 문서라 기계 번역 게시가 위험 — 범위 확정 필요.
+웹(`clipnote`)이 2026-07-31 다국어를 완료해 운영 반영했다(웹 `plan.md` 14장). 앱은 기반과
+설정 화면까지만 되어 있어 **나머지 화면을 웹과 같은 키·같은 문구로** 채운다.
+
+#### 현재 상태
+
+| 항목 | 상태 |
+|---|---|
+| `AppLanguage`(ko·en·ja·zh-Hans) | ✅ `e5091c8` |
+| `LocalizationStore`(재시작 없는 전환·한국어 폴백) | ✅ `e5091c8` |
+| `project.yml` `CFBundleLocalizations` | ✅ `e5091c8` |
+| 설정 화면 + 표시 언어 선택 UI | ✅ `e5091c8`·`218df1f` |
+| `LocalizationStoreTests`(번들 해석·언어별 값 차이) | ✅ `e5091c8` |
+| 나머지 화면 문자열 | ⬜ **한글 리터럴 264개 / 20개 파일** |
+
+#### 웹에서 확정돼 앱에도 그대로 적용되는 결정
+
+웹 작업에서 정한 것 중 **플랫폼과 무관한 규칙**은 다시 논의하지 않고 이식한다.
+
+- **한국어가 원본, 나머지는 부분 사전.** 번역이 없는 키는 한국어로 폴백한다.
+  앱은 `LocalizationStore.t(_:)` 가 "번역 없으면 키 자체 반환" 규약을 감지해 한국어 번들로 되짚는다.
+- **개인정보 처리방침 본문은 번역하지 않는다.** 법적 문서라 기계 번역 게시는 효력 문제가 생긴다.
+  제목·버튼만 번역하고 비한국어에서는 `language.koreanOnlyNotice`("이 문서는 한국어로만 제공됩니다")를
+  붙인다. 웹 `/{en,ja,zh}/privacy` 와 같은 처리다.
+- **사용자가 입력한 클립 제목·태그는 원문 유지.** 번역 대상이 아니다.
+- **공급자 이름은 라틴 표기 고정**(`Google`·`Kakao`·`Naver`). 언어마다 `카카오`/`カカオ`/`卡考` 로
+  갈리면 사용자가 자기 계정을 못 알아본다. 웹 `login.subtitleWithKakao` 참고.
+- **날짜·수량 표기는 사전에 넣지 않는다.** 웹은 `Intl.RelativeTimeFormat`·`DateTimeFormat` 이
+  4개 언어를 만들어 준다(`2025년 3월` / `March 2025` / `2025年3月` 는 사전으로 표현 불가).
+  앱은 `Date.FormatStyle` + 선택 언어의 `Locale` 로 같은 결과를 낸다.
+- **문장 중간의 강조·링크는 자리표시자로 둔다.** 앞/강조/뒤로 쪼개면 어순이 다른 언어에서 깨진다
+  (ko `기존 태그에 {강조}` vs en `{강조} to existing tags` — 강조 낱말 위치가 반대).
+  웹은 `{token}`, 앱은 `String(format:)` 의 `%@` 를 쓴다.
+- **FAQ 는 단일 출처.** 웹은 화면 `<dl>` 과 FAQPage JSON-LD 가 같은 배열을 쓴다. 앱은 JSON-LD 가
+  없으니 `FaqView` 한 곳이면 되지만, **문항·문구는 웹과 같은 것을 쓴다**(웹이 이번에 개선한 판).
+
+#### 앱 특화 결정 (웹에 없는 것)
+
+- **키 이름의 소스오브트루스는 웹 사전**(`lib/i18n/messages/ko.ts`, 189키). 앱 카탈로그가 웹에
+  없는 이름을 쓰고 있으면 앱을 고친다 — 웹은 이미 운영 반영됐고 사전이 10배 크다.
+  - 현재 어긋난 것: `settings.account.loggedIn`↔`settings.signedInWith`,
+    `settings.account.provider`↔`settings.accountLabel`,
+    `settings.account.providerFallback`↔`settings.providerUnknown`,
+    `settings.contact.action`↔`settings.contactAction`, `settings.contact.note`↔`settings.contactNote`,
+    `settings.row.view`↔`settings.viewLink`, `settings.danger.*`↔`settings.dangerTitle`·`dangerBody`·`withdraw`,
+    `settings.signOut`↔`common.logout`, `settings.privacy`↔`common.privacy`
+  - 앱에만 있는 개념(`settings.guard.*` — 비로그인 가드 화면, `settings.heading` — 내비 타이틀과
+    별개인 본문 제목)은 앱 전용 키로 남긴다. 웹에는 해당 UI 가 없다.
+- **웹에 없는 화면**: 온보딩 스포트라이트 투어(`onboarding.*`), 공유 확장(`share.*`).
+  이 두 네임스페이스는 앱이 원본이고 웹으로 갈 일이 없다.
+- **`{token}` → `%@` 변환 시 순서 주의.** 한 문장에 자리표시자가 둘 이상이면 언어별로 순서가
+  바뀔 수 있다. 그때는 `%1$@`·`%2$@` 위치 지정자를 쓴다(웹은 이름으로 참조해 이 문제가 없다).
+- **공유 확장(`ClipNoteShare`)은 별도 번들이다.** `project.yml` 의 소스가 `ClipNoteShare` + `Shared`
+  뿐이라 `ClipNote/Localization/` 이 들어 있지 않다. 확장까지 번역하려면 `Localization/` 을
+  `Shared/` 로 옮기고 확장 타깃에도 `CFBundleLocalizations` 를 선언해야 한다.
+
+#### 범위
+
+- **포함**: 홈·내 클립·로그인·소개·FAQ·온보딩·회원 탈퇴·공통 메뉴·모달 전체의 UI 문자열,
+  사용자에게 보이는 오류 메시지, 내비게이션 타이틀.
+- **제외**: 개인정보 처리방침 **본문**(제목·버튼은 포함), 로그·주석·`os_log` 문자열,
+  `AppLanguage.label`(각 언어를 그 언어로 표기하는 게 의도).
+
+#### 작업 순서 (각 단위마다 작업>리뷰>개선>검증)
+
+1. ⬜ 문자열 카탈로그 키를 웹 사전에 정렬 + `common.*` 도입
+2. ⬜ 공통 내비(`HeaderMenu`·`RootView`)
+3. ⬜ 홈(`HomeView`·`HomeViewModel`) — `home.*`·`homeActions.*`
+4. ⬜ 내 클립(`ClipsView`·`ClipCardView`·편집/공유결과/태그 모달) — `clips.*` + 날짜 그룹 로케일화
+5. ⬜ 로그인(`LoginView`·`AuthStore` 오류) — `login.*`
+6. ⬜ 소개·FAQ(`AboutView`·`FaqView`) — `about.*`·`faq.*`
+7. ⬜ 온보딩·투어(`OnboardingView`·`SpotlightTour`) — `onboarding.*`
+8. ⬜ 회원 탈퇴 + 개인정보(제목·버튼) — `settings.withdraw*`·`privacy.*`
+9. ⬜ 공유 확장(`ClipNoteShare`) — 번들 구조 변경 동반
+10. ⬜ 카탈로그 무결성 검사 스크립트 + 테스트 보강
+
+#### 검증
+
+- 로컬 빌드 불가(리눅스 컨테이너, Xcode 없음) → `develop` push 로 `pr-review.yml`
+  (`xcodebuild build` + `xcodebuild test`) 그린까지를 검증으로 본다.
+- `scripts/check-localizations.py`(신설 예정) — 카탈로그 JSON 을 직접 검사한다. Xcode 없이 도는
+  유일한 자동 검증이라 CI 전에 여기서 먼저 걸러낸다.
+  - 모든 키가 4개 언어를 다 갖는가
+  - 언어별 포맷 지시자(`%@`·`%1$@`) 개수·순서가 한국어와 같은가 — 다르면 런타임 크래시
+  - 코드에서 참조하지 않는 키가 있는가 / 코드가 참조하는 키가 카탈로그에 있는가
+  - 사전화 대상 파일에 한글 리터럴이 남았는가
+- **사람만 가능**: 시뮬레이터/실기기에서 4개 언어 전환 시 재시작 없이 바뀌는지, 레이아웃이
+  긴 번역(독일어 같은 극단은 없지만 영어가 한국어보다 길다)에 깨지지 않는지.
 
 ---
 
@@ -126,7 +211,8 @@ CI 게이트를 `xcodebuild build`(컴파일만) → `xcodebuild test`로 확장
 
 ### 남은 일 / 보류
 - **투어 시각 검증**(실기기/시뮬) — 사용자 직접.
-- **보류**: 다국어(KO/EN/JA/ZH) — 전 문자열 String Catalog 추출+런타임 로케일+언어 선택 UI, 별도 에픽. 내 클립 무한스크롤 — 임계 도달 시 cursor 기반(서버 `?before=&limit=` 필요), 지금은 미착수.
+- **다국어(KO/EN/JA/ZH)**: 보류 해제 — 위 "앱 다국어" 절에서 진행 중.
+- **보류**: 내 클립 무한스크롤 — 임계 도달 시 cursor 기반(서버 `?before=&limit=` 필요), 지금은 미착수.
 
 ---
 
