@@ -131,19 +131,6 @@ struct HomeView: View {
                 }
             }
             .tourAnchor(.url)
-            // 메타를 읽는 동안 공룡이 **URL 칸 테두리를** 돌아다닌다.
-            //
-            // 로딩 전용 상자를 따로 띄우면 나타났다 사라질 때마다 아래 내용이 통째로 밀린다 —
-            // 미리보기를 보려던 손이 헛짚는다. 오버레이는 자리를 차지하지 않아 흔들림이 없고,
-            // 이미 그려져 있는 입력칸 테두리가 그대로 길이 된다.
-            //
-            // `alignment: .bottom` + 칸 높이 = 오버레이가 **입력칸과 정확히 같은 사각형**이 된다
-            // (이 컨테이너는 라벨 줄까지 포함하고, 입력칸은 그 아래쪽 전부다).
-            .overlay(alignment: .bottom) {
-                if vm.loading {
-                    RunningDino().frame(height: Self.fieldHeight)
-                }
-            }
             VStack(alignment: .leading, spacing: 12) {
                 field(label: i18n.t("home.form.titleLabel"), muted: i18n.t("home.form.titleNote")) {
                     TextField(i18n.t("home.form.titlePlaceholder"), text: $vm.title)
@@ -164,18 +151,15 @@ struct HomeView: View {
             actions
         }
         .padding(14)
-        // 둥근 면과 테두리를 **배경 안에서** 그린다.
+        .background(AppColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(AppColor.border, lineWidth: 0.5))
+        // 메타를 읽는 동안 공룡이 **카드 테두리 안쪽**을 돈다.
         //
-        // 전에는 `.background` + `.clipShape` 였는데, 그 clip 은 배경뿐 아니라 카드 안 내용을
-        // 전부 잘라낸다. 공룡은 URL 칸 바깥 17pt 에 서는 반면 카드 안쪽 여백은 14pt 뿐이라,
-        // 좌우 면으로 넘어가는 순간 잘려 나갔다 — 위·아래만 보여서 도는 게 아니라 지나가는
-        // 것처럼 보였다. 배경 도형이 직접 둥글면 결과는 같으면서 내용은 잘리지 않는다.
-        .background {
-            RoundedRectangle(cornerRadius: Radius.md)
-                .fill(AppColor.surface)
-                .overlay(RoundedRectangle(cornerRadius: Radius.md)
-                    .stroke(AppColor.border, lineWidth: 0.5))
-        }
+        // URL 칸(높이 46pt)에 두면 32pt 공룡이 칸을 거의 채워 입력한 주소를 가린다. 카드는
+        // 넉넉해서 여백 위주로 지나간다. 오버레이라 자리를 차지하지 않아, 나타났다 사라져도
+        // 아래 내용이 밀리지 않는다.
+        .overlay { if vm.loading { RunningDino() } }
         .padding(.top, 8)
     }
 
@@ -305,7 +289,7 @@ struct HomeView: View {
 
     // MARK: - Building blocks
 
-    /// 입력칸 높이. 공룡을 윗변에 세우려면 호출부도 알아야 해서 상수로 뺐다.
+    /// 입력칸 높이.
     private static let fieldHeight: CGFloat = 46
 
     @ViewBuilder
