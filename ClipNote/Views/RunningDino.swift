@@ -46,25 +46,28 @@ struct RunningDino: View {
     @State private var skipped = Int.random(in: 0..<4)
 
     var body: some View {
-        // `GeometryReader` 가 가장 바깥이다. 안쪽에 두면 크기를 재 줄 사람이 `TimelineView`
-        // 인데, 그건 자리를 차지하겠다고 주장하지 않는 컨테이너라 오버레이 안에서 크기가
-        // 0 으로 접힐 수 있다 — 공룡이 아예 안 그려지던 게 이 모양이었다.
-        GeometryReader { proxy in
-            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
-                let spot = spot(in: proxy.size, elapsed: timeline.date.timeIntervalSince(start))
-                Text(verbatim: "🦖")
-                    .font(.system(size: Self.size))
-                    // 이 이모지는 **왼쪽을 보고** 그려져 있다. 진행 방향이 오른쪽이라
-                    // 그대로 두면 뒷걸음질로 읽힌다.
-                    .scaleEffect(x: -1, y: 1)
-                    // 회전 **전에** 얹어야 뜀박질이 몸을 따라 돈다 — 옆면에서는 옆으로 튄다.
-                    .offset(y: -spot.hop)
-                    .rotationEffect(.degrees(spot.angle))
-                    .position(spot.center)
-                    // 어디에 얹히든 잰 크기를 그대로 쓴다.
-                    .frame(width: proxy.size.width, height: proxy.size.height)
+        // **`Canvas` 로 그린다. `GeometryReader` 를 쓰지 않는다.**
+        //
+        // 둘 다 준 자리를 꽉 채우지만 성격이 다르다. `GeometryReader` 는 잰 크기를 자식에게
+        // 흘려보내는 측정 도구라, 그 자식이 다시 크기에 관여하면 레이아웃이 한 바퀴 돌 수
+        // 있다. 장식 하나 때문에 화면 레이아웃이 흔들릴 여지를 남길 이유가 없다.
+        // `Canvas` 는 제안받은 크기를 그대로 받아 그리기만 하는 잎이라 되먹임이 없다.
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
+            Canvas { context, size in
+                let spot = spot(in: size, elapsed: timeline.date.timeIntervalSince(start))
+                // 좌표계를 공룡 쪽으로 옮겨 놓고 그린다. 마지막에 적용한 변환이 그림에
+                // 가장 가깝다 — 뜀박질(몸 기준) → 좌우 반전 → 회전 → 자리 잡기 순서다.
+                context.translateBy(x: spot.center.x, y: spot.center.y)
+                context.rotate(by: .degrees(spot.angle))
+                // 이 이모지는 **왼쪽을 보고** 그려져 있다. 진행 방향이 오른쪽이라
+                // 그대로 두면 뒷걸음질로 읽힌다.
+                context.scaleBy(x: -1, y: 1)
+                context.translateBy(x: 0, y: -spot.hop)
+                context.draw(context.resolve(Text(verbatim: "🦖").font(.system(size: Self.size))),
+                             at: .zero, anchor: .center)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
         // 진행 상황은 옆의 문구가 알린다. 장식이 한 번 더 읽히면 방해만 된다.
         .accessibilityHidden(true)
