@@ -17,6 +17,14 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "6.0"
+    # Xcode 의 문자열 자동 추출을 끈다.
+    #
+    # SwiftUI `Text("리터럴")` 은 LocalizedStringKey 를 받기 때문에, 프로젝트에 문자열 카탈로그가
+    # 있으면 Xcode 가 빌드할 때마다 그 리터럴들을 카탈로그에 밀어 넣는다. 우리는 카탈로그를
+    # 손으로 관리하고(키는 `화면.이름` 꼴) 조회도 `LocalizationStore.t(_:)` 로 하므로 추출이
+    # 필요 없다. 켜 두면 빌드할 때마다 한글 리터럴이 키로 섞여 들어와
+    # `scripts/check-localizations.py` 가 "쓰는 곳이 없다"로 CI 를 떨어뜨린다.
+    SWIFT_EMIT_LOC_STRINGS: NO
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "5"
     DEVELOPMENT_TEAM: "928S75PVRK"

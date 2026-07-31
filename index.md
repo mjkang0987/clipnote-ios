@@ -96,6 +96,11 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 
 ## 설정 파일
 - `project.yml` — XcodeGen 프로젝트 정의(타깃·스킴·설정·버전)
+  - ⚠️ `ClipNote/Info.plist`·`ClipNoteShare/Info.plist` 는 **XcodeGen 이 여기서 생성**하는데 git 에도
+    추적된다. `info.properties` 를 고치면 `xcodegen generate` 후 생성된 plist 도 함께 커밋해야
+    한다 — 안 그러면 로컬에서 빌드할 때마다 "modified" 로 뜬다.
+  - `SWIFT_EMIT_LOC_STRINGS: NO` — Xcode 의 문자열 자동 추출을 끈다. 켜 두면 SwiftUI
+    `Text("리터럴")` 이 빌드마다 문자열 카탈로그에 밀려 들어와 카탈로그가 오염된다.
 - `Secrets.example.xcconfig` — 시크릿 템플릿 (실제 `Secrets.xcconfig`는 gitignored)
 - `.github/workflows/pr-review.yml` — CI(macOS): `xcodebuild test`(build+유닛 테스트), PR + `claude/**` 브랜치 push 트리거
 - `.github/workflows/deploy.yml` — TestFlight 배포(fastlane): **main push 자동**(md 제외·직렬화) + 수동(`workflow_dispatch`). 빌드번호=TestFlight 최신+1
