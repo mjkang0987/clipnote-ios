@@ -44,8 +44,11 @@ struct RunningDino: View {
     @State private var skipped = Int.random(in: 0..<4)
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
-            GeometryReader { proxy in
+        // `GeometryReader` 가 가장 바깥이다. 안쪽에 두면 크기를 재 줄 사람이 `TimelineView`
+        // 인데, 그건 자리를 차지하겠다고 주장하지 않는 컨테이너라 오버레이 안에서 크기가
+        // 0 으로 접힐 수 있다 — 공룡이 아예 안 그려지던 게 이 모양이었다.
+        GeometryReader { proxy in
+            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { timeline in
                 let spot = spot(in: proxy.size, elapsed: timeline.date.timeIntervalSince(start))
                 Text(verbatim: "🦖")
                     .font(.system(size: Self.size))
@@ -56,6 +59,8 @@ struct RunningDino: View {
                     .offset(y: -spot.hop)
                     .rotationEffect(.degrees(spot.angle))
                     .position(spot.center)
+                    // 어디에 얹히든 잰 크기를 그대로 쓴다.
+                    .frame(width: proxy.size.width, height: proxy.size.height)
             }
         }
         .allowsHitTesting(false)
