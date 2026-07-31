@@ -2,6 +2,271 @@
   "sourceLanguage": "ko",
   "version": "1.0",
   "strings": {
+    "about.body1": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote(클립노트)는 링크를 공유 카드로 바꿔 주는 무료 서비스예요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote is a free service that turns a link into a share card."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote はリンクを共有カードに変える無料サービスです。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote 是把链接变成分享卡片的免费服务。"
+          }
+        }
+      }
+    },
+    "about.body2": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "링크를 붙여넣으면 제목·설명·대표 이미지를 자동으로 읽어와, 카카오톡·SNS에서 한눈에 들어오는 카드와 짧은 주소를 만들어 드려요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a link and it reads the title, description, and cover image automatically, then builds a card that reads at a glance on messengers and social — plus a short URL."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクを貼り付けるとタイトル・説明・カバー画像を自動で読み取り、メッセンジャーやSNSで一目で分かるカードと短いURLを作ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴链接后会自动读取标题、说明和封面图，生成在聊天工具和社交平台上一眼就能看懂的卡片，以及一个短网址。"
+          }
+        }
+      }
+    },
+    "about.body3": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이버 카페 게시글, 인스타그램 릴처럼 미리보기가 잘 안 잡히는 링크도 됩니다."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It also handles links that usually don't preview well, like Naver Cafe posts and Instagram reels."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネイバーカフェの投稿やInstagramのリールのように、プレビューが出にくいリンクにも対応します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "像 Naver Cafe 帖子、Instagram Reels 这类不容易生成预览的链接也支持。"
+          }
+        }
+      }
+    },
+    "about.how1": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유할 링크를 붙여넣어요. 제목·설명·대표 이미지는 자동으로 채워져요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste the link you want to share. Title, description, and cover image fill in automatically."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有したいリンクを貼り付けます。タイトル・説明・カバー画像は自動で入ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴要分享的链接。标题、说明和封面图会自动填入。"
+          }
+        }
+      }
+    },
+    "about.how2": {
+      "extractionState": "manual",
+      "comment": "%1$@=homeActions.createLink, %2$@=homeActions.copyLink — 실제 버튼 이름을 끼워 넣어 화면과 어긋나지 않게 한다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」를 누르면 공유 카드가 먼저 보이는 짧은 주소가 만들어져요. 만든 뒤에는 같은 자리가 「%2$@」로 바뀌어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press “%1$@” and you get a short URL that shows the share card first. After that, the same button becomes “%2$@”."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」を押すと、共有カードが先に表示される短いURLができます。作成後は同じ場所が「%2$@」に変わります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击「%1$@」会生成一个先显示分享卡片的短网址。生成后同一个位置会变成「%2$@」。"
+          }
+        }
+      }
+    },
+    "about.how3": {
+      "extractionState": "manual",
+      "comment": "%@=homeActions.copyOriginal",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카드 없이 주소만 보내고 싶으면 「%@」 — 제목과 원본 주소를 함께 복사해요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just need the address without the card? “%@” copies the title and the original URL together."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カードなしでURLだけ送りたいときは「%@」— タイトルと元のURLをまとめてコピーします。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只想发网址、不需要卡片时用「%@」— 会一起复制标题和原始网址。"
+          }
+        }
+      }
+    },
+    "about.how4": {
+      "extractionState": "manual",
+      "comment": "%1$@=homeActions.saveToClips, %2$@=homeActions.saveHere",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」하면 나중에 태그로 정리해 다시 찾아볼 수 있어요. 로그인 전에는 「%2$@」 — 이 기기에만 남아요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” keeps it for later, sorted by tag. Before you sign in, “%2$@” keeps it on this device only."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」しておくと、あとでタグごとに整理して見返せます。ログイン前は「%2$@」でこの端末にだけ残ります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」之后可以按标签整理，随时回来查看。登录前用「%2$@」只会留在此设备。"
+          }
+        }
+      }
+    },
+    "about.howTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이렇게 동작해요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How it works"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使い方"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法"
+          }
+        }
+      }
+    },
+    "about.titleSuffix": {
+      "extractionState": "manual",
+      "comment": "브랜드명 ClipNote 뒤에 붙는다 — 제목 전체가 ‘ClipNote란?’ 이 된다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "란?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " — what is it?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "とは?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "是什么?"
+          }
+        }
+      }
+    },
     "clips.allTags": {
       "extractionState": "manual",
       "localizations": {
@@ -1815,6 +2080,358 @@
           "stringUnit": {
             "state": "translated",
             "value": "登录后"
+          }
+        }
+      }
+    },
+    "faq.a1": {
+      "extractionState": "manual",
+      "comment": "%1$@=homeActions.copyLink, %2$@=homeActions.copyOriginal",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」는 ClipNote가 만든 짧은 주소예요. 열면 공유 카드가 먼저 보인 뒤 원본으로 넘어가요. 「%2$@」는 카드를 거치지 않고 제목과 원본 주소를 그대로 복사해요. 짧은 주소는 로그인해야 만들어져요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” is the short URL ClipNote created. Opening it shows the share card first, then goes to the original. “%2$@” skips the card and copies the title and original URL as-is. Short URLs require signing in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」は ClipNote が作った短いURLです。開くと共有カードが表示されたあと元のページへ移動します。「%2$@」はカードを経由せず、タイトルと元のURLをそのままコピーします。短いURLはログインが必要です。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」是 ClipNote 生成的短网址。打开后会先显示分享卡片，然后跳转到原页面。「%2$@」不经过卡片，直接复制标题和原始网址。短网址需要登录才能生成。"
+          }
+        }
+      }
+    },
+    "faq.a2": {
+      "extractionState": "manual",
+      "comment": "%@=common.myClips",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립을 만들 때 태그 칸에 쉼표(,)로 구분해 최대 6개까지 달 수 있어요. ‘%@’ 화면에서 태그를 누르면 같은 태그의 클립만 모아 볼 수 있고, 한 번 쓴 태그는 다음에 ‘자주 쓴 태그’로 추천돼 한 번에 넣을 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you create a clip, add up to 6 tags in the tag field, separated by commas. Tap a tag on the ‘%@’ screen to see only clips with that tag. Tags you've used before are suggested under “Recent tags” so you can add them in one tap."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリップを作るとき、タグ欄にカンマ(,)区切りで最大6個まで付けられます。「%@」画面でタグを押すと同じタグのクリップだけまとめて見られ、一度使ったタグは次回「よく使うタグ」として提案されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建剪藏时在标签栏用逗号(,)分隔，最多可加 6 个。在「%@」页面点击标签可只看带该标签的剪藏，用过的标签下次会作为「常用标签」推荐，一次就能加上。"
+          }
+        }
+      }
+    },
+    "faq.a3": {
+      "extractionState": "manual",
+      "comment": "웹은 같은 키가 ‘이 브라우저에’ — 저장 위치의 이름만 플랫폼에 맞춘다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네. 비로그인 상태에서도 링크를 이 기기에 저장할 수 있어요. 다만 짧은 공유 링크 생성은 로그인(Google·Kakao)이 필요합니다."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes. You can save links on this device without an account. Creating short share links requires signing in with Google or Kakao."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はい。ログインしなくてもリンクをこの端末に保存できます。ただし短い共有リンクの作成には Google または Kakao でのログインが必要です。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可以。不登录也能把链接保存到此设备。但生成短分享链接需要用 Google 或 Kakao 登录。"
+          }
+        }
+      }
+    },
+    "faq.a4": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네. 전용 추출 기능으로 네이버 카페 게시글 제목, 인스타그램 릴·게시물 정보까지 가져옵니다. 비공개·멤버 전용 글은 제한될 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes. Dedicated extractors pull Naver Cafe post titles and Instagram reel or post details. Private and members-only posts may be limited."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はい。専用の抽出機能でネイバーカフェの投稿タイトルや Instagram のリール・投稿情報まで取得します。非公開・メンバー限定の投稿は制限される場合があります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持。专用提取功能可以获取 Naver Cafe 帖子标题以及 Instagram Reels、帖子的信息。非公开和仅成员可见的内容可能受限。"
+          }
+        }
+      }
+    },
+    "faq.a5": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클릭하면 미리보기 카드가 잠깐 보였다가, 원본 페이지로 자연스럽게 넘어가요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The preview card appears briefly, then it moves on to the original page."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリックするとプレビューカードが少し表示され、元のページへ自然に移動します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击后会短暂显示预览卡片，然后自然跳转到原页面。"
+          }
+        }
+      }
+    },
+    "faq.a6": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네, 무료로 사용할 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, it's free to use."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はい、無料でご利用いただけます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "是的，可以免费使用。"
+          }
+        }
+      }
+    },
+    "faq.q1": {
+      "extractionState": "manual",
+      "comment": "%1$@=homeActions.copyLink, %2$@=homeActions.copyOriginal",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」와 「%2$@」는 뭐가 달라요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's the difference between “%1$@” and “%2$@”?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」と「%2$@」の違いは?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%1$@」和「%2$@」有什么区别?"
+          }
+        }
+      }
+    },
+    "faq.q2": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "태그는 어떻게 쓰나요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How do tags work?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タグはどう使いますか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标签怎么用?"
+          }
+        }
+      }
+    },
+    "faq.q3": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 없이도 쓸 수 있나요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can I use it without signing in?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインしなくても使えますか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不登录也能用吗?"
+          }
+        }
+      }
+    },
+    "faq.q4": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이버 카페·인스타그램 링크도 되나요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do Naver Cafe and Instagram links work?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネイバーカフェやInstagramのリンクも使えますか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naver Cafe 和 Instagram 的链接也支持吗?"
+          }
+        }
+      }
+    },
+    "faq.q5": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유 링크를 열면 어떻게 되나요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What happens when someone opens a share link?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有リンクを開くとどうなりますか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开分享链接会怎样?"
+          }
+        }
+      }
+    },
+    "faq.q6": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무료인가요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is it free?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料ですか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "是免费的吗?"
           }
         }
       }

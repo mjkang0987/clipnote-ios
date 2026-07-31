@@ -45,6 +45,8 @@ CLEAN_FILES = [
     "ClipNote/Views/SharePreviewCard.swift",
     "ClipNote/Views/LoginView.swift",
     "ClipNote/Auth/AuthStore.swift",
+    "ClipNote/Views/AboutView.swift",
+    "ClipNote/Views/FaqView.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
