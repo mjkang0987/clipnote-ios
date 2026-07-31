@@ -131,14 +131,17 @@ struct HomeView: View {
                 }
             }
             .tourAnchor(.url)
-            // 메타를 읽는 동안 공룡이 **URL 칸 윗변 위를** 달린다.
+            // 메타를 읽는 동안 공룡이 **URL 칸 테두리를** 돌아다닌다.
             //
             // 로딩 전용 상자를 따로 띄우면 나타났다 사라질 때마다 아래 내용이 통째로 밀린다 —
             // 미리보기를 보려던 손이 헛짚는다. 오버레이는 자리를 차지하지 않아 흔들림이 없고,
-            // 이미 그려져 있는 입력칸 테두리가 그대로 땅이 된다.
+            // 이미 그려져 있는 입력칸 테두리가 그대로 길이 된다.
+            //
+            // `alignment: .bottom` + 칸 높이 = 오버레이가 **입력칸과 정확히 같은 사각형**이 된다
+            // (이 컨테이너는 라벨 줄까지 포함하고, 입력칸은 그 아래쪽 전부다).
             .overlay(alignment: .bottom) {
                 if vm.loading {
-                    RunningDino().offset(y: -Self.fieldHeight)
+                    RunningDino().frame(height: Self.fieldHeight)
                 }
             }
             VStack(alignment: .leading, spacing: 12) {

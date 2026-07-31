@@ -46,7 +46,14 @@ struct ClipsView: View {
             if let store {
                 content(store)
             } else {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                // 목록을 불러오는 동안 공룡이 **화면 가장자리**를 돈다.
+                //
+                // 홈에서는 입력칸 테두리를 밟지만 여기엔 밟을 상자가 없다. 화면 자체를 상자로
+                // 삼고 안쪽으로 넉넉히 들여서, 공룡이 테두리 바깥에 서도 화면 밖으로 나가지
+                // 않게 한다(공룡 중심이 사각형 밖 17pt 에 선다).
+                RunningDino()
+                    .padding(40)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .overlay { if bulkBusy { blockingOverlay } }
