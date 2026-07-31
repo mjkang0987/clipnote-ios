@@ -338,6 +338,41 @@ def check_text_literals(errors: list[str]) -> None:
             )
 
 
+def check_view_builder_targets(errors: list[str]) -> None:
+    """`@ViewBuilder` 가 엉뚱한 선언에 붙는 것을 막는다.
+
+    이 애트리뷰트는 **게터가 있는** 선언에만 붙는다 — `func` 이나 계산 `var`. 그런데
+    애트리뷰트와 선언 사이에 주석을 끼우는 건 문법상 허용이라, 그 틈에 상수를 하나 넣으면
+    애트리뷰트가 조용히 그 상수에 옮겨 붙는다:
+
+        @ViewBuilder
+        /// 입력칸 높이
+        private static let fieldHeight: CGFloat = 46   // ← 여기에 붙어 버린다
+        private func field(...) -> some View { ... }
+
+    컴파일러는 잡아 주지만 그건 CI 를 한 바퀴 돌고 난 뒤다. 사이에 낀 것이 무엇인지
+    확인하는 데 몇 줄이면 된다.
+    """
+    for path in swift_files():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for index, line in enumerate(lines):
+            if line.strip() != "@ViewBuilder":
+                continue
+            for follower in lines[index + 1:]:
+                stripped = follower.strip()
+                if not stripped or stripped.startswith("//"):
+                    continue
+                if re.search(r"\b(func|var)\b", stripped):
+                    break
+                fail(
+                    errors,
+                    f"{path.relative_to(ROOT)}:{index + 1} `@ViewBuilder` 가 "
+                    f"`func`/`var` 가 아닌 선언에 붙는다 (`{stripped}`) — "
+                    f"애트리뷰트를 그 선언 **바로 위**로 옮긴다",
+                )
+                break
+
+
 def check_clean_files(errors: list[str]) -> None:
     for relative in CLEAN_FILES:
         path = ROOT / relative
@@ -368,6 +403,7 @@ def main() -> int:
     check_usage(strings, errors)
     check_clean_files(errors)
     check_text_literals(errors)
+    check_view_builder_targets(errors)
 
     if errors:
         print(f"✗ {len(errors)}건")

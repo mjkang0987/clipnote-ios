@@ -293,10 +293,10 @@ struct HomeView: View {
 
     // MARK: - Building blocks
 
-    @ViewBuilder
     /// 입력칸 높이. 공룡을 윗변에 세우려면 호출부도 알아야 해서 상수로 뺐다.
     private static let fieldHeight: CGFloat = 46
 
+    @ViewBuilder
     private func field<Content: View>(label: String, required: Bool = false,
                                       muted: String? = nil,
                                       @ViewBuilder _ content: () -> Content) -> some View {
