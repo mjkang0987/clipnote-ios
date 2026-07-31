@@ -33,6 +33,8 @@ SOURCE_LANGUAGE = "ko"
 # 화면을 하나 끝낼 때마다 여기에 추가한다 — 이 목록이 진행 상황이자 되돌림 방지 장치다.
 CLEAN_FILES = [
     "ClipNote/Views/SettingsView.swift",
+    "ClipNote/Views/HeaderMenu.swift",
+    "ClipNote/Views/RootView.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
@@ -44,8 +46,12 @@ LITERAL_ALLOWLIST = {
 KEY_CALL = re.compile(r'\bt\(\s*"([^"\\]+)"')
 STRING_LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 HANGUL = re.compile(r"[가-힣]")
-# `%@`·`%d`·`%1$@` — 위치 지정자를 포함해 잡는다.
-FORMAT_SPEC = re.compile(r"%(?:(\d+)\$)?([@a-zA-Z])")
+# `%@`·`%lld`·`%1$@`·`%.2f` — 위치 지정자·플래그·너비·길이 수식어를 모두 넘겨 변환자를 잡는다.
+# 길이 수식어(`ll`)까지 포함해 비교해야 한다: 한국어가 `%lld` 인데 다른 언어가 `%d` 면
+# 64비트에서 인자를 잘못 읽는다.
+FORMAT_SPEC = re.compile(
+    r"%(?:(\d+)\$)?[-+ #0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?(hh|h|ll|l|q|z|t|j|L)?([@a-zA-Z])"
+)
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -99,11 +105,15 @@ def strip_comments(text: str) -> str:
 
 
 def specifiers(value: str) -> list[str]:
-    """포맷 지시자 목록. 위치 지정자가 있으면 그 순서로 정렬해 비교한다."""
-    found = FORMAT_SPEC.findall(value)
-    if any(index for index, _ in found):
-        return [kind for _, kind in sorted(found, key=lambda p: int(p[0] or 0))]
-    return [kind for _, kind in found]
+    """포맷 지시자 목록. 위치 지정자가 있으면 그 순서로 정렬해 비교한다.
+
+    위치 지정자(`%1$@`)를 쓰면 언어마다 문장 순서를 바꿔도 되므로, 등장 순서가 아니라
+    **인자 번호 순서**로 세운 목록을 비교한다.
+    """
+    found = FORMAT_SPEC.findall(value)  # [(index, length, conversion), ...]
+    if any(index for index, _, _ in found):
+        found = sorted(found, key=lambda item: int(item[0] or 0))
+    return [length + conversion for _, length, conversion in found]
 
 
 def check_catalog(catalog: dict, errors: list[str]) -> dict[str, dict]:

@@ -67,25 +67,36 @@ struct RootView: View {
 /// 로그인 전환 감지 → 로컬 클립 있으면 1회 확인 후 DB로 옮김(§5). 중복 프롬프트 가드.
 private struct LoginMigrationModifier: ViewModifier {
     @Environment(\.modelContext) private var modelContext
+    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
     @State private var ask = false
     @State private var pendingCount = 0
     @State private var resultMessage: String?
     @State private var prompted = false
 
+    /// 수량 표기(`3개`·`3 clips`)는 언어마다 단위 위치가 달라 문장에서 떼어 둔다.
+    /// 이걸 만들어 `%@` 자리에 끼워 넣는다 — 웹 `clips.countUnit` 과 같은 방식.
+    private func countUnit(_ count: Int) -> String {
+        i18n.t("clips.countUnit", args: count)
+    }
+
     func body(content: Content) -> some View {
         content
             .onChange(of: auth.loggedIn) { _, now in
                 if now { check() } else { prompted = false }
             }
-            .confirmationDialog("클립 옮기기", isPresented: $ask, titleVisibility: .visible) {
-                Button("옮기기") { migrate() }
-                Button("나중에", role: .cancel) {}
+            .confirmationDialog(
+                i18n.t("clips.migrateTitle"), isPresented: $ask, titleVisibility: .visible
+            ) {
+                Button(i18n.t("clips.migrateConfirm", args: countUnit(pendingCount))) { migrate() }
+                Button(i18n.t("clips.migrateLater"), role: .cancel) {}
             } message: {
-                Text("이 기기에 저장한 클립 \(pendingCount)개를 내 계정으로 옮길까요?")
+                Text(i18n.t("clips.migrateBody", args: countUnit(pendingCount)))
             }
-            .alert("클립 옮기기", isPresented: resultBinding) {
-                Button("확인", role: .cancel) { resultMessage = nil }
+            // 결과 알림 제목은 확인 다이얼로그와 다르다 — 후자는 의문형("…옮길까요?")이라
+            // "3개를 옮겼어요" 위에 얹으면 말이 안 된다.
+            .alert(i18n.t("clips.migrateResultTitle"), isPresented: resultBinding) {
+                Button(i18n.t("common.confirm"), role: .cancel) { resultMessage = nil }
             } message: {
                 Text(resultMessage ?? "")
             }
@@ -110,8 +121,8 @@ private struct LoginMigrationModifier: ViewModifier {
         Task {
             let (uploaded, allOK) = await MigrateLocalClips(localStore: store).run(accessToken: token)
             resultMessage = allOK
-                ? "클립 \(uploaded)개를 옮겼어요."
-                : "일부만 옮겨졌어요. 다시 시도해 주세요."
+                ? i18n.t("clips.migrateDone", args: countUnit(uploaded))
+                : i18n.t("clips.migratePartial")
         }
     }
 }
