@@ -4016,6 +4016,606 @@
         }
       }
     },
+    "onboarding.audienceAnyone": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다 — 로그인 없이도 되는 단계 배지",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "누구나"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "だれでも"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有人"
+          }
+        }
+      }
+    },
+    "onboarding.audienceLogin": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다 — 로그인해야 되는 단계 배지",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 필요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in required"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインが必要"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要登录"
+          }
+        }
+      }
+    },
+    "onboarding.clipsDesc": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다. %@ 는 common.myClips",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장한 클립은 상단 ‘%@’에서 이렇게 모여요. 태그로 분류하고 편집·공유할 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved clips gather in ‘%@’ up top, like this. Sort by tag, edit, and share from there."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したクリップは上部の「%@」にこうして集まります。タグで分類し、編集・共有できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存的剪藏会像这样集中在顶部的「%@」里。可以按标签分类，也能编辑和分享。"
+          }
+        }
+      }
+    },
+    "onboarding.clipsTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 클립에서 모아 봐요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find them all in My Clips"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マイクリップでまとめて見る"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在我的剪藏里统一查看"
+          }
+        }
+      }
+    },
+    "onboarding.mockTag1": {
+      "extractionState": "manual",
+      "comment": "앱 전용 목업 예시 — 온보딩 화면에 보인다. 그 언어에서 자연스러운 예로 바꾼다(직역하지 않는다)",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개발"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dev"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发"
+          }
+        }
+      }
+    },
+    "onboarding.mockTag2": {
+      "extractionState": "manual",
+      "comment": "앱 전용 목업 예시 — 온보딩 화면에 보인다. 그 언어에서 자연스러운 예로 바꾼다(직역하지 않는다)",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽을거리"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "to read"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あとで読む"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后读"
+          }
+        }
+      }
+    },
+    "onboarding.mockTitle1": {
+      "extractionState": "manual",
+      "comment": "앱 전용 목업 예시 — 온보딩 화면에 보인다. 그 언어에서 자연스러운 예로 바꾼다(직역하지 않는다)",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftUI 애니메이션 정리"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftUI animation, explained"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftUI アニメーション入門"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SwiftUI 动画整理"
+          }
+        }
+      }
+    },
+    "onboarding.mockTitle2": {
+      "extractionState": "manual",
+      "comment": "앱 전용 목업 예시 — 온보딩 화면에 보인다. 그 언어에서 자연스러운 예로 바꾼다(직역하지 않는다)",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "좋은 글쓰기의 5가지 원칙"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Five rules for better writing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "よい文章を書く5つの原則"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好文章的五个原则"
+          }
+        }
+      }
+    },
+    "onboarding.next": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次へ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一步"
+          }
+        }
+      }
+    },
+    "onboarding.optionsDesc": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목을 비우면 링크에서 자동으로 채워요. 태그로 분류할 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave the title blank and it fills in from the link. Use tags to sort clips."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトルを空にするとリンクから自動で入ります。タグで分類できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标题留空会自动从链接填入。可以用标签分类。"
+          }
+        }
+      }
+    },
+    "onboarding.optionsTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목·태그는 선택이에요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title and tags are optional"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトル・タグは任意です"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标题和标签是可选的"
+          }
+        }
+      }
+    },
+    "onboarding.previous": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "戻る"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一步"
+          }
+        }
+      }
+    },
+    "onboarding.saveDesc": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장하면 목록에 쌓여요. 게스트는 이 기기에, 로그인하면 내 계정에 저장돼요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved clips collect in your list — on this device as a guest, in your account once you sign in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存すると一覧に溜まります。ゲストはこの端末に、ログインするとアカウントに保存されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存后会累积在列表里。访客保存在此设备，登录后保存到账号。"
+          }
+        }
+      }
+    },
+    "onboarding.saveTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 클립에 저장"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to My Clips"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マイクリップに保存"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到我的剪藏"
+          }
+        }
+      }
+    },
+    "onboarding.shareDesc": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인하면 공유 카드와 짧은 링크를 한 번에 만들 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in and you can create the share card and short link in one step."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインすると共有カードと短いリンクを一度に作れます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后可以一步生成分享卡片和短链接。"
+          }
+        }
+      }
+    },
+    "onboarding.shareTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "짧은 공유 링크 만들기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a short share link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短い共有リンクを作る"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生成短分享链接"
+          }
+        }
+      }
+    },
+    "onboarding.skip": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "건너뛰기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキップ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过"
+          }
+        }
+      }
+    },
+    "onboarding.start": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작하기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "はじめる"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
+          }
+        }
+      }
+    },
+    "onboarding.urlDesc": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유하고 싶은 페이지 URL만 넣으면 시작돼요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just drop in the URL of the page you want to share."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有したいページのURLを入れるだけで始まります。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只要放入想分享的页面网址就能开始。"
+          }
+        }
+      }
+    },
+    "onboarding.urlTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 스포트라이트 투어가 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여기에 링크를 붙여넣어요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste your link here"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここにリンクを貼り付けます"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在这里粘贴链接"
+          }
+        }
+      }
+    },
     "settings.accountFallback": {
       "extractionState": "manual",
       "comment": "앱 전용 — 이메일도 공급자도 모를 때의 계정 이름. 여기에 ‘소셜’ 을 쓰면 이름 자리에 분류명이 들어가 어색하다",

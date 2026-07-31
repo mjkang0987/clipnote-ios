@@ -10,29 +10,36 @@ struct OnboardingView: View {
     /// 임베드한 HomeView용 라우터(투어는 비상호작용이라 실제 이동은 발생하지 않음).
     @State private var tourRouter = AppRouter()
 
-    private let steps: [TourStep] = [
-        TourStep(anchor: .url,
-                 title: "여기에 링크를 붙여넣어요",
-                 desc: "공유하고 싶은 페이지 URL만 넣으면 시작돼요.",
-                 audience: "누구나", loginOnly: false),
-        TourStep(anchor: .options,
-                 title: "제목·태그는 선택이에요",
-                 desc: "제목을 비우면 링크에서 자동으로 채워요. 태그로 분류할 수 있어요.",
-                 audience: "누구나", loginOnly: false),
-        TourStep(anchor: .save,
-                 title: "내 클립에 저장",
-                 desc: "저장하면 목록에 쌓여요. 게스트는 이 기기에, 로그인하면 내 계정에 저장돼요.",
-                 audience: "누구나", loginOnly: false),
-        TourStep(anchor: .share,
-                 title: "짧은 공유 링크 만들기",
-                 desc: "로그인하면 공유 카드와 짧은 링크를 한 번에 만들 수 있어요.",
-                 audience: "로그인 필요", loginOnly: true),
-        TourStep(anchor: nil,
-                 title: "내 클립에서 모아 봐요",
-                 desc: "저장한 클립은 상단 ‘내 클립’에서 이렇게 모여요. 태그로 분류하고 편집·공유할 수 있어요.",
-                 audience: nil, loginOnly: false),
-    ]
+    @Environment(LocalizationStore.self) private var i18n
 
+    /// 투어 단계. `let` 상수가 아니라 계산 프로퍼티다 — 표시 언어가 바뀌면 문구도 따라 바뀌어야
+    /// 하는데, 저장 프로퍼티로 두면 뷰가 처음 만들어진 시점의 언어로 굳는다.
+    private var steps: [TourStep] {
+        [
+            TourStep(anchor: .url,
+                     title: i18n.t("onboarding.urlTitle"),
+                     desc: i18n.t("onboarding.urlDesc"),
+                     audience: i18n.t("onboarding.audienceAnyone"), loginOnly: false),
+            TourStep(anchor: .options,
+                     title: i18n.t("onboarding.optionsTitle"),
+                     desc: i18n.t("onboarding.optionsDesc"),
+                     audience: i18n.t("onboarding.audienceAnyone"), loginOnly: false),
+            TourStep(anchor: .save,
+                     title: i18n.t("onboarding.saveTitle"),
+                     desc: i18n.t("onboarding.saveDesc"),
+                     audience: i18n.t("onboarding.audienceAnyone"), loginOnly: false),
+            TourStep(anchor: .share,
+                     title: i18n.t("onboarding.shareTitle"),
+                     desc: i18n.t("onboarding.shareDesc"),
+                     audience: i18n.t("onboarding.audienceLogin"), loginOnly: true),
+            TourStep(anchor: nil,
+                     title: i18n.t("onboarding.clipsTitle"),
+                     desc: i18n.t("onboarding.clipsDesc", args: i18n.t("common.myClips")),
+                     audience: nil, loginOnly: false),
+        ]
+    }
+
+    var body
     var body: some View {
         ZStack {
             NavigationStack {
