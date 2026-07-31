@@ -36,6 +36,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 빌드보다 먼저 돌린다 — 다국어가 깨지는 방식은 대부분 조용해서(번역 누락 → 한국어 폴백,
+      # 오타 키 → 키가 그대로 노출) xcodebuild 는 초록으로 통과한다. 몇 초짜리 검사라
+      # macOS 러너 분을 쓰기 전에 거른다.
+      - name: Check localizations
+        run: python3 scripts/check-localizations.py
+
       - name: Install XcodeGen
         run: brew install xcodegen
 

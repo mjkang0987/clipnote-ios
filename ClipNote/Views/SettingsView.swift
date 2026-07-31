@@ -17,14 +17,14 @@ struct SettingsView: View {
             if auth.loggedIn { content } else { guardView }
         }
         .background(AppColor.bg)
-        .navigationTitle(i18n.t("settings.title"))
+        .navigationTitle(i18n.t("common.settings"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(i18n.t("settings.heading"))
+                Text(i18n.t("settings.title"))
                     .font(.system(size: 24, weight: .bold)).foregroundStyle(AppColor.fg)
                 Text(i18n.t("settings.subtitle"))
                     .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
@@ -32,7 +32,7 @@ struct SettingsView: View {
 
                 accountSection.padding(.top, 24)
                 languageRow
-                linkRow(i18n.t("settings.privacy")) { router.go(.privacy) }
+                linkRow(i18n.t("common.privacy")) { router.go(.privacy) }
                 contactRow
                 dangerSection.padding(.top, 16)
             }
@@ -47,17 +47,17 @@ struct SettingsView: View {
             Divider().overlay(AppColor.border)
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(auth.account?.label ?? i18n.t("settings.account.loggedIn"))
+                    Text(auth.account?.label ?? i18n.t("settings.accountFallback"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.fg).lineLimit(1)
                     Text(i18n.t(
-                        "settings.account.provider",
-                        args: auth.account?.providerLabel ?? i18n.t("settings.account.providerFallback")
+                        "settings.signedInWith",
+                        args: auth.account?.providerLabel ?? i18n.t("settings.providerUnknown")
                     ))
                     .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted).lineLimit(1)
                 }
                 Spacer(minLength: 12)
-                Button(i18n.t("settings.signOut")) { Task { await auth.signOut() } }
+                Button(i18n.t("common.logout")) { Task { await auth.signOut() } }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.fgMuted)
             }
@@ -106,7 +106,7 @@ struct SettingsView: View {
                 HStack {
                     Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(AppColor.fg)
                     Spacer()
-                    Text(i18n.t("settings.row.view")).font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
+                    Text(i18n.t("settings.viewLink")).font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
                 }
                 .padding(.vertical, 16)
             }
@@ -122,11 +122,11 @@ struct SettingsView: View {
                 HStack {
                     Text(i18n.t("settings.contact")).font(.system(size: 14, weight: .semibold)).foregroundStyle(AppColor.fg)
                     Spacer()
-                    Text(i18n.t("settings.contact.action")).font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
+                    Text(i18n.t("settings.contactAction")).font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
                 }
                 .padding(.vertical, 16)
             }
-            Text(i18n.t("settings.contact.note", args: contactEmail))
+            Text(i18n.t("settings.contactNote", args: contactEmail))
                 .font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
                 .padding(.bottom, 4)
         }
@@ -136,11 +136,11 @@ struct SettingsView: View {
 
     private var dangerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(i18n.t("settings.danger.title"))
+            Text(i18n.t("settings.dangerTitle"))
                 .font(.system(size: 14, weight: .semibold)).foregroundStyle(AppColor.danger)
-            Text(i18n.t("settings.danger.body"))
+            Text(i18n.t("settings.dangerBody"))
                 .font(.system(size: 14)).lineSpacing(3).foregroundStyle(AppColor.fgMuted)
-            Button(i18n.t("settings.danger.action")) { router.go(.accountDelete) }
+            Button(i18n.t("settings.withdraw")) { router.go(.accountDelete) }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(AppColor.danger)
                 .padding(.top, 4)

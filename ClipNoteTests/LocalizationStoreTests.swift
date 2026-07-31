@@ -32,7 +32,7 @@ import Testing
         let values = AppLanguage.allCases.map { language -> String in
             let store = LocalizationStore(defaults: Self.scratchDefaults("differs"))
             store.select(language)
-            return store.t("settings.title")
+            return store.t("common.settings")
         }
         // 4개 언어가 서로 다른 값이어야 한다 — 하나라도 겹치면 폴백이 일어난 것.
         #expect(Set(values).count == AppLanguage.allCases.count, "번역이 겹친다: \(values)")
@@ -41,19 +41,19 @@ import Testing
     @Test @MainActor func translatesKnownKeyPerLanguage() {
         let store = LocalizationStore(defaults: Self.scratchDefaults("known"))
         store.select(.korean)
-        #expect(store.t("settings.title") == "설정")
+        #expect(store.t("common.settings") == "설정")
         store.select(.english)
-        #expect(store.t("settings.title") == "Settings")
+        #expect(store.t("common.settings") == "Settings")
         store.select(.japanese)
-        #expect(store.t("settings.title") == "設定")
+        #expect(store.t("common.settings") == "設定")
         store.select(.chineseSimplified)
-        #expect(store.t("settings.title") == "设置")
+        #expect(store.t("common.settings") == "设置")
     }
 
     @Test @MainActor func formatsArguments() {
         let store = LocalizationStore(defaults: Self.scratchDefaults("format"))
         store.select(.english)
-        #expect(store.t("settings.account.provider", args: "Google") == "Signed in with Google")
+        #expect(store.t("settings.signedInWith", args: "Google") == "Signed in with Google")
     }
 
     @Test @MainActor func unknownKeyReturnsKeyItself() {

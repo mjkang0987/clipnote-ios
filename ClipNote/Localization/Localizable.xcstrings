@@ -1,171 +1,532 @@
 {
-  "sourceLanguage" : "ko",
-  "version" : "1.0",
-  "strings" : {
-    "settings.account.loggedIn" : {
-      "comment" : "계정 라벨을 못 받았을 때의 대체 표기",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Signed in" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン中" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "로그인됨" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已登录" } }
+  "sourceLanguage": "ko",
+  "version": "1.0",
+  "strings": {
+    "common.logout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログアウト"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그아웃"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出登录"
+          }
+        }
       }
     },
-    "settings.account.provider" : {
-      "comment" : "%@ 는 provider 라벨(구글·카카오·네이버)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Signed in with %@" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@アカウントでログイン中" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "%@ 계정으로 로그인됨" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已通过 %@ 账户登录" } }
+    "common.privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보처리방침"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私政策"
+          }
+        }
       }
     },
-    "settings.account.providerFallback" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "social" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ソーシャル" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "소셜" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "社交" } }
+    "common.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        }
       }
     },
-    "settings.contact" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Contact us" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "お問い合わせ" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "문의하기" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "联系我们" } }
+    "settings.accountFallback": {
+      "comment": "앱 전용 — 계정 라벨(이메일·닉네임)을 못 받았을 때의 대체 표기. 웹에는 해당 UI 가 없다",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已登录"
+          }
+        }
       }
     },
-    "settings.contact.action" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Send email ›" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メールを送る ›" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "메일 보내기 ›" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "发送邮件 ›" } }
+    "settings.contact": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact us"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お問い合わせ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문의하기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "联系我们"
+          }
+        }
       }
     },
-    "settings.contact.note" : {
-      "comment" : "%@ 는 문의 메일 주소",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Send bug reports and feature requests to %@." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "不具合の報告・機能のご要望は %@ までお送りください。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "오류 제보·기능 요청은 %@ 로 보내 주세요." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "错误报告和功能建议请发送至 %@。" } }
+    "settings.contactAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send email ›"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールを送る ›"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메일 보내기 ›"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送邮件 ›"
+          }
+        }
       }
     },
-    "settings.danger.action" : {
-      "comment" : "탈퇴 버튼 — settings.danger.title 과 영문이 겹치지 않게 my 를 넣는다",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete my account" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "退会する" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "회원 탈퇴" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "注销账户" } }
+    "settings.contactNote": {
+      "comment": "%@ 는 문의 메일 주소",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report bugs or request features at %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不具合の報告・機能のご要望は %@ までお送りください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오류 제보·기능 요청은 %@ 로 보내 주세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如需报告问题或提出功能建议，请发送至 %@。"
+          }
+        }
       }
     },
-    "settings.danger.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deleting your account permanently removes it along with every saved clip and share link. This cannot be undone." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "退会するとアカウントと保存したすべてのクリップ・共有リンクが完全に削除され、復元できません。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "탈퇴하면 계정과 저장된 모든 클립·공유 링크가 영구 삭제되며 복구할 수 없어요." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "注销后，您的账户以及所有已保存的剪藏和分享链接将被永久删除，且无法恢复。" } }
+    "settings.dangerBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting your account permanently removes it along with every saved clip and share link. This can't be recovered."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退会するとアカウントと保存されたすべてのクリップ・共有リンクが永久に削除され、復元できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "탈퇴하면 계정과 저장된 모든 클립·공유 링크가 영구 삭제되며 복구할 수 없어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注销后账号以及保存的所有剪藏和分享链接将被永久删除，无法恢复。"
+          }
+        }
       }
     },
-    "settings.danger.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete account" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アカウント削除" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "계정 삭제" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除账户" } }
+    "settings.dangerTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete account"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정 삭제"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除账号"
+          }
+        }
       }
     },
-    "settings.guard.home" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Go home" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ホームへ" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "홈으로" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "返回首页" } }
+    "settings.guard.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to continue."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインするとご利用いただけます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 후 이용할 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后即可使用。"
+          }
+        }
       }
     },
-    "settings.guard.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sign in to continue." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログインするとご利用いただけます。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "로그인 후 이용할 수 있어요." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "登录后即可使用。" } }
+    "settings.guard.home": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go home"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホームへ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈으로"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回首页"
+          }
+        }
       }
     },
-    "settings.heading" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Account settings" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アカウント設定" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "계정 설정" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "账户设置" } }
+    "settings.language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示言語"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "표시 언어"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示语言"
+          }
+        }
+      },
+      "comment": "앱 전용 — 설정의 행 라벨. 웹 language.label(\"언어\")은 select 의 aria-label 이라 쓰임이 다르다"
+    },
+    "settings.providerUnknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "social"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソーシャル"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소셜"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "社交"
+          }
+        }
       }
     },
-    "settings.language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "表示言語" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "표시 언어" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示语言" } }
+    "settings.signedInWith": {
+      "comment": "%@ 는 공급자 이름(Google·Kakao·Naver) — 라틴 표기 고정, 번역하지 않는다",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in with %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ アカウントでログイン中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 계정으로 로그인됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已使用 %@ 账号登录"
+          }
+        }
       }
     },
-    "settings.privacy" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Privacy Policy" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プライバシーポリシー" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "개인정보 처리방침" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "隐私政策" } }
+    "settings.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage your sign-in details and account."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン情報とアカウントを管理します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 정보와 계정을 관리합니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理登录信息和账号。"
+          }
+        }
       }
     },
-    "settings.row.view" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "View ›" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "表示 ›" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "보기 ›" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "查看 ›" } }
+    "settings.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정 설정"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账号设置"
+          }
+        }
       }
     },
-    "settings.signOut" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sign out" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログアウト" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "로그아웃" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "退出登录" } }
+    "settings.viewLink": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View ›"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示 ›"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보기 ›"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看 ›"
+          }
+        }
       }
     },
-    "settings.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage your sign-in details and account." } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ログイン情報とアカウントを管理します。" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "로그인 정보와 계정을 관리합니다." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理您的登录信息和账户。" } }
-      }
-    },
-    "settings.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "設定" } },
-        "ko" : { "stringUnit" : { "state" : "translated", "value" : "설정" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设置" } }
+    "settings.withdraw": {
+      "comment": "탈퇴 버튼. 영문은 웹(settings.withdraw=\"Delete account\")과 다르다 — 앱은 제목(dangerTitle)과 버튼이 같은 상자에 붙어 있어 같은 문구면 구분이 안 된다",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my account"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退会する"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "회원 탈퇴"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注销账号"
+          }
+        }
       }
     }
   }
