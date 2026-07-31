@@ -20,8 +20,12 @@ import SwiftUI
 ///
 /// 도는 자리는 **호출부가 준 사각형**이 정한다. 그 안에서만 그려지므로 어디에 얹어도 안전하다.
 struct RunningDino: View {
-    /// 이동 속도(pt/초).
-    private static let speed = 96.0
+    /// 한 바퀴에 걸리는 시간(초). **속도가 아니라 이것을 고정한다.**
+    ///
+    /// 속도를 고정했더니 도는 자리에 따라 체감이 완전히 달라졌다 — 입력칸 둘레는 4초인데
+    /// 폼 카드 둘레는 2.5배라 한 바퀴에 10초가 걸렸다. 로딩이 1~2초면 공룡은 모서리에서
+    /// 조금 꿈틀대다 사라진다. 상자가 커지면 그만큼 빨리 달리는 게 맞다.
+    private static let lap = 4.0
     /// 뜀박질 한 번에 걸리는 시간(초). 짧을수록 종종거린다.
     private static let hopPeriod = 0.44
     /// 뜀박질 높이(pt). 밟고 있는 벽에서 **떨어지는 쪽**으로 튄다(천장이면 아래로).
@@ -85,9 +89,9 @@ struct RunningDino: View {
         }
 
         // 멈춰 세울 때는 첫 면 한가운데에 세운다 — 모서리에 걸치면 잘린 것처럼 보인다.
-        var walked = reduceMotion
-            ? lengths[0] / 2
-            : CGFloat((elapsed * Self.speed).truncatingRemainder(dividingBy: Double(total)))
+        // 한 바퀴 시간이 고정이라 진행도는 둘레와 무관한 비율이 된다.
+        let progress = (elapsed / Self.lap).truncatingRemainder(dividingBy: 1)
+        var walked = reduceMotion ? lengths[0] / 2 : total * CGFloat(progress)
 
         var index = 0
         while index < lengths.count - 1, walked >= lengths[index] {
