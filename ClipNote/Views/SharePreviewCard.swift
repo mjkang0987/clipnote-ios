@@ -62,7 +62,7 @@ struct SharePreviewCard: View {
                                 .foregroundStyle(.white.opacity(0.9))
                                 .lineLimit(2)
                         }
-                        Text("ClipNote")
+                        Text(verbatim: "ClipNote")
                             .font(.system(size: fsMark, weight: .bold))
                             .foregroundStyle(.white.opacity(0.95))
                             .padding(.top, w * 0.008)

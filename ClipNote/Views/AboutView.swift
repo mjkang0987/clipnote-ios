@@ -66,7 +66,7 @@ struct AboutView: View {
     }
 
     private func step(_ number: Int, _ text: String) -> some View {
-        Text("\(number). \(text)").font(.system(size: 14)).lineSpacing(3)
+        Text(verbatim: "\(number). \(text)").font(.system(size: 14)).lineSpacing(3)
             .foregroundStyle(AppColor.fgMuted).padding(.top, 6)
     }
 
@@ -75,7 +75,7 @@ struct AboutView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(titleColor)
             ForEach(items, id: \.self) { item in
-                Text("· \(item)").font(.system(size: 14)).lineSpacing(3).foregroundStyle(AppColor.fgMuted)
+                Text(verbatim: "· \(item)").font(.system(size: 14)).lineSpacing(3).foregroundStyle(AppColor.fgMuted)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

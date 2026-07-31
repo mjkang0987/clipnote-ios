@@ -11,6 +11,7 @@
 4. 카탈로그 키를 코드가 쓰고 있는가 (죽은 번역이 쌓이는 걸 막는다)
 5. 사전화를 마친 파일에 한글 리터럴이 되살아나지 않았는가 (아래 CLEAN_FILES 래칫)
 6. 카탈로그가 **정규 형식**으로 저장돼 있는가 (아래 canonical_json 참고)
+7. `Text("리터럴")` 이 남아 있지 않은가 (아래 check_text_literals 참고)
 
 사용:
     python3 scripts/check-localizations.py            # 검사
@@ -64,6 +65,9 @@ LITERAL_ALLOWLIST = {
 }
 
 KEY_CALL_START = re.compile(r"\bt\(")
+# `Text("…")` — 보간이 들어가도 리터럴이면 `LocalizedStringKey` 로 해석돼 Xcode 가 추출한다.
+# `Text(verbatim: "…")` 과 `Text(문자열변수)` 는 걸리지 않는다.
+TEXT_LITERAL = re.compile(r'\bText\(\s*"')
 STRING_LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 HANGUL = re.compile(r"[가-힣]")
 # `%@`·`%lld`·`%1$@`·`%.2f` — 위치 지정자·플래그·너비·길이 수식어를 모두 넘겨 변환자를 잡는다.
@@ -310,6 +314,30 @@ def strip_previews(text: str) -> str:
     return "".join(out)
 
 
+def check_text_literals(errors: list[str]) -> None:
+    """`Text("리터럴")` 을 막는다.
+
+    SwiftUI `Text` 는 문자열 **리터럴**을 받으면 `LocalizedStringKey` 오버로드로 간다. 보간이
+    들어가도 마찬가지다(`Text("· \\(item)")`). 그러면 Xcode 가 빌드할 때마다 그 리터럴을 문자열
+    카탈로그에 밀어 넣어, 내용이 그대로여도 파일이 통째로 바뀌고 `git pull` 이 막힌다.
+
+    빌드 설정(`SWIFT_EMIT_LOC_STRINGS: NO`)으로도 끌 수 있지만 그건 프로젝트를 재생성해야
+    적용된다 — 한 번 안 돌리면 다시 오염된다. **애초에 추출 대상이 아니게** 두는 게 확실하다.
+
+    - 번역이 필요한 문구 → `Text(i18n.t("키"))` (문자열 변수라 추출 대상이 아니다)
+    - 번역이 필요 없는 것(브랜드명·기호·번호) → `Text(verbatim: "…")`
+    """
+    for path in swift_files():
+        text = strip_previews(strip_comments(path.read_text(encoding="utf-8")))
+        if TEXT_LITERAL.search(text):
+            relative = path.relative_to(ROOT)
+            fail(
+                errors,
+                f'{relative} 에 `Text("리터럴")` 이 있다 — Xcode 가 문자열 카탈로그에 밀어 넣는다. '
+                f'번역 문구면 `Text(i18n.t("키"))`, 아니면 `Text(verbatim: "…")` 으로 쓴다',
+            )
+
+
 def check_clean_files(errors: list[str]) -> None:
     for relative in CLEAN_FILES:
         path = ROOT / relative
@@ -339,6 +367,7 @@ def main() -> int:
     strings = check_catalog(catalog, errors)
     check_usage(strings, errors)
     check_clean_files(errors)
+    check_text_literals(errors)
 
     if errors:
         print(f"✗ {len(errors)}건")

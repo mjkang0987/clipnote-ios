@@ -57,9 +57,9 @@ struct AccountDeleteView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     // 글머리표는 목록 표시라 사전에 넣지 않는다.
-                    Text("• \(i18n.t("settings.withdrawItemAccount"))")
-                    Text("• \(i18n.t("settings.withdrawItemClips"))")
-                    Text("• \(i18n.t("settings.withdrawItemLocal"))")
+                    Text(verbatim: "• \(i18n.t("settings.withdrawItemAccount"))")
+                    Text(verbatim: "• \(i18n.t("settings.withdrawItemClips"))")
+                    Text(verbatim: "• \(i18n.t("settings.withdrawItemLocal"))")
                 }
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)

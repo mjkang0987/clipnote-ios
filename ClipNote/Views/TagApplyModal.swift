@@ -21,7 +21,7 @@ struct TagApplyModal: View {
                 .font(.system(size: 13))
                 .foregroundStyle(AppColor.fgMuted)
 
-            Text("\(i18n.t("clips.editTagsLabel")) \(i18n.t("clips.editTagsNote"))")
+            Text(verbatim: "\(i18n.t("clips.editTagsLabel")) \(i18n.t("clips.editTagsNote"))")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppColor.fg)
             TextField(i18n.t("clips.editTagsPlaceholder"), text: $tagInput)

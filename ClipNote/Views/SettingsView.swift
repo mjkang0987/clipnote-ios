@@ -97,7 +97,7 @@ struct SettingsView: View {
                         }
                     }
                 } label: {
-                    Text("\(i18n.language.label) ›")
+                    Text(verbatim: "\(i18n.language.label) ›")
                         .font(.system(size: 14))
                         .foregroundStyle(AppColor.fgMuted)
                 }

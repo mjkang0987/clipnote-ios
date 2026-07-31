@@ -385,7 +385,7 @@ private struct ClipRow: View {
                         Button(i18n.t("clips.edit"), action: onEdit)
                         Button(i18n.t("common.delete"), role: .destructive, action: onDelete)
                     } label: {
-                        Text("⋯")
+                        Text(verbatim: "⋯")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(AppColor.fgMuted)
                             .frame(width: 32, height: 32)

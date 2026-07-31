@@ -128,7 +128,7 @@ struct SpotlightOverlay: View {
     private var callout: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Text("\(index + 1) / \(steps.count)")
+                Text(verbatim: "\(index + 1) / \(steps.count)")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(AppColor.brand)
                 if let audience = step.audience {

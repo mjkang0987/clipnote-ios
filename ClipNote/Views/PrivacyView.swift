@@ -102,7 +102,7 @@ struct PrivacyView: View {
                     .padding(.top, 22)
                 }
 
-                Text("© 2026 PIKAWORKS")
+                Text(verbatim: "© 2026 PIKAWORKS")
                     .font(.system(size: 12))
                     .foregroundStyle(AppColor.fgMuted)
                     .padding(.top, 28)

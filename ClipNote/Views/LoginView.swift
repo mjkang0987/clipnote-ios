@@ -65,7 +65,7 @@ struct LoginView: View {
                     .resizable().interpolation(.high).scaledToFit()
                     .frame(width: 34, height: 34)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
+                Text(verbatim: "ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
             }
             Text(i18n.t("common.login")).font(.system(size: 20, weight: .bold)).foregroundStyle(AppColor.fg)
             Text(i18n.t("login.subtitleWithKakao"))
@@ -197,7 +197,7 @@ struct LoginView: View {
                 .foregroundStyle(accent ? AppColor.brandStrong : AppColor.fg)
             ForEach(items, id: \.self) { item in
                 // 글머리표는 문구가 아니라 목록 표시라 사전에 넣지 않는다(번역 대상이 아니다).
-                Text("· \(item)").font(.system(size: 13)).lineSpacing(2)
+                Text(verbatim: "· \(item)").font(.system(size: 13)).lineSpacing(2)
                     .foregroundStyle(AppColor.fgMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

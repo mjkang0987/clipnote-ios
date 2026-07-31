@@ -290,7 +290,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 4) {
                 Text(label).font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.fg)
-                if required { Text("*").foregroundStyle(AppColor.danger) }
+                if required { Text(verbatim: "*").foregroundStyle(AppColor.danger) }
                 if let m = muted { Text(m).font(.system(size: 13)).foregroundStyle(AppColor.fgMuted) }
             }
             content()
@@ -347,7 +347,7 @@ struct HomeView: View {
     }
 
     private func warnBox(_ text: String) -> some View {
-        Text("⚠️ \(text)").font(.system(size: 14)).foregroundStyle(AppColor.fg)
+        Text(verbatim: "⚠️ \(text)").font(.system(size: 14)).foregroundStyle(AppColor.fg)
             .frame(maxWidth: .infinity, alignment: .leading).padding(12)
             .background(AppColor.warning.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: Radius.sm)).padding(.top, 16)

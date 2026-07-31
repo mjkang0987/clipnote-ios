@@ -13,8 +13,8 @@ struct BrandLogo: View {
                 .frame(width: size + 4, height: size + 4)
                 .clipShape(RoundedRectangle(cornerRadius: (size + 4) * 0.22))
             HStack(spacing: 0) {
-                Text("Clip").foregroundStyle(AppColor.fg)
-                Text("Note").foregroundStyle(AppColor.brand)
+                Text(verbatim: "Clip").foregroundStyle(AppColor.fg)
+                Text(verbatim: "Note").foregroundStyle(AppColor.brand)
             }
             .font(.system(size: size, weight: .bold))
         }

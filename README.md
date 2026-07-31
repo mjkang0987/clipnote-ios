@@ -49,10 +49,15 @@ iOS 기본 동작은 시스템 설정에서만 앱 언어가 바뀌는 구조(`B
 `Localizable.xcstrings` 는 사람과 Xcode 가 번갈아 쓰는 파일이다. 형식이 어긋나면 **내용이 그대로여도
 파일 전체가 diff 로 잡혀 `git pull` 이 막힌다.** 두 가지로 막아 놨다.
 
-- `project.yml` 의 `SWIFT_EMIT_LOC_STRINGS: NO` — Xcode 가 빌드마다 `Text("리터럴")` 을 카탈로그에
-  밀어 넣는 것을 끈다. **`project.yml` 을 받은 뒤엔 반드시 `xcodegen generate` 를 다시 돌려야** 적용된다.
-- `scripts/check-localizations.py` 의 정규 형식 검사 — 카탈로그를 손으로 고쳤으면
-  `python3 scripts/check-localizations.py --format` 로 다시 쓴다. CI 첫 스텝이 어긋난 형식을 막는다.
+1. **`Text("리터럴")` 을 쓰지 않는다.** SwiftUI `Text` 는 리터럴을 받으면 — 보간이 있어도
+   (`Text("· \(item)")`) — `LocalizedStringKey` 로 해석돼 Xcode 가 카탈로그에 밀어 넣는다.
+   - 번역 문구 → `Text(i18n.t("키"))`
+   - 브랜드명·기호·번호 → `Text(verbatim: "…")`
+   - CI 가 막는다(`check_text_literals`). **이게 가장 확실한 차단이다** — 빌드 설정과 달리
+     프로젝트 재생성 여부에 좌우되지 않는다.
+2. `project.yml` 의 `SWIFT_EMIT_LOC_STRINGS: NO` — 추출 자체를 끄는 보조 장치.
+   `xcodegen generate` 를 다시 돌려야 적용되므로 1번이 주된 방어선이다.
+3. 정규 형식 검사 — 카탈로그를 손으로 고쳤으면 `python3 scripts/check-localizations.py --format`.
 
 그래도 `pull` 이 이 파일 때문에 막히면, 로컬 변경은 도구가 만든 것이라 버려도 된다:
 
