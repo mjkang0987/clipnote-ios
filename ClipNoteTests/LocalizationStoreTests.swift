@@ -56,6 +56,62 @@ import Testing
         #expect(store.t("settings.signedInWith", args: "Google") == "Signed in with Google")
     }
 
+    /// 화면마다 대표 키를 하나씩 골라, **네 언어가 서로 다른 값을 주는지** 본다.
+    ///
+    /// `scripts/check-localizations.py` 는 카탈로그 *파일* 을 본다. 파일이 멀쩡해도 그 카탈로그가
+    /// 타깃에 안 들어가거나 `CFBundleLocalizations` 가 어긋나면 런타임에는 전부 폴백한다 —
+    /// 파일 검사로는 절대 잡히지 않는다. 그래서 번들에서 실제로 꺼내 본다.
+    ///
+    /// "키가 그대로 나오지 않는지"만 보면 부족하다. 예컨대 `en.lproj` 가 통째로 빠져도 `t(_:)`
+    /// 는 한국어로 폴백해 키가 아닌 값을 돌려주므로 그 검사는 통과한다. 값이 **갈리는지**를 봐야
+    /// 언어 번들이 실제로 실렸는지 알 수 있다.
+    @Test @MainActor func everyNamespaceResolvesPerLanguage() {
+        // 네임스페이스마다 하나씩, 네 언어에서 값이 모두 다른 키로 고른다.
+        // 새 화면을 사전화하면 여기에 대표 키를 추가한다.
+        let keys = [
+            "common.myClips", "home.hero.subtitle", "homeActions.createLink",
+            "clips.empty", "login.continueAsGuest", "compare.guestTitle",
+            "settings.title", "about.howTitle", "faq.q2", "menu.tour",
+            "onboarding.skip", "share.open", "language.koreanOnlyNotice",
+        ]
+        let store = LocalizationStore(defaults: Self.scratchDefaults("namespaces"))
+        for key in keys {
+            var values: [String] = []
+            for language in AppLanguage.allCases {
+                store.select(language)
+                let value = store.t(key)
+                #expect(value != key, "\(language.rawValue) 에서 \(key) 가 해석되지 않았다")
+                values.append(value)
+            }
+            #expect(Set(values).count == AppLanguage.allCases.count,
+                    "\(key) 가 언어별로 갈리지 않는다(번들 누락 → 폴백): \(values)")
+        }
+    }
+
+    /// 자리표시자가 둘인 문장은 `%1$@`·`%2$@` 위치 지정자를 쓴다. 언어별로 순서가 바뀌어도
+    /// 두 인자가 모두 살아 있어야 한다 — 한 언어에서 지시자를 하나 빠뜨리면 그 언어에서만
+    /// 낱말이 통째로 사라진다.
+    @Test @MainActor func positionalArgumentsKeepTheirMeaning() {
+        let store = LocalizationStore(defaults: Self.scratchDefaults("positional"))
+        for language in AppLanguage.allCases {
+            store.select(language)
+            let sentence = store.t("compare.guestItem3", args: "<DEVICE>", "<NOLINK>")
+            #expect(sentence.contains("<DEVICE>"), "\(language.rawValue): 첫 인자가 사라졌다")
+            #expect(sentence.contains("<NOLINK>"), "\(language.rawValue): 둘째 인자가 사라졌다")
+        }
+    }
+
+    /// 표시 언어는 `standard` 가 아니라 **App Group** 에 저장한다. 공유 확장은 앱과 다른
+    /// `standard` 도메인을 쓰므로, 여기가 standard 로 되돌아가면 앱만 영어이고 공유 시트는
+    /// 한국어로 뜬다.
+    ///
+    /// 시뮬레이터에서는 엔타이틀먼트 없이도 suite 를 열 수 있어 "확장과 정말 공유되는지"까지는
+    /// 확인하지 못한다. 이 테스트가 막는 것은 저장 위치가 standard 로 되돌아가는 회귀다.
+    @Test @MainActor func selectionIsNotStoredInStandardDefaults() {
+        #expect(LocalizationStore.sharedDefaults != UserDefaults.standard,
+                "표시 언어가 standard 에 저장된다 — 공유 확장이 읽지 못한다")
+    }
+
     @Test @MainActor func unknownKeyReturnsKeyItself() {
         // 번역도 한국어 폴백도 없으면 키가 그대로 나온다(빈 화면보다 낫다는 판단).
         let store = LocalizationStore(defaults: Self.scratchDefaults("unknown"))
