@@ -44,6 +44,24 @@ iOS 기본 동작은 시스템 설정에서만 앱 언어가 바뀌는 구조(`B
 
 자세한 내용은 `plan.md` "앱 다국어" 절.
 
+### 카탈로그를 만질 때 (중요)
+
+`Localizable.xcstrings` 는 사람과 Xcode 가 번갈아 쓰는 파일이다. 형식이 어긋나면 **내용이 그대로여도
+파일 전체가 diff 로 잡혀 `git pull` 이 막힌다.** 두 가지로 막아 놨다.
+
+- `project.yml` 의 `SWIFT_EMIT_LOC_STRINGS: NO` — Xcode 가 빌드마다 `Text("리터럴")` 을 카탈로그에
+  밀어 넣는 것을 끈다. **`project.yml` 을 받은 뒤엔 반드시 `xcodegen generate` 를 다시 돌려야** 적용된다.
+- `scripts/check-localizations.py` 의 정규 형식 검사 — 카탈로그를 손으로 고쳤으면
+  `python3 scripts/check-localizations.py --format` 로 다시 쓴다. CI 첫 스텝이 어긋난 형식을 막는다.
+
+그래도 `pull` 이 이 파일 때문에 막히면, 로컬 변경은 도구가 만든 것이라 버려도 된다:
+
+```bash
+cp Shared/Localization/Localizable.xcstrings /tmp/xcstrings-backup.json   # 백업(선택)
+git restore Shared/Localization/Localizable.xcstrings
+git pull origin develop && xcodegen generate
+```
+
 ## 브랜치
 
 `main`(배포) ← `develop`(통합) ← `feature/*`.
