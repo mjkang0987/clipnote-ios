@@ -29,6 +29,9 @@ struct RunningDino: View {
                 let elapsed = timeline.date.timeIntervalSince(start)
                 Text(verbatim: "🦖")
                     .font(.system(size: Self.size))
+                    // 이 이모지는 **왼쪽을 보고** 그려져 있다. 움직임은 왼→오른쪽이라
+                    // 그대로 두면 뒷걸음질로 읽힌다. 좌우를 뒤집어 진행 방향을 보게 한다.
+                    .scaleEffect(x: -1, y: 1)
                     .offset(x: x(in: proxy.size.width, elapsed: elapsed),
                             y: -hop(elapsed: elapsed))
             }
