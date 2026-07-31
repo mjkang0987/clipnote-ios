@@ -52,7 +52,9 @@
 | `project.yml` `CFBundleLocalizations` | ✅ `e5091c8` |
 | 설정 화면 + 표시 언어 선택 UI | ✅ `e5091c8`·`218df1f` |
 | `LocalizationStoreTests`(번들 해석·언어별 값 차이) | ✅ `e5091c8` |
-| 나머지 화면 문자열 | ⬜ **한글 리터럴 264개 / 20개 파일** |
+| 나머지 화면 문자열 | ✅ 전 화면 완료 (2026-07-31, 키 191개) |
+| 공유 확장(`ClipNoteShare`) | ✅ `Shared/Localization` 이동 + App Group 저장 |
+| 카탈로그 무결성 검사 | ✅ `scripts/check-localizations.py` (CI 첫 스텝) |
 
 #### 웹에서 확정돼 앱에도 그대로 적용되는 결정
 
@@ -85,15 +87,21 @@
     `settings.contact.action`↔`settings.contactAction`, `settings.contact.note`↔`settings.contactNote`,
     `settings.row.view`↔`settings.viewLink`, `settings.danger.*`↔`settings.dangerTitle`·`dangerBody`·`withdraw`,
     `settings.signOut`↔`common.logout`, `settings.privacy`↔`common.privacy`
-  - 앱에만 있는 개념(`settings.guard.*` — 비로그인 가드 화면, `settings.heading` — 내비 타이틀과
-    별개인 본문 제목)은 앱 전용 키로 남긴다. 웹에는 해당 UI 가 없다.
+  - 앱에만 있는 개념(`settings.guardBody`·`guardHome` — 비로그인 가드 화면)은 앱 전용 키로
+    남기되 이름 규칙은 웹처럼 평평하게 간다. 웹에는 해당 UI 가 없다.
+  - 값이 갈리는 것도 있다. 저장 위치의 이름(웹 `이 브라우저에` ↔ 앱 `이 기기에`)과
+    `settings.withdraw` 영문(웹 `Delete account` ↔ 앱 `Delete my account` — 앱은 제목과 버튼이
+    같은 상자에 붙어 있어 같은 문구면 구분이 안 된다). 이런 건 카탈로그 `comment` 에 이유를 남긴다.
 - **웹에 없는 화면**: 온보딩 스포트라이트 투어(`onboarding.*`), 공유 확장(`share.*`).
   이 두 네임스페이스는 앱이 원본이고 웹으로 갈 일이 없다.
 - **`{token}` → `%@` 변환 시 순서 주의.** 한 문장에 자리표시자가 둘 이상이면 언어별로 순서가
   바뀔 수 있다. 그때는 `%1$@`·`%2$@` 위치 지정자를 쓴다(웹은 이름으로 참조해 이 문제가 없다).
-- **공유 확장(`ClipNoteShare`)은 별도 번들이다.** `project.yml` 의 소스가 `ClipNoteShare` + `Shared`
-  뿐이라 `ClipNote/Localization/` 이 들어 있지 않다. 확장까지 번역하려면 `Localization/` 을
-  `Shared/` 로 옮기고 확장 타깃에도 `CFBundleLocalizations` 를 선언해야 한다.
+- **공유 확장(`ClipNoteShare`)은 별도 번들이다.** 아래 "공유 확장을 위한 구조 변경" 참고.
+- **사용자에게 보이는 오류는 문자열이 아니라 케이스로 둔다**(`HomeError`·`AuthErrorMessage`).
+  표시 언어를 아는 건 뷰인데 모델은 접근할 수 없고, 모델에 스토어를 주입하면 문장이 만들어진
+  시점의 언어로 굳어 언어를 바꿔도 오류만 옛 언어로 남는다. 서버·시스템이 준 문장은 그대로 통과시킨다.
+- **투어 단계처럼 배열로 든 문구는 계산 프로퍼티로 둔다.** `let` 저장 프로퍼티면 뷰가 처음
+  만들어진 시점의 언어로 굳는다.
 
 #### 범위
 
@@ -108,15 +116,25 @@
    원래 마지막 단계였는데 **앞으로 당겼다.** 2~9단계가 전부 이 검사에 걸리는 실수를 낼 수 있고,
    Xcode 없이 도는 유일한 자동 검증이라 뒤에 두면 아홉 번 헛돈다.
 1. ✅ 문자열 카탈로그 키를 웹 사전에 정렬 + `common.*` 도입
-2. ⬜ 공통 내비(`HeaderMenu`·`RootView`)
-3. ⬜ 홈(`HomeView`·`HomeViewModel`) — `home.*`·`homeActions.*`
-4. ⬜ 내 클립(`ClipsView`·`ClipCardView`·편집/공유결과/태그 모달) — `clips.*` + 날짜 그룹 로케일화
-5. ⬜ 로그인(`LoginView`·`AuthStore` 오류) — `login.*`
-6. ⬜ 소개·FAQ(`AboutView`·`FaqView`) — `about.*`·`faq.*`
-7. ⬜ 온보딩·투어(`OnboardingView`·`SpotlightTour`) — `onboarding.*`
-8. ⬜ 회원 탈퇴 + 개인정보(제목·버튼) — `settings.withdraw*`·`privacy.*`
-9. ⬜ 공유 확장(`ClipNoteShare`) — 번들 구조 변경 동반
-10. ⬜ `LocalizationStoreTests` 보강 + 전 화면 CI 그린
+2. ✅ 공통 내비(`HeaderMenu`·`RootView`) — `1e71838`
+3. ✅ 홈(`HomeView`·`HomeViewModel`) — `6077aa0`
+4. ✅ 내 클립(`ClipsView`·모달 3종) — `4975db8`
+5. ✅ 로그인(`LoginView`·`AuthStore`) — `c50a7b8`
+6. ✅ 소개·FAQ(`AboutView`·`FaqView`) — `fa8a292`
+7. ✅ 온보딩·투어(`OnboardingView`·`SpotlightTour`) — `104b15a`
+8. ✅ 회원 탈퇴 + 개인정보(제목·안내) — `66a4107`
+9. ✅ 공유 확장(`ClipNoteShare`) — 번들 구조 변경 동반
+10. 🟡 `LocalizationStoreTests` 보강 + 전 화면 CI 그린
+
+#### 공유 확장을 위한 구조 변경 (9단계)
+
+`ClipNote/Localization/` 을 `Shared/Localization/` 으로 옮겼다. `project.yml` 에서 확장 타깃의
+소스가 `ClipNoteShare` + `Shared` 뿐이라, 그 아래로 옮겨야 문자열 카탈로그가 확장 번들에도
+컴파일된다. 확장 타깃에도 `CFBundleLocalizations` 를 선언했다.
+
+**선택 언어의 저장 위치를 `UserDefaults.standard` 에서 App Group 으로 바꿨다.** 확장은 앱과
+`standard` 도메인이 달라서, standard 에 두면 확장이 사용자의 선택을 읽지 못한다 — 앱은 영어인데
+공유 시트만 한국어로 뜬다. 아직 출시되지 않은 기능이라 기존 값을 옮길 필요는 없다.
 
 #### 검증
 

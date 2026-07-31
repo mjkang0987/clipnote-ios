@@ -20,9 +20,6 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | 경로 | 역할 |
 |------|------|
 | `App/ClipNoteApp.swift` | 앱 진입점(@main), `.onOpenURL` 딥링크, AuthStore·LocalizationStore 주입, `modelContainer(LocalClip)` |
-| `Localization/AppLanguage.swift` | 지원 언어 enum(ko·en·ja·zh-Hans) + 시스템 선호 언어 매칭 |
-| `Localization/LocalizationStore.swift` | 표시 언어 상태·문자열 조회(@MainActor @Observable). 언어별 `.lproj` 직접 조회 → **재시작 없이 전환**, 번역 없으면 한국어 폴백 |
-| `Localization/Localizable.xcstrings` | 문자열 카탈로그(원본 `ko`). 키 이름은 웹 `lib/i18n/messages/ko.ts` 와 맞춘다 |
 | `Auth/AuthStore.swift` | 인증(@MainActor): 세션·토큰·OAuth·네이버 |
 | `Auth/AuthDeepLink.swift` | `clipnote://auth/...` 파싱 |
 | `Models/Models.swift` | 도메인 모델 |
@@ -58,6 +55,16 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `PrivacyInfo.xcprivacy` | 개인정보 매니페스트(심사) |
 | `ClipNoteTests/` | 유닛 테스트 |
 
+`Shared/`(앱·공유 확장 두 타깃이 함께 쓰는 코드)
+
+| 경로 | 역할 |
+|------|------|
+| `Shared/SharedURLStore.swift` | 확장 → 앱 URL 전달(App Group) |
+| `Shared/Localization/AppLanguage.swift` | 지원 언어 enum(ko·en·ja·zh-Hans) + 시스템 선호 언어 매칭 |
+| `Shared/Localization/LocalizationStore.swift` | 표시 언어 상태·문자열 조회(@MainActor @Observable). 언어별 `.lproj` 직접 조회 → **재시작 없이 전환**, 번역 없으면 한국어 폴백. 선택값은 App Group 에 저장(확장과 공유) |
+| `Shared/Localization/Localizable.xcstrings` | 문자열 카탈로그(원본 `ko`). 키 이름은 웹 `lib/i18n/messages/ko.ts` 와 맞춘다 |
+| `scripts/check-localizations.py` | 카탈로그 무결성 검사(CI 첫 스텝). 번역 누락·포맷 지시자 불일치·미사용/미등록 키·잔여 한글 리터럴 |
+
 ## 현재 상태
 - **Phase 1~5 + AdMob 완료** — 빌드/테스트 그린(76 tests / 13 suites, iPhone 17 Pro). **RN 기능 패리티 완성**.
   - Phase 1: `Theme`(pickGradient JS해시 동일)·`Models`(Codable)·`APIClient`(actor 7엔드포인트: 메타·클립·OG·목록·수정·삭제·계정삭제)·`ShareText`(§4.3)
@@ -71,11 +78,16 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 내 클립 무한스크롤(임계 도달 시 cursor 방식). 다국어는 보류 해제 — 아래 항목 참고.
-- **다국어 진행 중(2026-07-30~)**: 한국어(원본)·영어·일본어·중국어 간체. `Localization/` 3파일 +
-  `project.yml` `CFBundleLocalizations` + 설정의 표시 언어 선택까지 완료(`e5091c8`·`218df1f`).
-  **나머지 화면 문자열은 아직 하드코딩**(한글 리터럴 264개/20파일) — 화면 단위로 진행 중.
-  키 이름·문구는 웹 `clipnote` 사전이 소스오브트루스이고, 개인정보 처리방침 본문은 번역하지 않는다.
-  범위·결정·순서는 `plan.md` "앱 다국어" 절 참고.
+- **다국어(2026-07-30~31)**: 한국어(원본)·영어·일본어·중국어 간체, 전 화면 사전화 완료(키 191개).
+  설정 > 표시 언어에서 **재시작 없이** 바뀐다. 키 이름·문구의 소스오브트루스는 웹 `clipnote` 사전이고,
+  개인정보처리방침 **본문은 번역하지 않는다**(법적 문서 — 비한국어에서 안내만 붙인다).
+  - `Shared/Localization/` 이 앱·공유 확장 두 타깃에 실린다. 선택 언어는 **App Group** 에 저장한다 —
+    확장은 앱과 `standard` 도메인이 달라서, 맞추지 않으면 공유 시트만 다른 언어로 뜬다.
+  - 사용자에게 보이는 오류는 문자열이 아니라 케이스(`HomeError`·`AuthErrorMessage`)로 두고 뷰가 번역한다.
+    모델이 문장을 만들면 그 시점 언어로 굳어, 언어를 바꿔도 오류만 옛 언어로 남는다.
+  - `scripts/check-localizations.py` 가 CI 첫 스텝에서 카탈로그를 검사한다(Xcode 없이 도는 유일한 검증).
+  - **남은 것: 시뮬레이터/실기기에서 4개 언어 눈으로 확인**(고정 높이 시트의 번역문 잘림 등) — 사람만 가능.
+  - 범위·결정·순서는 `plan.md` "앱 다국어" 절 참고.
 - **로그인 첫 진입 깜빡임 수정(2026-07-23)**: 로그인 사용자가 처음 진입 시 홈 액션이 게스트→로그인 UI로 튀던 문제. `AuthStore`가 지난 실행 로그인 여부를 `UserDefaults`에 저장하고 세션 확정 전(loading)엔 `displayLoggedIn` 힌트로 렌더, `HomeView.actions`가 이를 사용. CI(`pr-review.yml`)에 `claude/**` push 트리거 추가. (PR #107)
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.

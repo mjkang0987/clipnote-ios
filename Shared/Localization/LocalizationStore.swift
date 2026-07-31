@@ -12,13 +12,25 @@ final class LocalizationStore {
     /// 선택한 언어를 저장하는 키. 기기에 남아 다음 실행에도 유지된다.
     static let storageKey = "app.language"
 
+    /// 저장 위치는 **App Group** 이다(`UserDefaults.standard` 가 아니라).
+    ///
+    /// 공유 확장은 앱과 다른 `standard` 도메인을 갖는다. standard 에 두면 확장이 사용자의
+    /// 선택을 읽지 못해, 앱은 영어인데 공유 시트만 한국어로 뜬다. App Group 은 두 타깃이
+    /// 같은 값을 본다(`SharedURLStore` 와 같은 그룹).
+    ///
+    /// 그룹을 못 여는 상황(엔타이틀먼트 누락·테스트)에서는 standard 로 떨어진다 —
+    /// 언어 선택이 확장과 어긋날 뿐 화면은 정상 동작한다.
+    static var sharedDefaults: UserDefaults {
+        UserDefaults(suiteName: SharedURLStore.appGroupID) ?? .standard
+    }
+
     private(set) var language: AppLanguage
 
     /// 현재 언어의 문자열 번들. 언어 변경 때마다 교체한다(조회마다 경로를 뒤지지 않도록).
     private var bundle: Bundle
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = LocalizationStore.sharedDefaults) {
         self.defaults = defaults
         let saved = defaults.string(forKey: Self.storageKey).flatMap(AppLanguage.init(rawValue:))
         let initial = saved ?? AppLanguage.matchingSystem()

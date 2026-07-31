@@ -5379,6 +5379,246 @@
           }
         }
       }
+    },
+    "share.close": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "닫기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "share.foundBody": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다. %@ 는 share.open 버튼 이름 — 문장이 버튼을 가리키므로 라벨이 바뀌면 같이 바뀌어야 한다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote 앱을 열면 홈 입력칸에 링크가 자동으로 채워져 있어요. 거기서 바로 저장하거나 공유 카드를 만들 수 있어요.\n‘%@’가 안 되면 홈 화면에서 ClipNote를 직접 열어 주세요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the ClipNote app and the link is already in the home input. Save it or build a share card right there.\nIf ‘%@’ doesn't work, open ClipNote from your home screen."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote アプリを開くと、ホームの入力欄にリンクが自動で入っています。そこからすぐ保存したり共有カードを作ったりできます。\n「%@」がうまくいかないときはホーム画面から ClipNote を直接開いてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 ClipNote 应用后，链接已经自动填入首页输入框。可以直接保存或生成分享卡片。\n如果「%@」无效，请从主屏幕直接打开 ClipNote。"
+          }
+        }
+      }
+    },
+    "share.foundTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote에 담았어요 🎉"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved to ClipNote 🎉"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote に取り込みました 🎉"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存入 ClipNote 🎉"
+          }
+        }
+      }
+    },
+    "share.loadingBody": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잠시만요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One moment."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "少々お待ちください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请稍候。"
+          }
+        }
+      }
+    },
+    "share.loadingTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote로 보내는 중…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending to ClipNote…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClipNote に送信中…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在发送到 ClipNote…"
+          }
+        }
+      }
+    },
+    "share.notFoundBody": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유한 항목에서 URL을 찾지 못했어요. 링크를 직접 복사해 붙여넣어 주세요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't find a URL in what you shared. Please copy the link and paste it instead."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有された項目からURLを見つけられませんでした。リンクをコピーして貼り付けてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能从分享的内容中找到网址。请复制链接后粘贴。"
+          }
+        }
+      }
+    },
+    "share.notFoundTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "링크를 찾지 못했어요"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No link found"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクが見つかりませんでした"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到链接"
+          }
+        }
+      }
+    },
+    "share.open": {
+      "extractionState": "manual",
+      "comment": "앱 전용(공유 확장) — 웹에는 해당 화면이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 열기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリを開く"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开应用"
+          }
+        }
+      }
     }
   }
 }

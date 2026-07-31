@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "ClipNote/Localization/Localizable.xcstrings"
+CATALOG = ROOT / "Shared/Localization/Localizable.xcstrings"
 
 # `AppLanguage` 와 `project.yml` 의 CFBundleLocalizations 도 같은 목록이어야 한다.
 # 그 둘의 일치는 Xcode 가 필요해 `LocalizationStoreTests` 가 본다.
@@ -50,12 +50,13 @@ CLEAN_FILES = [
     "ClipNote/Views/OnboardingView.swift",
     "ClipNote/Views/SpotlightTour.swift",
     "ClipNote/Views/AccountDeleteView.swift",
+    "ClipNoteShare/ShareViewController.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
 LITERAL_ALLOWLIST = {
     # 각 언어를 그 언어로 표기하는 게 의도다.
-    ("ClipNote/Localization/AppLanguage.swift", "한국어"),
+    ("Shared/Localization/AppLanguage.swift", "한국어"),
 }
 
 KEY_CALL_START = re.compile(r"\bt\(")

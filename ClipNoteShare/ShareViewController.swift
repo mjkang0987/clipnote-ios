@@ -6,6 +6,10 @@ import UniformTypeIdentifiers
 /// 호스트 앱(ClipNote)을 `clipnote://share?url=`로 연다. 앱은 홈 입력칸에 URL을 채운다(방식 A).
 @objc(ShareViewController)
 final class ShareViewController: UIViewController {
+    /// 표시 언어. 앱에서 고른 값을 App Group 에서 읽는다 — 확장은 앱과 `standard` 도메인이
+    /// 달라서, 저장 위치를 맞추지 않으면 앱만 영어이고 공유 시트는 한국어로 뜬다.
+    private let i18n = LocalizationStore()
+
     private var deepLink: URL?
 
     private let card = UIView()
@@ -61,14 +65,14 @@ final class ShareViewController: UIViewController {
         titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = .label
         titleLabel.numberOfLines = 0
-        titleLabel.text = "ClipNote로 보내는 중…"
+        titleLabel.text = i18n.t("share.loadingTitle")
 
         bodyLabel.font = .systemFont(ofSize: 14)
         bodyLabel.textColor = .secondaryLabel
         bodyLabel.numberOfLines = 0
-        bodyLabel.text = "잠시만요."
+        bodyLabel.text = i18n.t("share.loadingBody")
 
-        openButton.setTitle("앱 열기", for: .normal)
+        openButton.setTitle(i18n.t("share.open"), for: .normal)
         openButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         openButton.setTitleColor(.white, for: .normal)
         openButton.backgroundColor = brand
@@ -76,7 +80,7 @@ final class ShareViewController: UIViewController {
         openButton.isHidden = true
         openButton.addTarget(self, action: #selector(openTapped), for: .touchUpInside)
 
-        closeButton.setTitle("닫기", for: .normal)
+        closeButton.setTitle(i18n.t("share.close"), for: .normal)
         closeButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         closeButton.setTitleColor(.secondaryLabel, for: .normal)
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
@@ -108,16 +112,16 @@ final class ShareViewController: UIViewController {
     }
 
     private func showFound() {
-        titleLabel.text = "ClipNote에 담았어요 🎉"
-        bodyLabel.text = "ClipNote 앱을 열면 홈 입력칸에 링크가 자동으로 채워져 있어요. "
-            + "거기서 바로 저장하거나 공유 카드를 만들 수 있어요.\n"
-            + "‘앱 열기’가 안 되면 홈 화면에서 ClipNote를 직접 열어 주세요."
+        titleLabel.text = i18n.t("share.foundTitle")
+        // 안내문이 '앱 열기' 버튼을 가리킨다 — 라벨을 직접 적으면 버튼 이름을 바꿀 때
+        // 안내만 옛 이름으로 남는다.
+        bodyLabel.text = i18n.t("share.foundBody", args: i18n.t("share.open"))
         openButton.isHidden = (deepLink == nil)
     }
 
     private func showNotFound() {
-        titleLabel.text = "링크를 찾지 못했어요"
-        bodyLabel.text = "공유한 항목에서 URL을 찾지 못했어요. 링크를 직접 복사해 붙여넣어 주세요."
+        titleLabel.text = i18n.t("share.notFoundTitle")
+        bodyLabel.text = i18n.t("share.notFoundBody")
         openButton.isHidden = true
     }
 
