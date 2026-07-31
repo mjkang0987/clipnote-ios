@@ -1467,6 +1467,358 @@
         }
       }
     },
+    "compare.guestItem1": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "링크를 붙여넣어 미리보기 카드를 바로 만들 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste a link and build a preview card right away."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクを貼り付けてプレビューカードをすぐ作れます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴链接就能立刻生成预览卡片。"
+          }
+        }
+      }
+    },
+    "compare.guestItem2": {
+      "extractionState": "manual",
+      "comment": "%@ 는 common.myClips. 웹은 같은 키가 ‘이 브라우저에’ — 저장 위치의 이름만 플랫폼에 맞춘다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "만든 클립을 이 기기에 저장하고 ‘%@’에서 다시 봐요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save clips on this device and find them again in ‘%@’."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作ったクリップをこの端末に保存して「%@」で見返せます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把剪藏保存在此设备，之后在「%@」中再查看。"
+          }
+        }
+      }
+    },
+    "compare.guestItem3": {
+      "extractionState": "manual",
+      "comment": "%1$@ 는 guestItem3Device, %2$@ 는 guestItem3NoLink. 자리표시자가 둘이라 위치 지정자를 쓴다 — 언어마다 순서가 바뀔 수 있다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단, 저장은 %1$@ 남고 %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "But they stay %1$@, and %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ただし保存は%1$@残り、%2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "但保存只会留在%1$@，而且%2$@"
+          }
+        }
+      }
+    },
+    "compare.guestItem3Device": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에만"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on this device only"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この端末にだけ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备上"
+          }
+        }
+      }
+    },
+    "compare.guestItem3NoLink": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "짧은 공유 링크는 못 만들어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you can't create short share links."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短い共有リンクは作れません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法生成短分享链接。"
+          }
+        }
+      }
+    },
+    "compare.guestTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 안 해도"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without signing in"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインしなくても"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不登录也可以"
+          }
+        }
+      }
+    },
+    "compare.signedInItem1": {
+      "extractionState": "manual",
+      "comment": "%@ 는 compare.signedInItem1Emphasis — 웹은 이 낱말을 강조한다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@로 카카오톡·SNS에 바로 보낼 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a %@ straight to messengers and social."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@でメッセンジャーやSNSにそのまま送れます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可以用%@直接发送到聊天工具和社交平台。"
+          }
+        }
+      }
+    },
+    "compare.signedInItem1Emphasis": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "짧은 공유 링크"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "short share link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短い共有リンク"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短分享链接"
+          }
+        }
+      }
+    },
+    "compare.signedInItem2": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유한 링크가 제목·이미지가 담긴 미리보기 카드로 떠요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared links show up as preview cards with a title and image."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有したリンクがタイトルと画像入りのプレビューカードで表示されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享的链接会显示为带标题和图片的预览卡片。"
+          }
+        }
+      }
+    },
+    "compare.signedInItem3": {
+      "extractionState": "manual",
+      "comment": "%@ 는 compare.signedInItem3Emphasis",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립이 계정에 쌓여 %@ 그대로 보이고, 태그로 깔끔하게 정리돼요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clips collect in your account, stay visible %@, and sort neatly by tag."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリップがアカウントに溜まり、%@そのまま見られてタグで整理できます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪藏会保存在账号里，%@都能照样查看，并按标签整理得很清楚。"
+          }
+        }
+      }
+    },
+    "compare.signedInItem3Emphasis": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어느 기기에서나"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on any device"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "どの端末でも"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何设备上"
+          }
+        }
+      }
+    },
+    "compare.signedInTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 하면"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you sign in"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログインすると"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后"
+          }
+        }
+      }
+    },
     "faq.title": {
       "extractionState": "manual",
       "localizations": {
@@ -2633,6 +2985,330 @@
         }
       }
     },
+    "login.compareTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 / 게스트 모드 안내"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in vs. guest"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン / ゲストモードについて"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录 / 访客模式说明"
+          }
+        }
+      }
+    },
+    "login.consent": {
+      "extractionState": "manual",
+      "comment": "웹은 같은 키 끝에 방침 링크가 문장으로 붙는다(‘{privacy}을 확인했어요’). 앱은 문장 아래 별도 버튼으로 두므로 그 절이 없다 — 동의 문구 전체가 체크박스 탭 영역이라 그 안에 링크를 넣으면 서로 잡아먹는다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 이메일, 프로필 닉네임·이미지)가 수집되는 데 동의합니다."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I agree that my social account details (unique identifier, email, profile nickname and image) are collected to identify me when signing in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン時に会員識別のためソーシャルアカウント情報(固有識別子、メール、プロフィールのニックネーム・画像)が収集されることに同意します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我同意在登录时为识别会员而收集社交账号信息(唯一标识符、邮箱、昵称与头像)。"
+          }
+        }
+      }
+    },
+    "login.continueAsGuest": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "게스트로 계속하기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue as guest"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ゲストとして続ける"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以访客身份继续"
+          }
+        }
+      }
+    },
+    "login.continueWith": {
+      "extractionState": "manual",
+      "comment": "%@ 는 공급자 이름(Google·Kakao·Naver) — 라틴 표기 고정",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@로 계속하기"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ で続ける"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用 %@ 继续"
+          }
+        }
+      }
+    },
+    "login.errorConsent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보처리방침에 동의하셔야 로그인할 수 있어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You need to agree to the privacy policy to sign in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシーに同意しないとログインできません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要同意隐私政策才能登录。"
+          }
+        }
+      }
+    },
+    "login.errorNaverNotConfigured": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 빌드에 NAVER_CLIENT_ID 가 없을 때. 사용자가 손쓸 수 없는 배포 설정 문제라 재시도 안내를 붙이지 않는다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네이버 로그인 설정이 없어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naver sign-in isn't configured."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naver ログインの設定がありません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未配置 Naver 登录。"
+          }
+        }
+      }
+    },
+    "login.or": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "또는"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "または"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或"
+          }
+        }
+      }
+    },
+    "login.privacyCheck": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 동의 상자 안의 방침 열기 버튼",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보처리방침 확인"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the privacy policy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシーを確認"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看隐私政策"
+          }
+        }
+      }
+    },
+    "login.recent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최근 로그인"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last used"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回利用"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近使用"
+          }
+        }
+      }
+    },
+    "login.redirecting": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 중…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redirecting…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動中…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳转中…"
+          }
+        }
+      }
+    },
+    "login.subtitleWithKakao": {
+      "extractionState": "manual",
+      "comment": "공급자 이름은 라틴 표기 고정 — 번역하지 않는다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google·Kakao 계정으로 간편하게 시작하세요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started quickly with your Google or Kakao account."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google・Kakao アカウントで手軽に始められます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Google 或 Kakao 账号快速开始。"
+          }
+        }
+      }
+    },
     "menu.about": {
       "extractionState": "manual",
       "comment": "앱 전용 — 소개 화면으로 가는 메뉴 항목. 웹은 홈 하단 섹션이라 내비 라벨이 없다",
@@ -2724,9 +3400,15 @@
       }
     },
     "settings.accountFallback": {
-      "comment": "앱 전용 — 계정 라벨(이메일·닉네임)을 못 받았을 때의 대체 표기. 웹에는 해당 UI 가 없다",
       "extractionState": "manual",
+      "comment": "앱 전용 — 이메일도 공급자도 모를 때의 계정 이름. 여기에 ‘소셜’ 을 쓰면 이름 자리에 분류명이 들어가 어색하다",
       "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인됨"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -2737,12 +3419,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ログイン中"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인됨"
           }
         },
         "zh-Hans": {

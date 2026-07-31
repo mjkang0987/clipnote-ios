@@ -47,14 +47,11 @@ struct SettingsView: View {
             Divider().overlay(AppColor.border)
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(auth.account?.label ?? i18n.t("settings.accountFallback"))
+                    Text(accountLabel)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.fg).lineLimit(1)
-                    Text(i18n.t(
-                        "settings.signedInWith",
-                        args: auth.account?.providerLabel ?? i18n.t("settings.providerUnknown")
-                    ))
-                    .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted).lineLimit(1)
+                    Text(i18n.t("settings.signedInWith", args: providerName))
+                        .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted).lineLimit(1)
                 }
                 Spacer(minLength: 12)
                 Button(i18n.t("common.logout")) { Task { await auth.signOut() } }
@@ -63,6 +60,18 @@ struct SettingsView: View {
             }
             .padding(.vertical, 20)
         }
+    }
+
+    /// 계정 표시 이름 — 이메일이 있으면 그것, 없으면 공급자 이름(네이버는 이메일을 주지 않는다).
+    /// 둘 다 없을 때만 사전의 대체 문구를 쓴다. 여기에 `providerName` 의 폴백("소셜")이 오면
+    /// 이름 자리에 분류명이 들어가 어색해진다.
+    private var accountLabel: String {
+        auth.account?.email ?? auth.account?.providerName ?? i18n.t("settings.accountFallback")
+    }
+
+    /// 공급자 이름. 라틴 표기 고정이라 번역하지 않고, 모르는 공급자일 때만 사전을 쓴다.
+    private var providerName: String {
+        auth.account?.providerName ?? i18n.t("settings.providerUnknown")
     }
 
     // MARK: - 표시 언어
