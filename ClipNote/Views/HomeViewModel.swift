@@ -32,6 +32,11 @@ final class HomeViewModel {
     private let api: APIClient
     private var debounceTask: Task<Void, Never>?
     private var fetchedURL: String?
+    /// 직전 URL — 이번 변경이 타이핑인지 붙여넣기인지 가르는 데만 쓴다.
+    private var previousURL = ""
+
+    /// 타이핑 디바운스. 한 글자마다 요청을 보내지 않으려고 둔다.
+    private static let typingDebounce = Duration.milliseconds(600)
 
     init(api: APIClient = .shared) { self.api = api }
 
@@ -68,9 +73,20 @@ final class HomeViewModel {
 
     // MARK: - Metadata extraction (600ms debounce)
 
-    /// URL 변경 콜백. 유효하면 600ms 디바운스 후 메타 추출. 변경 시 이전 Task 취소.
+    /// 이번 변경이 **사람이 한 글자 친 것**인가.
+    ///
+    /// 아니라면 붙여넣기·공유 확장으로 URL 이 통째로 들어온 것이다. 그때는 더 들어올 글자가
+    /// 없으니 디바운스를 기다릴 이유가 없다 — 이 앱의 주 입력이 붙여넣기라 체감이 그만큼 빨라진다.
+    static func isTyping(from previous: String, to current: String) -> Bool {
+        current.count == previous.count + 1 && current.hasPrefix(previous)
+    }
+
+    /// URL 변경 콜백. 유효하면 메타 추출(타이핑이면 디바운스 후). 변경 시 이전 Task 취소.
     func urlChanged() {
         let t = trimmedURL
+        let typed = Self.isTyping(from: previousURL, to: t)
+        previousURL = t
+
         if let f = fetchedURL, f != t {
             fetchedURL = nil
             meta = nil
@@ -79,7 +95,7 @@ final class HomeViewModel {
         debounceTask?.cancel()
         guard isFetchableUrl(t), fetchedURL != t else { return }
         debounceTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(600))
+            if typed { try? await Task.sleep(for: Self.typingDebounce) }
             guard !Task.isCancelled else { return }
             await self?.loadMeta(t)
         }

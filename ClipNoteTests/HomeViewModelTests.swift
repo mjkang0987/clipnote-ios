@@ -59,6 +59,21 @@ final class HomeStubURLProtocol: URLProtocol, @unchecked Sendable {
         #expect(vm.error == .metaFailed)
     }
 
+    /// 붙여넣기·공유로 들어온 URL 은 디바운스를 건너뛴다. 타이핑만 기다린다.
+    @Test(arguments: [
+        // 빈 칸에서 한 글자, 이어서 한 글자 — 타이핑
+        ("", "h", true),
+        ("http", "https", true),
+        // 통째로 들어옴 — 붙여넣기·공유 확장
+        ("", "https://example.com/a", false),
+        ("https://a.com", "https://example.com/a", false),
+        // 지우기 — 타이핑으로 보지 않는다(더 들어올 글자를 기다릴 이유가 없다)
+        ("https://example.com/a", "https://example.com/", false),
+    ])
+    func detectsTypingVersusPaste(previous: String, current: String, typed: Bool) {
+        #expect(HomeViewModel.isTyping(from: previous, to: current) == typed)
+    }
+
     @Test func tagsParsedFromInput() {
         let vm = makeVM()
         vm.tagInput = "a, b ,c"
