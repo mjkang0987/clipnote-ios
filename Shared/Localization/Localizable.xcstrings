@@ -796,36 +796,6 @@
         }
       }
     },
-    "clips.discardAction": {
-      "extractionState": "manual",
-      "comment": "앱 전용 — 옮기기 다이얼로그의 거절 버튼. 웹은 ‘취소’ 를 누르면 삭제 확인으로 넘어가지만, iOS 에서 취소 역할 버튼이 삭제 흐름을 여는 건 관례에 어긋나 의도를 라벨에 드러낸다",
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 기기에서 삭제"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete from this device"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "この端末から削除"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "从此设备删除"
-          }
-        }
-      }
-    },
     "clips.discardBody": {
       "extractionState": "manual",
       "comment": "%1$@ 는 clips.countUnit 결과, %2$@ 는 clips.discardIrreversible. 웹은 같은 키가 ‘이 브라우저’ — 저장 위치의 이름만 플랫폼에 맞춘다",
@@ -1326,36 +1296,6 @@
         }
       }
     },
-    "clips.migrateLater": {
-      "extractionState": "manual",
-      "comment": "앱 전용 — 확인 다이얼로그의 취소 버튼. 웹은 레이어라 ‘취소’ 를 쓴다",
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "나중에"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Later"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "あとで"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "稍后"
-          }
-        }
-      }
-    },
     "clips.migratePartial": {
       "extractionState": "manual",
       "comment": "앱 전용 — 옮기기 부분 실패 알림",
@@ -1441,6 +1381,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "要迁移此设备上的剪藏吗?"
+          }
+        }
+      }
+    },
+    "clips.migrating": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "옮기는 중…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動中…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "迁移中…"
           }
         }
       }

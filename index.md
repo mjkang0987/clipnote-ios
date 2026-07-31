@@ -39,6 +39,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip). 원본 대표 이미지 있으면 프록시 경유 배경/썸네일, 없으면 그라디언트 |
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
+| `Views/ConfirmLayer.swift` | 공용 확인 레이어(제목·본문·확인/취소) + `emphasized()` 강조 텍스트. 웹 `ModalShell` 대응 — 확인 계열은 액션 시트가 아니라 레이어로 띄운다 |
 | `Views/SpinnerLabel.swift` | 공용 인라인 로딩 스피너 라벨 |
 | `Views/SpotlightTour.swift` | 온보딩 스포트라이트 투어(앵커·오버레이·역마스크·`ClipsPreviewMock`) |
 | `Views/AppRouter.swift` | 내비게이션 상태(@Observable): path·로그인·Safari |

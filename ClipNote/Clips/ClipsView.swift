@@ -81,22 +81,8 @@ struct ClipsView: View {
                 }
             }
         }
-        .confirmationDialog(
-            i18n.t("clips.bulkDeleteTitle", args: countUnit(selected.count)),
-            isPresented: $showBulkDeleteConfirm, titleVisibility: .visible
-        ) {
-            Button(i18n.t("common.delete"), role: .destructive) {
-                Task {
-                    bulkBusy = true
-                    await store?.bulkDelete(ids: Array(selected))
-                    bulkBusy = false
-                    exitSelect()
-                }
-            }
-            Button(i18n.t("common.cancel"), role: .cancel) {}
-        } message: {
-            Text(i18n.t("clips.irreversible"))
-        }
+        // 확인 계열은 전부 레이어로 띄운다(웹과 동일) — `ConfirmLayer` 주석 참고.
+        .sheet(isPresented: $showBulkDeleteConfirm) { bulkDeleteLayer }
         .sheet(item: $editing) { clip in
             EditClipModal(initialTitle: clip.title, initialTags: clip.tags) { title, tags in
                 await store?.saveEdit(clip, title: title, tags: tags)
@@ -106,13 +92,7 @@ struct ClipsView: View {
                              set: { if $0 == nil { safariURL = nil } })) { item in
             SafariView(url: item.url)
         }
-        .confirmationDialog(i18n.t("clips.deleteTitle"), isPresented: deleteBinding,
-                            titleVisibility: .visible, presenting: pendingDelete) { clip in
-            Button(i18n.t("common.delete"), role: .destructive) { Task { await store?.delete(clip) } }
-            Button(i18n.t("common.cancel"), role: .cancel) {}
-        } message: { clip in
-            Text(i18n.t("clips.deleteBody", args: clip.title))
-        }
+        .sheet(item: $pendingDelete) { clip in deleteLayer(clip) }
     }
 
     @ToolbarContentBuilder
@@ -260,8 +240,42 @@ struct ClipsView: View {
         i18n.t("clips.countUnit", args: count)
     }
 
-    private var deleteBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
+    // MARK: - 확인 레이어
+
+    private func deleteLayer(_ clip: UClip) -> some View {
+        ConfirmLayer(
+            title: i18n.t("clips.deleteTitle"),
+            message: emphasized(i18n.t("clips.deleteBody", args: clip.title), [clip.title]),
+            confirmLabel: i18n.t("common.delete"),
+            destructive: true,
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: {
+                pendingDelete = nil
+                Task { await store?.delete(clip) }
+            },
+            onCancel: { pendingDelete = nil }
+        )
+    }
+
+    private var bulkDeleteLayer: some View {
+        let count = countUnit(selected.count)
+        return ConfirmLayer(
+            title: i18n.t("clips.bulkDeleteTitle", args: count),
+            message: Text(i18n.t("clips.irreversible")),
+            confirmLabel: i18n.t("common.delete"),
+            destructive: true,
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: {
+                showBulkDeleteConfirm = false
+                Task {
+                    bulkBusy = true
+                    await store?.bulkDelete(ids: Array(selected))
+                    bulkBusy = false
+                    exitSelect()
+                }
+            },
+            onCancel: { showBulkDeleteConfirm = false }
+        )
     }
 
     private func setup() async {

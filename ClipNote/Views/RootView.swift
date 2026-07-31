@@ -69,22 +69,28 @@ struct RootView: View {
 
 /// 로그인 전환 감지 → 로컬 클립이 있으면 계정으로 옮길지 묻는다(§5). 중복 프롬프트 가드.
 ///
-/// **왜 거절에 삭제 확인이 따라붙나** — 로그인 상태의 내 클립 목록은 DB 를 보여준다(`ClipsStore.load`).
-/// 옮기지 않은 로컬 클립은 그때부터 화면에서 볼 방법이 없으니 남겨 둘 자리가 없다. 웹도 같은 이유로
-/// 거절하면 삭제를 확인받는다(`ClipsClient.askDiscardLocal`).
+/// **왜 거절에 삭제 확인이 따라붙나** — 로그인 상태의 내 클립 목록은 DB 를 보여준다
+/// (`ClipsStore.load`). 옮기지 않은 로컬 클립은 그때부터 화면에서 볼 방법이 없으니 남겨 둘
+/// 자리가 없다. 웹도 같은 이유로 거절하면 삭제를 확인받는다(`ClipsClient.askDiscardLocal`).
 ///
-/// **웹과 다른 점** — 웹은 `[옮기기] [취소]` 두 버튼이고 `취소` 가 삭제 확인으로 넘어간다.
-/// iOS 에서 취소 역할 버튼이 삭제 흐름을 여는 건 관례에 어긋나고, `confirmationDialog` 는
-/// 바깥 탭으로 닫힌 것과 취소를 누른 것을 구분할 수 없다. 그래서 의도를 라벨에 드러내
-/// `[옮기기] [이 기기에서 삭제] [나중에]` 세 버튼으로 편다. 삭제는 웹과 똑같이 한 단계 더 확인받고,
-/// 애매한 닫힘(바깥 탭)은 어느 경우든 **결정 보류**로 떨어진다 — 로컬 클립은 그대로 남는다.
+/// **세 갈래를 구분한다**(웹 `a0f931d`→`ec7221d`→`4323eb6` 과 같은 결론)
+/// - `옮기기` — 계정으로 올리고 로컬을 비운다
+/// - `취소` — 옮기지 않겠다는 의사 표시 → 삭제 확인으로 넘어간다
+/// - 스와이프로 닫기 — **결정 보류**. 로컬 클립을 그대로 두므로 다음 로그인 때 다시 뜬다
+///
+/// 이 구분 때문에 `confirmationDialog` 를 쓸 수 없다 — 바깥 탭과 취소를 구분하지 못한다.
 private struct LoginMigrationModifier: ViewModifier {
     @Environment(\.modelContext) private var modelContext
     @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
-    @State private var ask = false
-    @State private var askDiscard = false
+
+    @State private var showMigrate = false
+    @State private var showDiscard = false
+    /// `취소` 를 눌러서 닫혔는가. 스와이프로 닫힌 경우와 구분하려고 둔다 —
+    /// `.sheet(onDismiss:)` 는 둘을 똑같이 알려주기 때문에 버튼 쪽에서 표시를 남겨야 한다.
+    @State private var declined = false
     @State private var pendingCount = 0
+    @State private var migrating = false
     @State private var resultMessage: String?
     @State private var prompted = false
 
@@ -99,34 +105,52 @@ private struct LoginMigrationModifier: ViewModifier {
             .onChange(of: auth.loggedIn) { _, now in
                 if now { check() } else { prompted = false }
             }
-            .confirmationDialog(
-                i18n.t("clips.migrateTitle"), isPresented: $ask, titleVisibility: .visible
-            ) {
-                Button(i18n.t("clips.migrateConfirm", args: countUnit(pendingCount))) { migrate() }
-                Button(i18n.t("clips.discardAction"), role: .destructive) { askDiscard = true }
-                Button(i18n.t("clips.migrateLater"), role: .cancel) {}
-            } message: {
-                Text(i18n.t("clips.migrateBody", args: countUnit(pendingCount)))
-            }
-            // 삭제 확인. 로컬 클립은 이 기기에만 있고 서버 사본이 없어 되돌릴 수 없다 —
-            // 그래서 한 단계를 더 둔다. 여기서 취소하면 아무 일도 일어나지 않는다(보류).
-            .confirmationDialog(
-                i18n.t("clips.discardTitle"), isPresented: $askDiscard, titleVisibility: .visible
-            ) {
-                Button(i18n.t("common.delete"), role: .destructive) { discard() }
-                Button(i18n.t("common.cancel"), role: .cancel) {}
-            } message: {
-                Text(i18n.t("clips.discardBody",
-                            args: countUnit(pendingCount), i18n.t("clips.discardIrreversible")))
-            }
-            // 결과 알림 제목은 확인 다이얼로그와 다르다 — 후자는 의문형("…옮길까요?")이라
-            // "3개를 옮겼어요" 위에 얹으면 말이 안 된다.
+            .sheet(isPresented: $showMigrate, onDismiss: resolveMigrateDismiss) { migrateLayer }
+            .sheet(isPresented: $showDiscard) { discardLayer }
+            // 옮기기 결과는 결정이 아니라 알림이라 레이어로 만들지 않는다.
+            // (웹은 페이지가 그 자리에서 갱신돼 알림이 없지만, 앱은 네트워크 작업이라 결과를 알린다.)
             .alert(i18n.t("clips.migrateResultTitle"), isPresented: resultBinding) {
                 Button(i18n.t("common.confirm"), role: .cancel) { resultMessage = nil }
             } message: {
                 Text(resultMessage ?? "")
             }
     }
+
+    // MARK: - 레이어
+
+    private var migrateLayer: some View {
+        let count = countUnit(pendingCount)
+        return ConfirmLayer(
+            title: i18n.t("clips.migrateTitle"),
+            message: emphasized(i18n.t("clips.migrateBody", args: count), [count]),
+            confirmLabel: i18n.t("clips.migrateConfirm", args: count),
+            busy: migrating,
+            busyLabel: i18n.t("clips.migrating"),
+            cancelLabel: i18n.t("common.cancel"),
+            // 옮기는 동안 레이어를 열어 둔 채 스피너를 보여 준다(웹과 동일). 끝나면 닫는다.
+            onConfirm: migrate,
+            onCancel: { declined = true; showMigrate = false }
+        )
+        // 진행 중에는 스와이프로 닫지 못하게 막는다 — 중간에 닫히면 무엇이 옮겨졌는지 알 수 없다.
+        .interactiveDismissDisabled(migrating)
+    }
+
+    private var discardLayer: some View {
+        let count = countUnit(pendingCount)
+        let irreversible = i18n.t("clips.discardIrreversible")
+        return ConfirmLayer(
+            title: i18n.t("clips.discardTitle"),
+            message: emphasized(i18n.t("clips.discardBody", args: count, irreversible),
+                                [count, irreversible]),
+            confirmLabel: i18n.t("common.delete"),
+            destructive: true,
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: { discard(); showDiscard = false },
+            onCancel: { showDiscard = false }
+        )
+    }
+
+    // MARK: - 동작
 
     private var resultBinding: Binding<Bool> {
         Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })
@@ -138,17 +162,30 @@ private struct LoginMigrationModifier: ViewModifier {
         guard count > 0 else { return }
         pendingCount = count
         prompted = true
-        ask = true
+        declined = false
+        showMigrate = true
+    }
+
+    /// 레이어가 닫힌 뒤 다음 단계를 정한다.
+    /// `취소` 를 눌렀으면 삭제 확인으로, 그냥 닫았으면 **보류**(로컬 클립을 건드리지 않는다).
+    private func resolveMigrateDismiss() {
+        guard declined else { return }
+        declined = false
+        showDiscard = true
     }
 
     private func migrate() {
         let store = LocalClipStore(container: modelContext.container)
         let token = auth.accessToken
+        migrating = true
         Task {
             let (uploaded, allOK) = await MigrateLocalClips(localStore: store).run(accessToken: token)
+            migrating = false
+            showMigrate = false
             resultMessage = allOK
                 ? i18n.t("clips.migrateDone", args: countUnit(uploaded))
                 : i18n.t("clips.migratePartial")
+            ClipsRefresh.emit()
         }
     }
 
