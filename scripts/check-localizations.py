@@ -37,6 +37,12 @@ CLEAN_FILES = [
     "ClipNote/Views/RootView.swift",
     "ClipNote/Views/HomeView.swift",
     "ClipNote/Views/HomeViewModel.swift",
+    "ClipNote/Clips/ClipsView.swift",
+    "ClipNote/Views/EditClipModal.swift",
+    "ClipNote/Views/TagApplyModal.swift",
+    "ClipNote/Views/ShareResultModal.swift",
+    "ClipNote/Views/ClipCardView.swift",
+    "ClipNote/Views/SharePreviewCard.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
@@ -122,8 +128,9 @@ def referenced_keys(text: str) -> list[str]:
     """`t(...)` 호출 안에 있는 문자열 리터럴을 전부 키로 본다.
 
     `t("a")` 만 보면 `t(flag ? "a" : "b")` 를 놓친다. 놓친 키는 "쓰는 곳이 없다"로 잘못
-    보고되고, 그걸 무시하는 습관이 들면 검사가 무력해진다. 그래서 여는 괄호부터 짝이 맞는
-    닫는 괄호까지 훑어 그 안의 리터럴을 모두 거둔다.
+    보고되고, 그걸 무시하는 습관이 들면 검사가 무력해진다. 그래서 여는 괄호부터 훑어 리터럴을
+    거두되, **첫 인자까지만** 본다 — `t("clips.emptyForTag", args: tag ?? "")` 의 `""` 는
+    키가 아니라 포맷 인자다. 뒤 인자에 있는 중첩 `t(` 호출은 finditer 가 따로 잡는다.
     """
     keys: list[str] = []
     for match in KEY_CALL_START.finditer(text):
@@ -139,6 +146,8 @@ def referenced_keys(text: str) -> list[str]:
                 argument.append(text[i : end + 1])
                 i = end + 1
                 continue
+            if ch == "," and depth == 1:
+                break
             depth += (ch == "(") - (ch == ")")
             i += 1
         keys.extend(literal[1:-1] for literal in argument)
@@ -223,13 +232,38 @@ def check_usage(strings: dict, errors: list[str]) -> None:
             fail(errors, f"[{key}] 카탈로그에만 있고 쓰는 곳이 없다")
 
 
+def strip_previews(text: str) -> str:
+    """`#Preview { … }` 블록을 들어낸다.
+
+    Xcode 캔버스 전용이라 사용자에게 도달하지 않는다. 예시 데이터에 한글을 쓰는 게 오히려
+    자연스럽고(한국어 제목의 줄바꿈을 봐야 한다), 번역해 봐야 볼 사람이 없다.
+    """
+    out = []
+    i, n = 0, len(text)
+    while i < n:
+        start = text.find("#Preview", i)
+        if start == -1:
+            out.append(text[i:])
+            break
+        out.append(text[i:start])
+        brace = text.find("{", start)
+        if brace == -1:
+            break
+        depth, j = 1, brace + 1
+        while j < n and depth > 0:
+            depth += (text[j] == "{") - (text[j] == "}")
+            j += 1
+        i = j
+    return "".join(out)
+
+
 def check_clean_files(errors: list[str]) -> None:
     for relative in CLEAN_FILES:
         path = ROOT / relative
         if not path.exists():
             fail(errors, f"{relative} 가 없다 — CLEAN_FILES 를 고쳐야 한다")
             continue
-        text = strip_comments(path.read_text(encoding="utf-8"))
+        text = strip_previews(strip_comments(path.read_text(encoding="utf-8")))
         for literal in STRING_LITERAL.findall(text):
             if not HANGUL.search(literal):
                 continue

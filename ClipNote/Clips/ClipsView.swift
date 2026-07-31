@@ -23,6 +23,7 @@ func openableWebURL(_ raw: String) -> URL? {
 struct ClipsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
 
     @State private var store: ClipsStore?
@@ -48,7 +49,9 @@ struct ClipsView: View {
             }
         }
         .overlay { if bulkBusy { blockingOverlay } }
-        .navigationTitle(selectMode ? "\(selected.count)개 선택" : "내 클립")
+        .navigationTitle(selectMode
+                         ? i18n.t("clips.selectedCount", args: selected.count)
+                         : i18n.t("common.myClips"))
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
         .toolbar {
@@ -78,8 +81,11 @@ struct ClipsView: View {
                 }
             }
         }
-        .confirmationDialog("클립 삭제", isPresented: $showBulkDeleteConfirm) {
-            Button("삭제", role: .destructive) {
+        .confirmationDialog(
+            i18n.t("clips.bulkDeleteTitle", args: countUnit(selected.count)),
+            isPresented: $showBulkDeleteConfirm, titleVisibility: .visible
+        ) {
+            Button(i18n.t("common.delete"), role: .destructive) {
                 Task {
                     bulkBusy = true
                     await store?.bulkDelete(ids: Array(selected))
@@ -87,9 +93,9 @@ struct ClipsView: View {
                     exitSelect()
                 }
             }
-            Button("취소", role: .cancel) {}
+            Button(i18n.t("common.cancel"), role: .cancel) {}
         } message: {
-            Text("선택한 \(selected.count)개 클립을 삭제할까요?")
+            Text(i18n.t("clips.irreversible"))
         }
         .sheet(item: $editing) { clip in
             EditClipModal(initialTitle: clip.title, initialTags: clip.tags) { title, tags in
@@ -100,11 +106,12 @@ struct ClipsView: View {
                              set: { if $0 == nil { safariURL = nil } })) { item in
             SafariView(url: item.url)
         }
-        .confirmationDialog("클립 삭제", isPresented: deleteBinding, presenting: pendingDelete) { clip in
-            Button("삭제", role: .destructive) { Task { await store?.delete(clip) } }
-            Button("취소", role: .cancel) {}
+        .confirmationDialog(i18n.t("clips.deleteTitle"), isPresented: deleteBinding,
+                            titleVisibility: .visible, presenting: pendingDelete) { clip in
+            Button(i18n.t("common.delete"), role: .destructive) { Task { await store?.delete(clip) } }
+            Button(i18n.t("common.cancel"), role: .cancel) {}
         } message: { clip in
-            Text("‘\(clip.title)’ 클립을 삭제할까요?")
+            Text(i18n.t("clips.deleteBody", args: clip.title))
         }
     }
 
@@ -112,9 +119,9 @@ struct ClipsView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if selectMode {
-                Button("취소") { exitSelect() }
+                Button(i18n.t("common.cancel")) { exitSelect() }
             } else if auth.loggedIn, store?.clips?.isEmpty == false {
-                Button("선택") { selectMode = true }
+                Button(i18n.t("clips.select")) { selectMode = true }
             }
         }
     }
@@ -123,7 +130,7 @@ struct ClipsView: View {
     private var bulkBar: some View {
         HStack(spacing: 8) {
             Button { showTagModal = true } label: {
-                Text("태그 적용")
+                Text(i18n.t("clips.applyTags"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
                     .frame(maxWidth: .infinity).frame(height: 48)
@@ -131,7 +138,7 @@ struct ClipsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
             Button { showBulkDeleteConfirm = true } label: {
-                Text("삭제 (\(selected.count))")
+                Text(i18n.t("clips.bulkDeleteButton", args: selected.count))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .frame(maxWidth: .infinity).frame(height: 48)
@@ -151,7 +158,7 @@ struct ClipsView: View {
     @ViewBuilder
     private func content(_ store: ClipsStore) -> some View {
         if store.clips == nil {
-            Text("불러오는 중…")
+            Text(i18n.t("clips.loading"))
                 .font(.system(size: 14))
                 .foregroundStyle(AppColor.fgMuted)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -163,7 +170,7 @@ struct ClipsView: View {
                     filterRow(store).plainRow()
                 }
                 if store.filtered.isEmpty {
-                    Text("‘\(store.activeTag ?? "")’ 태그의 클립이 없어요.")
+                    Text(i18n.t("clips.emptyForTag", args: store.activeTag ?? ""))
                         .font(.system(size: 14))
                         .foregroundStyle(AppColor.fgMuted)
                         .plainRow()
@@ -199,8 +206,8 @@ struct ClipsView: View {
             base
         } else {
             base.swipeActions(edge: .trailing) {
-                Button("삭제", role: .destructive) { pendingDelete = clip }
-                Button("편집") { editing = clip }.tint(AppColor.brand)
+                Button(i18n.t("common.delete"), role: .destructive) { pendingDelete = clip }
+                Button(i18n.t("clips.edit")) { editing = clip }.tint(AppColor.brand)
             }
         }
     }
@@ -208,7 +215,7 @@ struct ClipsView: View {
     private func filterRow(_ store: ClipsStore) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(label: "전체", active: store.activeTag == nil) { store.activeTag = nil }
+                FilterChip(label: i18n.t("clips.allTags"), active: store.activeTag == nil) { store.activeTag = nil }
                 ForEach(store.allTags, id: \.self) { tag in
                     FilterChip(label: tag, active: store.activeTag == tag) { store.activeTag = tag }
                 }
@@ -219,11 +226,11 @@ struct ClipsView: View {
 
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Text("아직 저장한 클립이 없어요.")
+            Text(i18n.t("clips.empty"))
                 .font(.system(size: 15))
                 .foregroundStyle(AppColor.fgMuted)
             Button { dismiss() } label: {
-                Text("첫 클립 만들기")
+                Text(i18n.t("clips.emptyCta"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .padding(.horizontal, 20).frame(height: 46)
@@ -246,6 +253,11 @@ struct ClipsView: View {
                 .background(AppColor.surface)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
         }
+    }
+
+    /// 수량 표기(`3개`·`3 clips`) — 언어마다 단위 위치가 달라 문장에서 떼어 만든다.
+    private func countUnit(_ count: Int) -> String {
+        i18n.t("clips.countUnit", args: count)
     }
 
     private var deleteBinding: Binding<Bool> {
@@ -310,6 +322,8 @@ private extension View {
 
 /// 목록 카드 한 줄 — 썸네일·제목·호스트·태그 + ⋯메뉴 + 액션행(공유/바로가기).
 private struct ClipRow: View {
+    @Environment(LocalizationStore.self) private var i18n
+
     let clip: UClip
     let selectMode: Bool
     let isSelected: Bool
@@ -353,8 +367,8 @@ private struct ClipRow: View {
                 Spacer(minLength: 0)
                 if !selectMode {
                     Menu {
-                        Button("편집", action: onEdit)
-                        Button("삭제", role: .destructive, action: onDelete)
+                        Button(i18n.t("clips.edit"), action: onEdit)
+                        Button(i18n.t("common.delete"), role: .destructive, action: onDelete)
                     } label: {
                         Text("⋯")
                             .font(.system(size: 20, weight: .bold))
@@ -396,9 +410,9 @@ private struct ClipRow: View {
         HStack(spacing: 0) {
             if !clip.local {
                 Button(action: clip.shared ? onCopyShare : onMakeShared) {
-                    SpinnerLabel(title: clip.shared
-                                 ? (copied ? "복사됨 ✓" : "공유 링크 복사")
-                                 : (makingShared ? "켜는 중…" : "공유 링크 만들기"),
+                    SpinnerLabel(title: i18n.t(clip.shared
+                                 ? (copied ? "clips.copied" : "clips.copyShareLink")
+                                 : (makingShared ? "clips.creatingShareLink" : "clips.createShareLink")),
                                  loading: makingShared, tint: AppColor.brandStrong)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
@@ -408,7 +422,7 @@ private struct ClipRow: View {
                 Divider().frame(height: 24).background(AppColor.border)
             }
             Button(action: onOpen) {
-                Text("바로가기")
+                Text(i18n.t("clips.openOriginal"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppColor.fg)
                     .frame(maxWidth: .infinity).frame(height: 44)

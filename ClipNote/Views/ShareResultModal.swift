@@ -6,10 +6,11 @@ struct ShareResultModal: View {
     let title: String
     let description: String?
     let url: String
-    /// "내 클립에 저장" — 성공 시 true 반환.
+    /// 내 클립에 저장(`homeActions.saveToClips`) — 성공 시 true 반환.
     let onSave: () async -> Bool
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
     @State private var copied = false
     @State private var saving = false
     @State private var saved = false
@@ -19,10 +20,10 @@ struct ShareResultModal: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("공유 링크가 만들어졌어요 🎉")
+            Text(i18n.t("home.result.title"))
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(AppColor.fg)
-            Text("링크를 복사해 공유하세요. 열면 공유 카드가 먼저 보인 뒤 원본으로 이동해요.")
+            Text(i18n.t("home.result.body"))
                 .font(.system(size: 13))
                 .foregroundStyle(AppColor.fgMuted)
 
@@ -40,12 +41,12 @@ struct ShareResultModal: View {
 
             HStack(spacing: 8) {
                 Button { copy() } label: {
-                    Text(copied ? "복사됨 ✓" : "링크 복사")
+                    Text(i18n.t(copied ? "homeActions.copied" : "homeActions.copyLink"))
                 }
                 .buttonStyle(ModalPrimaryButton())
 
                 Button { showSafari = true } label: {
-                    Text("열기")
+                    Text(i18n.t("home.result.open"))
                 }
                 .buttonStyle(ModalGhostButton())
                 .disabled(safariURL == nil)
@@ -54,7 +55,8 @@ struct ShareResultModal: View {
             Button {
                 Task { await save() }
             } label: {
-                SpinnerLabel(title: saved ? "내 클립에 저장됨 ✓" : (saving ? "저장 중…" : "내 클립에 저장"),
+                SpinnerLabel(title: i18n.t(saved ? "home.result.savedToClips"
+                                          : (saving ? "homeActions.saving" : "homeActions.saveToClips")),
                              loading: saving, tint: AppColor.brandStrong)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
@@ -66,7 +68,7 @@ struct ShareResultModal: View {
             .disabled(saving || saved)
             .opacity(saving || saved ? 0.6 : 1)
 
-            Button("닫기") { dismiss() }
+            Button(i18n.t("home.result.close")) { dismiss() }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(AppColor.fgMuted)
                 .frame(maxWidth: .infinity)

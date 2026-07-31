@@ -6,40 +6,52 @@ struct TagApplyModal: View {
     let onApply: (_ tags: [String], _ mode: TagMode) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
     @State private var tagInput = ""
     @State private var mode: TagMode = .add
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("태그 적용 (\(count)개)")
+            Text(i18n.t("clips.bulkTagTitle"))
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(AppColor.fg)
+            // 대상 수는 제목에 괄호로 붙이지 않고 별도 줄에 둔다 — 웹과 같은 구성이고,
+            // 수량 표기(`3개`/`3 clips`)는 언어마다 단위 위치가 달라 문장에서 떼어 만든다.
+            Text(i18n.t("clips.bulkTagBody", args: i18n.t("clips.countUnit", args: count)))
+                .font(.system(size: 13))
+                .foregroundStyle(AppColor.fgMuted)
 
-            Text("태그 (쉼표로 구분, 최대 6개)")
+            Text("\(i18n.t("clips.editTagsLabel")) \(i18n.t("clips.editTagsNote"))")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppColor.fg)
-            TextField("개발, 디자인", text: $tagInput)
+            TextField(i18n.t("clips.editTagsPlaceholder"), text: $tagInput)
                 .textInputAutocapitalization(.never)
                 .modalField()
 
             HStack(spacing: 8) {
-                modeChip("추가", .add)
-                modeChip("교체", .replace)
+                modeChip(i18n.t("clips.bulkTagModeAddEmphasis"), .add)
+                modeChip(i18n.t("clips.bulkTagModeReplaceEmphasis"), .replace)
             }
-            Text(mode == .add ? "기존 태그에 더해요." : "기존 태그를 지우고 이 태그로 바꿔요.")
+            // 칩 라벨(강조 낱말)을 문장에 끼워 설명을 만든다. 낱말 위치가 언어마다 달라
+            // 앞/뒤로 쪼개 적을 수 없다 — ko `기존 태그에 {추가}` vs en `{Add} to existing tags`.
+            Text(mode == .add
+                 ? i18n.t("clips.bulkTagModeAdd", args: i18n.t("clips.bulkTagModeAddEmphasis"))
+                 : i18n.t("clips.bulkTagModeReplace", args: i18n.t("clips.bulkTagModeReplaceEmphasis")))
                 .font(.system(size: 12))
                 .foregroundStyle(AppColor.fgMuted)
 
             HStack(spacing: 8) {
-                Button("취소") { dismiss() }
+                Button(i18n.t("common.cancel")) { dismiss() }
                     .buttonStyle(ModalGhostButton())
-                Button("적용") { apply() }
+                Button(i18n.t("clips.bulkTagApply")) { apply() }
                     .buttonStyle(ModalPrimaryButton())
             }
             .padding(.top, 8)
         }
         .padding(20)
-        .presentationDetents([.height(300)])
+        // 대상 수 안내를 한 줄 늘렸고, 번역문이 한국어보다 길어 줄바꿈될 수 있다(영어가 특히).
+        // 고정 높이라 모자라면 잘리므로 여유를 준다.
+        .presentationDetents([.height(340)])
     }
 
     private func modeChip(_ label: String, _ value: TagMode) -> some View {
