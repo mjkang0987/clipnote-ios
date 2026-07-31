@@ -15,8 +15,13 @@ struct RunningDino: View {
     /// 뜀박질 한 번에 걸리는 시간(초). 짧을수록 종종거린다.
     private static let hopPeriod = 0.44
     /// 뜀박질 높이(pt).
-    private static let hopHeight = 7.0
-    private static let size = 30.0
+    private static let hopHeight = 5.0
+    /// 입력칸 라벨 줄(13pt 글자 + 6pt 간격)을 크게 넘지 않는 크기. 더 키우면 위 여백까지
+    /// 파고들어 카드 밖으로 삐져나온다.
+    private static let size = 24.0
+
+    /// 이 뷰가 차지하는 높이. 호출부가 "땅" 위에 얹으려면 알아야 한다.
+    static let height = size + hopHeight
 
     /// 시스템 "동작 줄이기" 가 켜져 있으면 움직이지 않는다 — 전정기관 장애가 있는 사용자에게
     /// 화면을 가로지르는 반복 운동은 불편을 준다. 공룡은 그대로 두고 멈춰 세운다.
@@ -36,12 +41,10 @@ struct RunningDino: View {
                             y: -hop(elapsed: elapsed))
             }
         }
-        .frame(height: Self.size + Self.hopHeight + 8)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(AppColor.fgMuted.opacity(0.3))
-                .frame(height: 1.5)
-        }
+        .frame(height: Self.height)
+        // 땅은 호출부가 준다 — 홈에서는 URL 입력칸의 윗변이 땅이다. 로딩만을 위해 상자를
+        // 하나 더 띄우면 화면이 밀리고, 나타났다 사라질 때마다 아래 내용이 출렁인다.
+        .allowsHitTesting(false)
         // 진행 상황은 옆의 문구가 알린다. 장식이 한 번 더 읽히면 방해만 된다.
         .accessibilityHidden(true)
     }

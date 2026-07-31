@@ -29,7 +29,6 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 0) {
                 hero
                 formCard
-                if vm.loading { metaLoadingRow }
                 if let e = vm.error { errorBox(message(for: e)) }
                 if vm.noMeta, let reason = vm.metaReason { warnBox(reason) }
                 if vm.hasInput { previews }
@@ -100,7 +99,8 @@ struct HomeView: View {
 
     private var formCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            field(label: i18n.t("home.form.urlLabel"), required: true) {
+            field(label: i18n.t("home.form.urlLabel"), required: true,
+                  muted: vm.loading ? i18n.t("home.metaLoading") : nil) {
                 // 플레이스홀더를 시스템 기본색에 맡기면 URL 필드가 시스템 tint(파랑)로 링크처럼 보임.
                 // 회색 오버레이로 직접 그려 다른 필드와 동일한 회색으로 고정(#73은 타이핑 글자만 처리했음).
                 ZStack(alignment: .leading) {
@@ -131,6 +131,16 @@ struct HomeView: View {
                 }
             }
             .tourAnchor(.url)
+            // 메타를 읽는 동안 공룡이 **URL 칸 윗변 위를** 달린다.
+            //
+            // 로딩 전용 상자를 따로 띄우면 나타났다 사라질 때마다 아래 내용이 통째로 밀린다 —
+            // 미리보기를 보려던 손이 헛짚는다. 오버레이는 자리를 차지하지 않아 흔들림이 없고,
+            // 이미 그려져 있는 입력칸 테두리가 그대로 땅이 된다.
+            .overlay(alignment: .bottom) {
+                if vm.loading {
+                    RunningDino().offset(y: -Self.fieldHeight)
+                }
+            }
             VStack(alignment: .leading, spacing: 12) {
                 field(label: i18n.t("home.form.titleLabel"), muted: i18n.t("home.form.titleNote")) {
                     TextField(i18n.t("home.form.titlePlaceholder"), text: $vm.title)
@@ -284,6 +294,9 @@ struct HomeView: View {
     // MARK: - Building blocks
 
     @ViewBuilder
+    /// 입력칸 높이. 공룡을 윗변에 세우려면 호출부도 알아야 해서 상수로 뺐다.
+    private static let fieldHeight: CGFloat = 46
+
     private func field<Content: View>(label: String, required: Bool = false,
                                       muted: String? = nil,
                                       @ViewBuilder _ content: () -> Content) -> some View {
@@ -297,7 +310,7 @@ struct HomeView: View {
                 .font(.system(size: 15))
                 .foregroundStyle(AppColor.fg)
                 .padding(.horizontal, 12)
-                .frame(height: 46)
+                .frame(height: Self.fieldHeight)
                 .background(AppColor.bg)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.border, lineWidth: 0.5))
@@ -326,22 +339,6 @@ struct HomeView: View {
         }
         .disabled(disabled)
         .opacity(disabled ? 0.5 : 1)
-    }
-
-    /// 메타를 읽는 동안 보이는 행.
-    ///
-    /// 원본 사이트를 대신 열어 보는 일이라 사이트에 따라 몇 초씩 걸린다. 스피너만 돌면 멈춘
-    /// 것처럼 느껴져서 달리는 공룡을 얹었다. 문구는 그대로 둔다 — 무슨 일이 벌어지는지 알리는
-    /// 건 글이고, 공룡은 기다리는 시간을 견딜 만하게 만드는 장식이다.
-    private var metaLoadingRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            RunningDino()
-            Text(i18n.t("home.metaLoading"))
-                .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.sm)).padding(.top, 12)
     }
 
     private func errorBox(_ text: String) -> some View {
