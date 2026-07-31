@@ -64,7 +64,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Shared/Localization/AppLanguage.swift` | 지원 언어 enum(ko·en·ja·zh-Hans) + 시스템 선호 언어 매칭 |
 | `Shared/Localization/LocalizationStore.swift` | 표시 언어 상태·문자열 조회(@MainActor @Observable). 언어별 `.lproj` 직접 조회 → **재시작 없이 전환**, 번역 없으면 한국어 폴백. 선택값은 App Group 에 저장(확장과 공유) |
 | `Shared/Localization/Localizable.xcstrings` | 문자열 카탈로그(원본 `ko`). 키 이름은 웹 `lib/i18n/messages/ko.ts` 와 맞춘다 |
-| `scripts/check-localizations.py` | 카탈로그 무결성 검사(CI 첫 스텝). 번역 누락·포맷 지시자 불일치·미사용/미등록 키·잔여 한글 리터럴 |
+| `scripts/check-localizations.py` | 카탈로그 무결성 검사(CI 첫 스텝). 번역 누락·포맷 지시자 불일치·미사용/미등록 키·잔여 한글 리터럴 + **정규 형식**. `--format` 으로 다시 쓴다 |
 
 ## 현재 상태
 - **Phase 1~5 + AdMob 완료** — 빌드/테스트 그린(76 tests / 13 suites, iPhone 17 Pro). **RN 기능 패리티 완성**.
@@ -102,6 +102,16 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
     한다 — 안 그러면 로컬에서 빌드할 때마다 "modified" 로 뜬다.
   - `SWIFT_EMIT_LOC_STRINGS: NO` — Xcode 의 문자열 자동 추출을 끈다. 켜 두면 SwiftUI
     `Text("리터럴")` 이 빌드마다 문자열 카탈로그에 밀려 들어와 카탈로그가 오염된다.
+
+### 문자열 카탈로그를 만질 때
+
+`Localizable.xcstrings` 는 사람(스크립트)과 Xcode 가 번갈아 쓴다. **형식이 갈리면 내용이 그대로여도
+파일 전체가 diff 로 잡혀 `git pull` 이 막힌다.** 그래서 정규 형식을 정해 두고 CI 가 강제한다.
+
+- 정규 형식 = Xcode 가 쓰는 형식(Foundation `JSONSerialization` 의 `.prettyPrinted | .sortedKeys`):
+  구분자 `" : "`(콜론 **앞에도** 공백), 들여쓰기 2칸, 키 정렬, 한글 이스케이프 없음, **끝에 개행 없음**.
+- 손으로 고친 뒤에는 반드시 `python3 scripts/check-localizations.py --format` 를 돌린다.
+- 파이썬 `json.dump` 기본값은 `": "` 라 그냥 쓰면 어긋난다.
 - `Secrets.example.xcconfig` — 시크릿 템플릿 (실제 `Secrets.xcconfig`는 gitignored)
 - `.github/workflows/pr-review.yml` — CI(macOS): `xcodebuild test`(build+유닛 테스트), PR + `claude/**` 브랜치 push 트리거
 - `.github/workflows/deploy.yml` — TestFlight 배포(fastlane): **main push 자동**(md 제외·직렬화) + 수동(`workflow_dispatch`). 빌드번호=TestFlight 최신+1

@@ -10,8 +10,11 @@
 3. 코드가 쓰는 키가 카탈로그에 있는가 (없으면 화면에 `settings.title` 같은 키가 그대로 뜬다)
 4. 카탈로그 키를 코드가 쓰고 있는가 (죽은 번역이 쌓이는 걸 막는다)
 5. 사전화를 마친 파일에 한글 리터럴이 되살아나지 않았는가 (아래 CLEAN_FILES 래칫)
+6. 카탈로그가 **정규 형식**으로 저장돼 있는가 (아래 canonical_json 참고)
 
-사용: python3 scripts/check-localizations.py
+사용:
+    python3 scripts/check-localizations.py            # 검사
+    python3 scripts/check-localizations.py --format   # 카탈로그를 정규 형식으로 다시 쓴다
 """
 
 from __future__ import annotations
@@ -73,6 +76,35 @@ FORMAT_SPEC = re.compile(
 
 def fail(errors: list[str], message: str) -> None:
     errors.append(message)
+
+
+def canonical_json(doc: dict) -> str:
+    """카탈로그의 정규 형식.
+
+    **왜 필요한가** — 이 파일은 사람(스크립트)과 Xcode가 번갈아 쓴다. 형식이 다르면 Xcode 가
+    문자열 카탈로그를 열거나 빌드할 때마다 자기 형식으로 전체를 다시 써서, 내용이 하나도
+    안 바뀌었는데도 파일 전체가 diff 로 잡힌다. 그러면 `git pull` 이 막히고, 매번 로컬 변경을
+    버리게 된다(실제로 그렇게 됐다).
+
+    그래서 **Xcode 가 쓰는 형식**에 맞춘다. 문자열 카탈로그는 Foundation `JSONSerialization` 의
+    `.prettyPrinted | .sortedKeys` 로 직렬화되므로 다음과 같다.
+
+    - 키·값 구분자가 `" : "` (콜론 앞에도 공백). 파이썬 기본값 `": "` 와 다르다
+    - 들여쓰기 2칸, 중첩 객체를 한 줄로 접지 않는다
+    - 키는 알파벳순
+    - 한글을 이스케이프하지 않는다
+    - **끝에 개행을 붙이지 않는다** — `JSONSerialization` 이 만든 바이트를 그대로 쓰기 때문
+    """
+    return json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True, separators=(",", " : "))
+
+
+def check_format(raw: str, doc: dict, errors: list[str]) -> None:
+    if raw != canonical_json(doc):
+        fail(
+            errors,
+            "카탈로그가 정규 형식이 아니다 — `python3 scripts/check-localizations.py --format` 로 "
+            "다시 쓴다. (형식이 갈리면 Xcode 가 만질 때마다 파일 전체가 diff 로 잡혀 pull 이 막힌다)",
+        )
 
 
 def swift_files() -> list[Path]:
@@ -294,8 +326,16 @@ def check_clean_files(errors: list[str]) -> None:
 
 
 def main() -> int:
+    raw = CATALOG.read_text(encoding="utf-8")
+    catalog = json.loads(raw)
+
+    if "--format" in sys.argv:
+        CATALOG.write_text(canonical_json(catalog), encoding="utf-8")
+        print(f"✓ 정규 형식으로 다시 씀 — {CATALOG.relative_to(ROOT)}")
+        return 0
+
     errors: list[str] = []
-    catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
+    check_format(raw, catalog, errors)
     strings = check_catalog(catalog, errors)
     check_usage(strings, errors)
     check_clean_files(errors)
