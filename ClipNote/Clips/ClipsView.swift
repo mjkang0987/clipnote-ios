@@ -46,9 +46,7 @@ struct ClipsView: View {
             if let store {
                 content(store)
             } else {
-                // 목록을 불러오는 동안 공룡이 **화면 가장자리**를 돈다(홈과 같은 자리).
-                RunningDino()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                loadingState
             }
         }
         .overlay { if bulkBusy { blockingOverlay } }
@@ -141,10 +139,7 @@ struct ClipsView: View {
     @ViewBuilder
     private func content(_ store: ClipsStore) -> some View {
         if store.clips == nil {
-            Text(i18n.t("clips.loading"))
-                .font(.system(size: 14))
-                .foregroundStyle(AppColor.fgMuted)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            loadingState
         } else if store.clips?.isEmpty == true {
             emptyState
         } else {
@@ -226,6 +221,22 @@ struct ClipsView: View {
     }
 
     // MARK: - Helpers
+
+    /// 목록을 기다리는 동안 보이는 화면.
+    ///
+    /// 기다리는 구간이 둘이라 한 곳으로 모은다 — 스토어를 만드는 동안(`store == nil`)과
+    /// 목록을 받아오는 동안(`store.clips == nil`). 전자는 `.task` 한 프레임이라 눈에 띄지
+    /// 않고, **실제로 기다리는 건 후자**다. 공룡을 앞엣것에만 달아 두면 사실상 안 나온다.
+    ///
+    /// 공룡은 홈과 같은 자리 — 화면 가장자리를 돈다. 무슨 일이 벌어지는지 알리는 건 글이고,
+    /// 공룡은 기다리는 시간을 견딜 만하게 만드는 장식이라 둘 다 둔다.
+    private var loadingState: some View {
+        Text(i18n.t("clips.loading"))
+            .font(.system(size: 14))
+            .foregroundStyle(AppColor.fgMuted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay { RunningDino() }
+    }
 
     private var blockingOverlay: some View {
         ZStack {
