@@ -6,6 +6,7 @@ import SwiftData
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppRouter.self) private var router
+    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
     @State private var vm = HomeViewModel()
 
@@ -29,7 +30,7 @@ struct HomeView: View {
                 hero
                 formCard
                 if vm.loading { metaLoadingRow }
-                if let e = vm.errorMessage { errorBox(e) }
+                if let e = vm.error { errorBox(message(for: e)) }
                 if vm.noMeta, let reason = vm.metaReason { warnBox(reason) }
                 if vm.hasInput { previews }
             }
@@ -47,7 +48,7 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { HeaderMenu() }
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink("내 클립", value: AppRoute.clips)
+                NavigationLink(i18n.t("common.myClips"), value: AppRoute.clips)
             }
         }
         // 키보드가 뜨면 하단 배너 숨김(겹침 방지, RN 동작).
@@ -58,7 +59,7 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             kbVisible = false
         }
-        // URL 이 바뀌면 이전 링크는 이 입력과 맞지 않으므로 버린다 → 1차 버튼이 `링크 만들기` 로 복귀.
+        // URL 이 바뀌면 이전 링크는 이 입력과 맞지 않으므로 버린다 → 1차 버튼이 `createLink` 로 복귀.
         .onChange(of: vm.url) {
             vm.urlChanged()
             shareURL = nil
@@ -68,7 +69,7 @@ struct HomeView: View {
         .onChange(of: router.pendingSharedURL) { _, s in consumeSharedURL(s) }
         .onAppear { consumeSharedURL(router.pendingSharedURL) }
         // 시트 표시 여부를 shareURL 과 분리한다 — `.sheet(item:)` 은 닫힐 때 바인딩을 nil 로
-        // 되돌려 링크를 잃는다. 링크는 남아 있어야 1차 버튼이 `링크 복사` 로 바뀔 수 있다.
+        // 되돌려 링크를 잃는다. 링크는 남아 있어야 1차 버튼이 `copyLink` 로 바뀔 수 있다.
         .sheet(isPresented: $shareSheetOpen) {
             if let url = shareURL {
                 ShareResultModal(title: vm.resolvedTitle,
@@ -82,11 +83,13 @@ struct HomeView: View {
 
     private var hero: some View {
         VStack(spacing: 8) {
-            Text("밋밋한 링크를 카드 한 장으로")
+            // 강조 낱말을 분리해 둔 건 웹과 같은 이유다 — 언어마다 위치가 달라서
+            // 앞/뒤로 쪼개면 문장이 깨진다. 앱은 아직 색을 다르게 주지 않는다.
+            Text(i18n.t("home.hero.title", args: i18n.t("home.hero.titleAccent")))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(AppColor.fg)
                 .multilineTextAlignment(.center)
-            Text("제목·대표 이미지가 담긴 카드와 짧은 링크를 한 번에. 카카오톡·SNS에서 깔끔하게 보여요.")
+            Text(i18n.t("home.hero.subtitle"))
                 .font(.system(size: 14))
                 .foregroundStyle(AppColor.fgMuted)
                 .multilineTextAlignment(.center)
@@ -97,12 +100,12 @@ struct HomeView: View {
 
     private var formCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            field(label: "URL", required: true) {
+            field(label: i18n.t("home.form.urlLabel"), required: true) {
                 // 플레이스홀더를 시스템 기본색에 맡기면 URL 필드가 시스템 tint(파랑)로 링크처럼 보임.
                 // 회색 오버레이로 직접 그려 다른 필드와 동일한 회색으로 고정(#73은 타이핑 글자만 처리했음).
                 ZStack(alignment: .leading) {
                     if vm.url.isEmpty {
-                        Text("공유할 링크 붙여넣기")
+                        Text(i18n.t("home.form.urlPlaceholder"))
                             .foregroundStyle(AppColor.fgMuted)
                     }
                     HStack(spacing: 8) {
@@ -122,19 +125,19 @@ struct HomeView: View {
                                     .font(.system(size: 16))
                                     .foregroundStyle(AppColor.fgMuted)
                             }
-                            .accessibilityLabel("입력 지우기")
+                            .accessibilityLabel(i18n.t("home.clearInputAria"))
                         }
                     }
                 }
             }
             .tourAnchor(.url)
             VStack(alignment: .leading, spacing: 12) {
-                field(label: "제목", muted: "(안 쓰면 자동으로 채워져요)") {
-                    TextField("공유 카드에 보일 제목", text: $vm.title)
+                field(label: i18n.t("home.form.titleLabel"), muted: i18n.t("home.form.titleNote")) {
+                    TextField(i18n.t("home.form.titlePlaceholder"), text: $vm.title)
                         .focused($focus, equals: .title)
                 }
-                field(label: "태그", muted: "(선택 · 쉼표로 구분)") {
-                    TextField("개발, 디자인, 읽을거리", text: $vm.tagInput)
+                field(label: i18n.t("home.form.tagsLabel"), muted: i18n.t("home.form.tagsNote")) {
+                    TextField(i18n.t("home.form.tagsPlaceholder"), text: $vm.tagInput)
                         .focused($focus, equals: .tag)
                         .textInputAutocapitalization(.never)
                 }
@@ -159,34 +162,34 @@ struct HomeView: View {
         // 세션 복원 전 첫 프레임은 지난 실행 값(displayLoggedIn)으로 그려 깜빡임을 막는다.
         if auth.displayLoggedIn {
             // 버튼 3개 → 링크·복사를 한 줄에 묶고, 저장은 자기 줄을 전부 쓴다(웹과 동일 배치).
-            // 1차: 링크가 없으면 `링크 만들기`, 있으면 `링크 복사`(짧은 주소).
-            // `원본 복사`(제목+원본 URL)는 링크 유무와 무관하게 항상 노출.
+            // 1차: 링크가 없으면 `createLink`, 있으면 `copyLink`(짧은 주소).
+            // `copyOriginal`(제목+원본 URL)은 링크 유무와 무관하게 항상 노출.
             VStack(spacing: 8) {
                 HStack(spacing: 8) {
                     if shareURL != nil {
-                        primaryButton(copiedLink ? "복사됨 ✓" : "링크 복사",
+                        primaryButton(i18n.t(copiedLink ? "homeActions.copied" : "homeActions.copyLink"),
                                       disabled: false) { copyShareLink() }
                     } else {
-                        primaryButton(creating ? "만드는 중…" : "링크 만들기",
+                        primaryButton(i18n.t(creating ? "homeActions.creating" : "homeActions.createLink"),
                                       disabled: !vm.hasInput || creating, loading: creating) { await createShare() }
                             .tourAnchor(.share)
                     }
-                    secondaryButton(copiedShare ? "복사됨 ✓" : "원본 복사",
+                    secondaryButton(i18n.t(copiedShare ? "homeActions.copied" : "homeActions.copyOriginal"),
                                     disabled: !vm.hasInput) { copyGuestShare() }
                 }
-                secondaryButton(directSaved ? "저장됨 ✓" : (savingDirect ? "저장 중…" : "내 클립에 저장"),
+                secondaryButton(i18n.t(directSaved ? "homeActions.saved" : (savingDirect ? "homeActions.saving" : "homeActions.saveToClips")),
                                 disabled: !vm.hasInput || savingDirect, loading: savingDirect) { await saveToClips() }
                     .tourAnchor(.save)
             }
             .padding(.top, 4)
         } else {
-            primaryButton(savedLocal ? "저장됨 ✓" : "이 기기에 저장",
+            primaryButton(i18n.t(savedLocal ? "homeActions.saved" : "homeActions.saveHere"),
                           disabled: !vm.hasInput) { saveLocal() }
                 .tourAnchor(.save)
                 .padding(.top, 4)
             HStack(spacing: 8) {
                 ShareLink(item: guestShareText) {
-                    Text("공유하기")
+                    Text(i18n.t("homeActions.share"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
                         .frame(maxWidth: .infinity).frame(height: 48)
@@ -198,7 +201,7 @@ struct HomeView: View {
                 .opacity(vm.hasInput ? 1 : 0.5)
 
                 Button { copyGuestShare() } label: {
-                    Text(copiedShare ? "복사됨 ✓" : "원본 복사")
+                    Text(i18n.t(copiedShare ? "homeActions.copied" : "homeActions.copyOriginal"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
                         .frame(maxWidth: .infinity).frame(height: 48)
@@ -209,15 +212,51 @@ struct HomeView: View {
                 .disabled(!vm.hasInput)
                 .opacity(vm.hasInput ? 1 : 0.5)
             }
-            HStack(spacing: 0) {
-                Text("공유 카드·짧은 링크는 ")
-                Text("로그인").foregroundStyle(AppColor.brandStrong).fontWeight(.semibold)
-                    .onTapGesture { router.showLogin = true }
-                Text(" 하면 만들어져요.")
+            guestHint
+        }
+    }
+
+    /// 게스트 안내 — `로그인` 낱말을 브랜드 색으로 강조하고, 누르면 로그인 시트를 연다.
+    ///
+    /// 문장을 앞/뒤로 쪼개 사전에 넣으면 어순이 다른 언어에서 깨진다(영어는 `Sign in` 이 문장
+    /// 맨 앞이다). 그래서 사전에는 `%@` 가 든 온전한 문장 하나만 두고, 여기서 끼워 넣은
+    /// 낱말을 기준으로 다시 쪼갠다 — 웹 `interpolateNode` 와 같은 방식.
+    ///
+    /// 탭 영역은 낱말이 아니라 **안내문 전체**다. 강조 낱말만 누르게 하면 12pt 글자 폭이라
+    /// 손가락으로 맞히기 어렵다.
+    private var guestHint: some View {
+        let login = i18n.t("common.login")
+        let full = i18n.t("homeActions.guestHint", args: login)
+        let parts = full.components(separatedBy: login)
+        return HStack(spacing: 0) {
+            Text(parts.first ?? full)
+            if parts.count > 1 {
+                Text(login).foregroundStyle(AppColor.brandStrong).fontWeight(.semibold)
+                Text(parts.dropFirst().joined(separator: login))
             }
-            .font(.system(size: 12))
-            .foregroundStyle(AppColor.fgMuted)
-            .frame(maxWidth: .infinity)
+        }
+        .font(.system(size: 12))
+        .foregroundStyle(AppColor.fgMuted)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture { router.showLogin = true }
+    }
+
+    /// 미리보기 카드에 그릴 제목. 아직 아무것도 없으면 자리표시자를 보여 준다.
+    private var previewTitle: String {
+        let resolved = vm.resolvedTitle
+        return resolved.isEmpty ? i18n.t("home.preview.titlePlaceholder") : resolved
+    }
+
+    /// 모델이 든 오류 케이스를 현재 언어의 문장으로 바꾼다.
+    /// 서버가 준 문장은 그대로 쓴다 — 이미 사람이 읽는 말이고, 앱이 알 수 없는 사유를 담는다.
+    private func message(for error: HomeError) -> String {
+        switch error {
+        case .metaFailed: i18n.t("home.errors.metaFailed")
+        case .titleRequiredForLink: i18n.t("home.errors.titleRequiredForLink")
+        case .titleRequiredForClip: i18n.t("home.errors.titleRequiredForClip")
+        case .linkCreateFailed(let server): server ?? i18n.t("home.errors.linkCreateFailed")
+        case .server(let message): message
         }
     }
 
@@ -225,20 +264,20 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 40) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
-                    Text("공유 카드").font(.system(size: 15, weight: .semibold)).foregroundStyle(AppColor.fg)
+                    Text(i18n.t("home.cardPreview.title")).font(.system(size: 15, weight: .semibold)).foregroundStyle(AppColor.fg)
                     if vm.loading { ProgressView().controlSize(.small) }
                 }
-                Text("링크를 공유하면 이렇게 보여요").font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
-                SharePreviewCard(title: vm.effectiveTitle, description: vm.previewDescription,
+                Text(i18n.t("home.cardPreview.note")).font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
+                SharePreviewCard(title: previewTitle, description: vm.previewDescription,
                                  siteName: vm.previewSiteName, gradient: vm.gradient,
                                  imageURL: vm.previewImage)
-                Text("실제 공유 시 뜨는 이미지예요. 원본 대표 이미지가 있으면 배경으로 쓰고, 없으면 제목에 맞춰 만든 그라디언트로 채워져요.")
+                Text(i18n.t("home.cardPreview.caption"))
                     .font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
             }
             VStack(alignment: .leading, spacing: 8) {
-                Text("내 클립에 저장하면").font(.system(size: 15, weight: .semibold)).foregroundStyle(AppColor.fg)
-                Text("목록에서 이렇게 보여요").font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
-                ClipCardView(title: vm.effectiveTitle,
+                Text(i18n.t("home.clipPreview.title")).font(.system(size: 15, weight: .semibold)).foregroundStyle(AppColor.fg)
+                Text(i18n.t("home.clipPreview.note")).font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
+                ClipCardView(title: previewTitle,
                              host: vm.hasInput ? prettyHost(vm.url) : nil,
                              imageURL: vm.previewImage, gradient: vm.gradient, tags: vm.tags)
             }
@@ -301,7 +340,7 @@ struct HomeView: View {
     private var metaLoadingRow: some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small)
-            Text("링크 정보를 읽는 중…")
+            Text(i18n.t("home.metaLoading"))
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(12)
@@ -327,7 +366,7 @@ struct HomeView: View {
 
     /// 게스트 공유/복사 텍스트 — 카드 생성 없이 스크랩된 제목 + 원본 URL.
     private var guestShareText: String {
-        buildShareText(title: vm.effectiveTitle, description: nil, url: vm.url)
+        buildShareText(title: vm.resolvedTitle, description: nil, url: vm.url)
     }
 
     private func copyGuestShare() {

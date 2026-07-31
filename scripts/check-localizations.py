@@ -35,6 +35,8 @@ CLEAN_FILES = [
     "ClipNote/Views/SettingsView.swift",
     "ClipNote/Views/HeaderMenu.swift",
     "ClipNote/Views/RootView.swift",
+    "ClipNote/Views/HomeView.swift",
+    "ClipNote/Views/HomeViewModel.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
@@ -43,7 +45,7 @@ LITERAL_ALLOWLIST = {
     ("ClipNote/Localization/AppLanguage.swift", "한국어"),
 }
 
-KEY_CALL = re.compile(r'\bt\(\s*"([^"\\]+)"')
+KEY_CALL_START = re.compile(r"\bt\(")
 STRING_LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 HANGUL = re.compile(r"[가-힣]")
 # `%@`·`%lld`·`%1$@`·`%.2f` — 위치 지정자·플래그·너비·길이 수식어를 모두 넘겨 변환자를 잡는다.
@@ -116,6 +118,33 @@ def specifiers(value: str) -> list[str]:
     return [length + conversion for _, length, conversion in found]
 
 
+def referenced_keys(text: str) -> list[str]:
+    """`t(...)` 호출 안에 있는 문자열 리터럴을 전부 키로 본다.
+
+    `t("a")` 만 보면 `t(flag ? "a" : "b")` 를 놓친다. 놓친 키는 "쓰는 곳이 없다"로 잘못
+    보고되고, 그걸 무시하는 습관이 들면 검사가 무력해진다. 그래서 여는 괄호부터 짝이 맞는
+    닫는 괄호까지 훑어 그 안의 리터럴을 모두 거둔다.
+    """
+    keys: list[str] = []
+    for match in KEY_CALL_START.finditer(text):
+        i = match.end()
+        depth, n = 1, len(text)
+        argument = []
+        while i < n and depth > 0:
+            ch = text[i]
+            if ch == '"':
+                end = i + 1
+                while end < n and text[end] != '"':
+                    end += 2 if text[end] == "\\" else 1
+                argument.append(text[i : end + 1])
+                i = end + 1
+                continue
+            depth += (ch == "(") - (ch == ")")
+            i += 1
+        keys.extend(literal[1:-1] for literal in argument)
+    return keys
+
+
 def check_catalog(catalog: dict, errors: list[str]) -> dict[str, dict]:
     if catalog.get("sourceLanguage") != SOURCE_LANGUAGE:
         fail(errors, f"sourceLanguage 가 {SOURCE_LANGUAGE} 가 아니다: {catalog.get('sourceLanguage')}")
@@ -172,7 +201,7 @@ def check_usage(strings: dict, errors: list[str]) -> None:
     used: dict[str, list[str]] = {}
     for path in swift_files():
         text = strip_comments(path.read_text(encoding="utf-8"))
-        for key in KEY_CALL.findall(text):
+        for key in referenced_keys(text):
             used.setdefault(key, []).append(str(path.relative_to(ROOT)))
 
     # 테스트는 일부러 없는 키를 조회한다(폴백 검증). 그건 사용처로 세지 않는다.

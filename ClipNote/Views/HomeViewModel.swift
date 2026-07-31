@@ -1,6 +1,22 @@
 import Foundation
 import Observation
 
+/// 홈에서 사용자에게 보여 줄 오류.
+///
+/// **문자열이 아니라 케이스로 둔다.** 표시 언어는 `LocalizationStore`(뷰 환경)가 알고 있는데
+/// 이 모델은 뷰가 아니라서 접근할 수 없다. 모델에 스토어를 주입하면 언어가 바뀔 때 모델까지
+/// 다시 만들어야 하고, 문자열을 만들 시점의 언어로 굳어 버린다. 케이스로 두면 뷰가 그릴 때
+/// 그 시점의 언어로 번역한다.
+enum HomeError: Equatable {
+    case metaFailed
+    case titleRequiredForLink
+    case titleRequiredForClip
+    /// 링크 생성 실패. 서버가 사유를 주면 그걸 쓰고(이미 사람이 읽는 문장), 없으면 사전 문구.
+    case linkCreateFailed(server: String?)
+    /// 서버가 준 메시지를 그대로 보여 준다(클립 추가 실패 등).
+    case server(String)
+}
+
 /// 홈 화면 상태·로직. RN `app/index.tsx` 이식. URL 디바운스 메타 추출 + 저장/공유 입력 조립.
 @MainActor
 @Observable
@@ -11,7 +27,7 @@ final class HomeViewModel {
 
     private(set) var meta: ClipMetadata?
     private(set) var loading = false
-    var errorMessage: String?
+    var error: HomeError?
 
     private let api: APIClient
     private var debounceTask: Task<Void, Never>?
@@ -38,14 +54,8 @@ final class HomeViewModel {
         return pickGradient(url.isEmpty ? "clipnote" : url)
     }
 
-    /// 미리보기용 제목(빈 값이면 플레이스홀더).
-    var effectiveTitle: String {
-        if !trimmedTitle.isEmpty { return trimmedTitle }
-        if let mt = meta?.title, !mt.isEmpty { return mt }
-        return hasInput ? prettyHost(url) : "여기에 제목이 표시됩니다"
-    }
-
-    /// 저장/전송용 제목(플레이스홀더 없음 — 빈 값이면 저장 불가).
+    /// 저장·전송·미리보기에 쓰는 제목. 빈 값이면 화면이 `home.preview.titlePlaceholder` 를 대신 그린다
+    /// — 플레이스홀더는 번역 대상이라 모델이 들고 있으면 안 된다.
     var resolvedTitle: String {
         if !trimmedTitle.isEmpty { return trimmedTitle }
         if let mt = meta?.title, !mt.isEmpty { return mt }
@@ -79,7 +89,7 @@ final class HomeViewModel {
     func loadMeta(_ target: String) async {
         guard isFetchableUrl(target) else { return }
         loading = true
-        errorMessage = nil
+        error = nil
         defer { loading = false }
         do {
             let data = try await api.fetchMetadata(url: target)
@@ -90,7 +100,7 @@ final class HomeViewModel {
                 title = ft
             }
         } catch {
-            errorMessage = "내용을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."
+            self.error = .metaFailed
         }
     }
 
@@ -119,16 +129,16 @@ final class HomeViewModel {
         return true
     }
 
-    /// 로그인: 공유 링크 생성. 실패 시 errorMessage 설정 후 nil.
+    /// 로그인: 공유 링크 생성. 실패 시 `error` 설정 후 nil.
     func createShare(accessToken: String?) async -> CreateClipResult? {
         guard let input = makeInput(save: nil) else {
-            errorMessage = "공유 링크를 만들려면 제목이 필요해요. 제목을 입력해 주세요."
+            error = .titleRequiredForLink
             return nil
         }
-        errorMessage = nil
+        error = nil
         let res = await api.createClip(input, accessToken: accessToken)
         guard res.error == nil, res.shareUrl != nil else {
-            errorMessage = res.error ?? "공유 링크 생성에 실패했어요."
+            error = .linkCreateFailed(server: res.error)
             return nil
         }
         return res
@@ -137,12 +147,12 @@ final class HomeViewModel {
     /// 로그인: 공유 카드 없이 바로 내 클립(DB)에 저장.
     func saveToClips(accessToken: String?) async -> Bool {
         guard let input = makeInput(save: true) else {
-            errorMessage = "저장하려면 제목이 필요해요. 제목을 입력해 주세요."
+            error = .titleRequiredForClip
             return false
         }
-        errorMessage = nil
+        error = nil
         let res = await api.createClip(input, accessToken: accessToken)
-        if let e = res.error { errorMessage = e; return false }
+        if let e = res.error { error = .server(e); return false }
         return true
     }
 }

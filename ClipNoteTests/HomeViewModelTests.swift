@@ -55,7 +55,8 @@ final class HomeStubURLProtocol: URLProtocol, @unchecked Sendable {
         let vm = makeVM()
         await vm.loadMeta("https://example.com/a")
         #expect(vm.meta == nil)
-        #expect(vm.errorMessage != nil)
+        // 케이스까지 본다 — nil 아님만 보면 엉뚱한 오류가 들어와도 통과한다.
+        #expect(vm.error == .metaFailed)
     }
 
     @Test func tagsParsedFromInput() {
@@ -89,6 +90,6 @@ final class HomeStubURLProtocol: URLProtocol, @unchecked Sendable {
         let vm = makeVM()
         let res = await vm.createShare(accessToken: "tok")
         #expect(res == nil)
-        #expect(vm.errorMessage != nil)
+        #expect(vm.error == .titleRequiredForLink)
     }
 }
