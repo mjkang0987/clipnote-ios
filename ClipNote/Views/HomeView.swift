@@ -164,9 +164,18 @@ struct HomeView: View {
             actions
         }
         .padding(14)
-        .background(AppColor.surface)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-        .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(AppColor.border, lineWidth: 0.5))
+        // 둥근 면과 테두리를 **배경 안에서** 그린다.
+        //
+        // 전에는 `.background` + `.clipShape` 였는데, 그 clip 은 배경뿐 아니라 카드 안 내용을
+        // 전부 잘라낸다. 공룡은 URL 칸 바깥 17pt 에 서는 반면 카드 안쪽 여백은 14pt 뿐이라,
+        // 좌우 면으로 넘어가는 순간 잘려 나갔다 — 위·아래만 보여서 도는 게 아니라 지나가는
+        // 것처럼 보였다. 배경 도형이 직접 둥글면 결과는 같으면서 내용은 잘리지 않는다.
+        .background {
+            RoundedRectangle(cornerRadius: Radius.md)
+                .fill(AppColor.surface)
+                .overlay(RoundedRectangle(cornerRadius: Radius.md)
+                    .stroke(AppColor.border, lineWidth: 0.5))
+        }
         .padding(.top, 8)
     }
 
