@@ -84,8 +84,9 @@ private struct LoginMigrationModifier: ViewModifier {
     @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
 
-    @State private var showMigrate = false
-    @State private var showDiscard = false
+    // 개수를 그리는 레이어는 `.sheet(item:)` 으로 값을 실어 보낸다 — `ClipCount` 주석 참고.
+    @State private var migrateRequest: ClipCount?
+    @State private var discardRequest: ClipCount?
     /// `취소` 를 눌러서 닫혔는가. 스와이프로 닫힌 경우와 구분하려고 둔다 —
     /// `.sheet(onDismiss:)` 는 둘을 똑같이 알려주기 때문에 버튼 쪽에서 표시를 남겨야 한다.
     @State private var declined = false
@@ -105,8 +106,8 @@ private struct LoginMigrationModifier: ViewModifier {
             .onChange(of: auth.loggedIn) { _, now in
                 if now { check() } else { prompted = false }
             }
-            .sheet(isPresented: $showMigrate, onDismiss: resolveMigrateDismiss) { migrateLayer }
-            .sheet(isPresented: $showDiscard) { discardLayer }
+            .sheet(item: $migrateRequest, onDismiss: resolveMigrateDismiss) { migrateLayer($0.value) }
+            .sheet(item: $discardRequest) { discardLayer($0.value) }
             // 옮기기 결과는 결정이 아니라 알림이라 레이어로 만들지 않는다.
             // (웹은 페이지가 그 자리에서 갱신돼 알림이 없지만, 앱은 네트워크 작업이라 결과를 알린다.)
             .alert(i18n.t("clips.migrateResultTitle"), isPresented: resultBinding) {
@@ -118,8 +119,8 @@ private struct LoginMigrationModifier: ViewModifier {
 
     // MARK: - 레이어
 
-    private var migrateLayer: some View {
-        let count = countUnit(pendingCount)
+    private func migrateLayer(_ pending: Int) -> some View {
+        let count = countUnit(pending)
         return ConfirmLayer(
             title: i18n.t("clips.migrateTitle"),
             message: emphasized(i18n.t("clips.migrateBody", args: count), [count]),
@@ -128,15 +129,15 @@ private struct LoginMigrationModifier: ViewModifier {
             busyLabel: i18n.t("clips.migrating"),
             cancelLabel: i18n.t("common.cancel"),
             // 옮기는 동안 레이어를 열어 둔 채 스피너를 보여 준다(웹과 동일). 끝나면 닫는다.
-            onConfirm: migrate,
-            onCancel: { declined = true; showMigrate = false }
+            onConfirm: { migrate(pending) },
+            onCancel: { declined = true; migrateRequest = nil }
         )
         // 진행 중에는 스와이프로 닫지 못하게 막는다 — 중간에 닫히면 무엇이 옮겨졌는지 알 수 없다.
         .interactiveDismissDisabled(migrating)
     }
 
-    private var discardLayer: some View {
-        let count = countUnit(pendingCount)
+    private func discardLayer(_ pending: Int) -> some View {
+        let count = countUnit(pending)
         let irreversible = i18n.t("clips.discardIrreversible")
         return ConfirmLayer(
             title: i18n.t("clips.discardTitle"),
@@ -147,8 +148,8 @@ private struct LoginMigrationModifier: ViewModifier {
             // 삭제는 테두리만 남긴다. 미끄러져 눌리는 쪽이 안전해야 한다.
             emphasis: .cautious,
             cancelLabel: i18n.t("common.cancel"),
-            onConfirm: { discard(); showDiscard = false },
-            onCancel: { showDiscard = false }
+            onConfirm: { discard(); discardRequest = nil },
+            onCancel: { discardRequest = nil }
         )
     }
 
@@ -165,7 +166,7 @@ private struct LoginMigrationModifier: ViewModifier {
         pendingCount = count
         prompted = true
         declined = false
-        showMigrate = true
+        migrateRequest = ClipCount(value: count)
     }
 
     /// 레이어가 닫힌 뒤 다음 단계를 정한다.
@@ -173,17 +174,17 @@ private struct LoginMigrationModifier: ViewModifier {
     private func resolveMigrateDismiss() {
         guard declined else { return }
         declined = false
-        showDiscard = true
+        discardRequest = ClipCount(value: pendingCount)
     }
 
-    private func migrate() {
+    private func migrate(_ pending: Int) {
         let store = LocalClipStore(container: modelContext.container)
         let token = auth.accessToken
         migrating = true
         Task {
             let (uploaded, allOK) = await MigrateLocalClips(localStore: store).run(accessToken: token)
             migrating = false
-            showMigrate = false
+            migrateRequest = nil
             resultMessage = allOK
                 ? i18n.t("clips.migrateDone", args: countUnit(uploaded))
                 : i18n.t("clips.migratePartial")

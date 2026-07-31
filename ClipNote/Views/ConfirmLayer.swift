@@ -104,6 +104,17 @@ struct ConfirmLayer: View {
     }
 }
 
+/// 레이어에 개수를 **값으로 실어 보내기 위한 래퍼.**
+///
+/// `.sheet(isPresented:)` 의 콘텐츠 클로저는 표시 시점이 아니라 **직전 `body` 평가 시점의 상태**를
+/// 잡을 수 있다. 개수와 표시 여부를 같은 틱에 세팅하면 아직 갱신 전인 값으로 그려진다
+/// (실제로 옮기기 레이어가 "0개 옮기기" 로 떴다). `.sheet(item:)` 은 그릴 값을 함께 넘기므로
+/// 이 어긋남이 구조적으로 생기지 않는다.
+struct ClipCount: Identifiable {
+    let value: Int
+    var id: Int { value }
+}
+
 /// 채운 버튼 — 색만 갈아 끼운다(브랜드 / 위험).
 struct ModalFilledButton: ButtonStyle {
     let color: Color

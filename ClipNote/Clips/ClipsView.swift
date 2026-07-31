@@ -36,8 +36,9 @@ struct ClipsView: View {
     // 다중선택(로그인 전용)
     @State private var selectMode = false
     @State private var selected: Set<String> = []
-    @State private var showTagModal = false
-    @State private var showBulkDeleteConfirm = false
+    // 개수를 그리는 레이어는 전부 `.sheet(item:)` 으로 값을 실어 보낸다 — `ClipCount` 주석 참고.
+    @State private var tagApplyRequest: ClipCount?
+    @State private var bulkDeleteRequest: ClipCount?
     @State private var bulkBusy = false
 
     var body: some View {
@@ -71,8 +72,8 @@ struct ClipsView: View {
         .onReceive(NotificationCenter.default.publisher(for: ClipsRefresh.name)) { _ in
             Task { await reloadWithAuth() }
         }
-        .sheet(isPresented: $showTagModal) {
-            TagApplyModal(count: selected.count) { tags, mode in
+        .sheet(item: $tagApplyRequest) { request in
+            TagApplyModal(count: request.value) { tags, mode in
                 Task {
                     bulkBusy = true
                     await store?.applyTags(ids: Array(selected), tags: tags, mode: mode)
@@ -82,7 +83,7 @@ struct ClipsView: View {
             }
         }
         // 확인 계열은 전부 레이어로 띄운다(웹과 동일) — `ConfirmLayer` 주석 참고.
-        .sheet(isPresented: $showBulkDeleteConfirm) { bulkDeleteLayer }
+        .sheet(item: $bulkDeleteRequest) { bulkDeleteLayer($0.value) }
         .sheet(item: $editing) { clip in
             EditClipModal(initialTitle: clip.title, initialTags: clip.tags) { title, tags in
                 await store?.saveEdit(clip, title: title, tags: tags)
@@ -109,7 +110,7 @@ struct ClipsView: View {
     /// 다중선택 하단 바 — 태그 적용 / 삭제(n).
     private var bulkBar: some View {
         HStack(spacing: 8) {
-            Button { showTagModal = true } label: {
+            Button { tagApplyRequest = ClipCount(value: selected.count) } label: {
                 Text(i18n.t("clips.applyTags"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
@@ -117,7 +118,7 @@ struct ClipsView: View {
                     .background(AppColor.brandSoft)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
-            Button { showBulkDeleteConfirm = true } label: {
+            Button { bulkDeleteRequest = ClipCount(value: selected.count) } label: {
                 Text(i18n.t("clips.bulkDeleteButton", args: selected.count))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
@@ -257,8 +258,8 @@ struct ClipsView: View {
         )
     }
 
-    private var bulkDeleteLayer: some View {
-        let count = countUnit(selected.count)
+    private func bulkDeleteLayer(_ pending: Int) -> some View {
+        let count = countUnit(pending)
         return ConfirmLayer(
             title: i18n.t("clips.bulkDeleteTitle", args: count),
             message: Text(i18n.t("clips.irreversible")),
@@ -266,7 +267,7 @@ struct ClipsView: View {
             emphasis: .destructive,
             cancelLabel: i18n.t("common.cancel"),
             onConfirm: {
-                showBulkDeleteConfirm = false
+                bulkDeleteRequest = nil
                 Task {
                     bulkBusy = true
                     await store?.bulkDelete(ids: Array(selected))
@@ -274,7 +275,7 @@ struct ClipsView: View {
                     exitSelect()
                 }
             },
-            onCancel: { showBulkDeleteConfirm = false }
+            onCancel: { bulkDeleteRequest = nil }
         )
     }
 
