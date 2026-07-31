@@ -49,6 +49,7 @@ CLEAN_FILES = [
     "ClipNote/Views/FaqView.swift",
     "ClipNote/Views/OnboardingView.swift",
     "ClipNote/Views/SpotlightTour.swift",
+    "ClipNote/Views/AccountDeleteView.swift",
 ]
 
 # 한글이 들어 있어도 번역 대상이 아닌 것.
@@ -137,6 +138,11 @@ def referenced_keys(text: str) -> list[str]:
     보고되고, 그걸 무시하는 습관이 들면 검사가 무력해진다. 그래서 여는 괄호부터 훑어 리터럴을
     거두되, **첫 인자까지만** 본다 — `t("clips.emptyForTag", args: tag ?? "")` 의 `""` 는
     키가 아니라 포맷 인자다. 뒤 인자에 있는 중첩 `t(` 호출은 finditer 가 따로 잡는다.
+
+    첫 인자 안에도 키가 아닌 리터럴이 섞일 수 있다 —
+    `t(res.error == "network" ? "settings.withdrawNetworkFailed" : "settings.withdrawFailed")`
+    의 `"network"` 는 비교 대상이다. 키는 예외 없이 `네임스페이스.이름` 꼴이므로 점이 있는
+    리터럴만 키로 본다(`check_catalog` 가 카탈로그 쪽에서 이 규칙을 강제한다).
     """
     keys: list[str] = []
     for match in KEY_CALL_START.finditer(text):
@@ -156,7 +162,9 @@ def referenced_keys(text: str) -> list[str]:
                 break
             depth += (ch == "(") - (ch == ")")
             i += 1
-        keys.extend(literal[1:-1] for literal in argument)
+        keys.extend(
+            literal[1:-1] for literal in argument if "." in literal[1:-1]
+        )
     return keys
 
 
@@ -166,6 +174,11 @@ def check_catalog(catalog: dict, errors: list[str]) -> dict[str, dict]:
 
     strings = catalog.get("strings", {})
     for key, entry in sorted(strings.items()):
+        # 키는 예외 없이 `네임스페이스.이름` 꼴이어야 한다. 코드 쪽 검사(`referenced_keys`)가
+        # 점을 기준으로 키와 일반 리터럴을 가르기 때문에, 점 없는 키를 만들면 조용히 누락된다.
+        if "." not in key:
+            fail(errors, f"[{key}] 키에 네임스페이스가 없다 — `화면.이름` 꼴로 짓는다")
+
         locs = entry.get("localizations", {})
 
         missing = [lang for lang in LANGUAGES if lang not in locs]

@@ -168,10 +168,10 @@ struct SettingsView: View {
             VStack(spacing: 12) {
                 // 언어는 로그인 없이도 바꿀 수 있어야 한다.
                 languageRow
-                Text(i18n.t("settings.guard.body"))
+                Text(i18n.t("settings.guardBody"))
                     .font(.system(size: 15)).foregroundStyle(AppColor.fgMuted)
                     .padding(.top, 24)
-                Button(i18n.t("settings.guard.home")) { router.home() }
+                Button(i18n.t("settings.guardHome")) { router.home() }
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
             }

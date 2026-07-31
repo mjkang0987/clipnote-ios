@@ -3602,6 +3602,36 @@
         }
       }
     },
+    "language.koreanOnlyNotice": {
+      "extractionState": "manual",
+      "comment": "개인정보처리방침 본문은 법적 문서라 번역하지 않는다 — 비한국어에서 본문 위에 붙인다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 문서는 한국어로만 제공됩니다."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This document is provided in Korean only."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この文書は韓国語でのみ提供されます。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本文件仅提供韩文版本。"
+          }
+        }
+      }
+    },
     "login.compareTitle": {
       "extractionState": "manual",
       "localizations": {
@@ -4792,7 +4822,7 @@
         }
       }
     },
-    "settings.guard.body": {
+    "settings.guardBody": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -4821,7 +4851,7 @@
         }
       }
     },
-    "settings.guard.home": {
+    "settings.guardHome": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -5052,6 +5082,300 @@
           "stringUnit": {
             "state": "translated",
             "value": "注销账号"
+          }
+        }
+      }
+    },
+    "settings.withdrawAgree": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위 내용을 확인했으며 삭제에 동의합니다."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I've read the above and agree to the deletion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上記を確認し、削除に同意します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我已阅读以上内容并同意删除。"
+          }
+        }
+      }
+    },
+    "settings.withdrawBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아래 정보가 영구적으로 삭제되며 복구할 수 없어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The following will be permanently deleted and can't be recovered."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以下の情報が永久に削除され、復元できません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以下信息将被永久删除，无法恢复。"
+          }
+        }
+      }
+    },
+    "settings.withdrawDoneBody": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 탈퇴 결과 알림",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정과 저장된 클립이 모두 삭제되었어요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your account and all saved clips have been deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントと保存されたクリップがすべて削除されました。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的账号和所有已保存的剪藏均已删除。"
+          }
+        }
+      }
+    },
+    "settings.withdrawDoneTitle": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 탈퇴 결과 알림",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "탈퇴 완료"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account deleted"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退会が完了しました"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注销完成"
+          }
+        }
+      }
+    },
+    "settings.withdrawFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete the account. Please try again in a moment."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退会処理に失敗しました。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注销失败。请稍后再试。"
+          }
+        }
+      }
+    },
+    "settings.withdrawItemAccount": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정 정보(로그인 식별자·이메일·프로필)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account details (sign-in identifier, email, profile)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント情報(ログイン識別子・メール・プロフィール)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "账号信息(登录标识符·邮箱·个人资料)"
+          }
+        }
+      }
+    },
+    "settings.withdrawItemClips": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장한 모든 클립과 공유 링크"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every saved clip and share link"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存したすべてのクリップと共有リンク"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存的所有剪藏和分享链接"
+          }
+        }
+      }
+    },
+    "settings.withdrawItemLocal": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹에는 브라우저 저장분을 따로 적는 항목이 없다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에 보관된 클립"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clips kept on this device"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この端末に保存されたクリップ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存在此设备上的剪藏"
+          }
+        }
+      }
+    },
+    "settings.withdrawNetworkFailed": {
+      "extractionState": "manual",
+      "comment": "앱 전용 — 웹은 네트워크 실패를 따로 구분하지 않는다",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네트워크 문제로 탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A network problem stopped the deletion. Please try again in a moment."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネットワークの問題で退会できませんでした。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络问题导致注销未完成。请稍后再试。"
+          }
+        }
+      }
+    },
+    "settings.withdrawTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정말 탈퇴할까요?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your account?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本当に退会しますか?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确定要注销吗?"
           }
         }
       }

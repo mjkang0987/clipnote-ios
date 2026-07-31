@@ -5,6 +5,7 @@ import SwiftUI
 struct AccountDeleteView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
 
     @State private var agreed = false
@@ -18,26 +19,27 @@ struct AccountDeleteView: View {
             if auth.loggedIn { form } else { guardView }
         }
         .background(AppColor.bg)
-        .navigationTitle("회원 탈퇴")
+        .navigationTitle(i18n.t("settings.withdraw"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("정말 탈퇴할까요?", isPresented: $showConfirm, titleVisibility: .visible) {
-            Button("탈퇴하기", role: .destructive) { Task { await runDelete() } }
-            Button("취소", role: .cancel) {}
+        .confirmationDialog(i18n.t("settings.withdrawTitle"), isPresented: $showConfirm,
+                            titleVisibility: .visible) {
+            Button(i18n.t("settings.withdraw"), role: .destructive) { Task { await runDelete() } }
+            Button(i18n.t("common.cancel"), role: .cancel) {}
         } message: {
-            Text("계정과 저장된 모든 클립이 영구적으로 삭제되며 복구할 수 없어요.")
+            Text(i18n.t("settings.dangerBody"))
         }
-        .alert("탈퇴 완료", isPresented: $showDone) {
-            Button("확인") { dismiss() }
+        .alert(i18n.t("settings.withdrawDoneTitle"), isPresented: $showDone) {
+            Button(i18n.t("common.confirm")) { dismiss() }
         } message: {
-            Text("계정과 저장된 클립이 모두 삭제되었어요.")
+            Text(i18n.t("settings.withdrawDoneBody"))
         }
     }
 
     private var guardView: some View {
         VStack(spacing: 12) {
-            Text("로그인 후 이용할 수 있어요.")
+            Text(i18n.t("settings.guardBody"))
                 .font(.system(size: 15)).foregroundStyle(AppColor.fgMuted)
-            Button("홈으로") { dismiss() }
+            Button(i18n.t("settings.guardHome")) { dismiss() }
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(AppColor.brandStrong)
         }
@@ -47,16 +49,17 @@ struct AccountDeleteView: View {
     private var form: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("회원 탈퇴")
+                Text(i18n.t("settings.withdraw"))
                     .font(.system(size: 18, weight: .bold)).foregroundStyle(AppColor.fg)
-                Text("탈퇴하면 아래 정보가 영구적으로 삭제되며 복구할 수 없어요.")
+                Text(i18n.t("settings.withdrawBody"))
                     .font(.system(size: 14)).lineSpacing(3)
                     .foregroundStyle(AppColor.fgMuted).padding(.top, 8)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("• 계정 정보(소셜 로그인 식별자·이메일·프로필)")
-                    Text("• 저장한 모든 클립과 공유 링크")
-                    Text("• 이 기기에 보관된 클립")
+                    // 글머리표는 목록 표시라 사전에 넣지 않는다.
+                    Text("• \(i18n.t("settings.withdrawItemAccount"))")
+                    Text("• \(i18n.t("settings.withdrawItemClips"))")
+                    Text("• \(i18n.t("settings.withdrawItemLocal"))")
                 }
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,7 +81,7 @@ struct AccountDeleteView: View {
                             }
                         }
                         .frame(width: 22, height: 22)
-                        Text("위 내용을 확인했으며, 모든 데이터가 삭제되는 것에 동의합니다.")
+                        Text(i18n.t("settings.withdrawAgree"))
                             .font(.system(size: 14)).foregroundStyle(AppColor.fg)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -93,7 +96,7 @@ struct AccountDeleteView: View {
                 Button { showConfirm = true } label: {
                     Group {
                         if busy { ProgressView().tint(AppColor.white) }
-                        else { Text("회원 탈퇴").font(.system(size: 15, weight: .semibold)) }
+                        else { Text(i18n.t("settings.withdraw")).font(.system(size: 15, weight: .semibold)) }
                     }
                     .foregroundStyle(AppColor.white)
                     .frame(maxWidth: .infinity).frame(height: 50)
@@ -104,7 +107,7 @@ struct AccountDeleteView: View {
                 .opacity(!agreed || busy ? 0.5 : 1)
                 .padding(.top, 20)
 
-                Button("취소") { dismiss() }
+                Button(i18n.t("common.cancel")) { dismiss() }
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.fgMuted)
                     .frame(maxWidth: .infinity).frame(height: 46)
@@ -121,9 +124,9 @@ struct AccountDeleteView: View {
         let res = await APIClient.shared.deleteAccount(accessToken: auth.accessToken)
         guard res.ok else {
             busy = false
-            error = res.error == "network"
-                ? "네트워크 문제로 탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요."
-                : "탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요."
+            error = i18n.t(res.error == "network"
+                           ? "settings.withdrawNetworkFailed"
+                           : "settings.withdrawFailed")
             return
         }
         // 서버 삭제 완료 → 로컬 세션·로컬 클립 정리.
