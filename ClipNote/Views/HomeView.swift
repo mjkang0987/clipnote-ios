@@ -187,36 +187,27 @@ struct HomeView: View {
             }
             .padding(.top, 4)
         } else {
-            primaryButton(i18n.t(savedLocal ? "homeActions.saved" : "homeActions.saveHere"),
-                          disabled: !vm.hasInput) { saveLocal() }
-                .tourAnchor(.save)
-                .padding(.top, 4)
-            HStack(spacing: 8) {
-                ShareLink(item: guestShareText) {
-                    Text(i18n.t("homeActions.share"))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(AppColor.brandStrong)
-                        .frame(maxWidth: .infinity).frame(height: 48)
-                        .background(AppColor.brandSoft)
-                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                        .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
-                }
-                .disabled(!vm.hasInput)
-                .opacity(vm.hasInput ? 1 : 0.5)
+            // 게스트도 로그인과 같은 구조 — **위 줄은 공유·복사, 저장은 항상 하단 한 줄**(웹과 동일).
+            // 전에는 저장이 위에 있어서, 로그인 여부에 따라 같은 버튼이 위아래로 튀었다.
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    // `ShareLink` 는 자체 라벨을 받으므로 `secondaryButton` 을 쓸 수 없다.
+                    // 대신 같은 모양을 `secondaryActionStyle()` 로 공유한다.
+                    ShareLink(item: guestShareText) {
+                        Text(i18n.t("homeActions.share")).secondaryActionStyle()
+                    }
+                    .disabled(!vm.hasInput)
+                    .opacity(vm.hasInput ? 1 : 0.5)
 
-                Button { copyGuestShare() } label: {
-                    Text(i18n.t(copiedShare ? "homeActions.copied" : "homeActions.copyOriginal"))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(AppColor.brandStrong)
-                        .frame(maxWidth: .infinity).frame(height: 48)
-                        .background(AppColor.brandSoft)
-                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                        .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
+                    secondaryButton(i18n.t(copiedShare ? "homeActions.copied" : "homeActions.copyOriginal"),
+                                    disabled: !vm.hasInput) { copyGuestShare() }
+                        .tourAnchor(.copyOriginal)
                 }
-                .disabled(!vm.hasInput)
-                .opacity(vm.hasInput ? 1 : 0.5)
-                .tourAnchor(.copyOriginal)
+                primaryButton(i18n.t(savedLocal ? "homeActions.saved" : "homeActions.saveHere"),
+                              disabled: !vm.hasInput) { saveLocal() }
+                    .tourAnchor(.save)
             }
+            .padding(.top, 4)
             guestHint
         }
     }
@@ -331,12 +322,7 @@ struct HomeView: View {
                                  action: @escaping () async -> Void) -> some View {
         Button { Task { await action() } } label: {
             SpinnerLabel(title: label, loading: loading, tint: AppColor.brandStrong)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(AppColor.brandStrong)
-                .frame(maxWidth: .infinity).frame(height: 48)
-                .background(AppColor.brandSoft)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-                .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
+                .secondaryActionStyle()
         }
         .disabled(disabled)
         .opacity(disabled ? 0.5 : 1)
@@ -420,9 +406,17 @@ struct HomeView: View {
     }
 }
 
-/// `.sheet(item:)`용 Identifiable 래퍼.
-private struct ShareURLItem: Identifiable {
-    let url: String
-    var id: String { url }
+private extension View {
+    /// 2차 액션 버튼 모양 — 테두리 + 연보라. 홈의 링크·복사·공유가 모두 이걸 쓴다.
+    /// **채운 보라는 저장 버튼 하나뿐이다**(웹 `b824002` 규칙).
+    func secondaryActionStyle() -> some View {
+        self
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(AppColor.brandStrong)
+            .frame(maxWidth: .infinity).frame(height: 48)
+            .background(AppColor.brandSoft)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.brand, lineWidth: 0.5))
+    }
 }
 
