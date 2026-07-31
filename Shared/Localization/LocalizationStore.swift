@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 
 /// 표시 언어 상태 + 문자열 조회. 언어를 바꾸면 **재시작 없이** 화면이 즉시 갱신된다.
 ///
@@ -33,6 +34,11 @@ final class LocalizationStore {
     init(defaults: UserDefaults = LocalizationStore.sharedDefaults) {
         self.defaults = defaults
         let saved = defaults.string(forKey: Self.storageKey).flatMap(AppLanguage.init(rawValue:))
+        if saved == nil {
+            // 앱에서 언어를 고른 적이 있는데도 여기가 비면 저장 위치가 어긋난 것이다
+            // (확장이 App Group 을 못 여는 경우). 그러면 시스템 언어로 떨어진다.
+            Self.log.notice("저장된 표시 언어가 없다 — 시스템 언어로 시작 (번들 \(Bundle.main.bundleIdentifier ?? "?", privacy: .public))")
+        }
         let initial = saved ?? AppLanguage.matchingSystem()
         self.language = initial
         self.bundle = Self.bundle(for: initial)
@@ -63,10 +69,19 @@ final class LocalizationStore {
 
     /// 언어별 `.lproj` 번들. 못 찾으면 `Bundle.main`으로 떨어져 원본 언어가 나온다
     /// (문자열 카탈로그에 해당 언어가 빠졌거나 프로젝트 설정에 등록되지 않은 경우).
+    ///
+    /// **폴백은 화면상 조용하다** — 앱이 멀쩡히 동작하면서 전부 한국어로만 나온다. 특히 공유
+    /// 확장은 앱과 별개 번들이라 확장에만 언어가 안 실려도 눈치채기 어렵다. 그래서 로그를 남긴다
+    /// (Console.app 에서 `clipnote.i18n` 으로 필터).
     static func bundle(for language: AppLanguage) -> Bundle {
         guard let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
               let bundle = Bundle(path: path)
-        else { return .main }
+        else {
+            log.error("\(language.rawValue, privacy: .public).lproj 가 번들에 없다 — 전부 원본 언어로 나온다 (번들 \(Bundle.main.bundleIdentifier ?? "?", privacy: .public))")
+            return .main
+        }
         return bundle
     }
+
+    private static let log = Logger(subsystem: "kr.co.clipnote.app", category: "clipnote.i18n")
 }
