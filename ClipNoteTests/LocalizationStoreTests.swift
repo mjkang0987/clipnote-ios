@@ -119,6 +119,22 @@ import Testing
         #expect(store.t("no.such.key") == "no.such.key")
     }
 
+    /// 언어를 한 번도 안 바꿔도 **결정된 값이 저장돼야** 한다.
+    ///
+    /// 저장이 안 되면 공유 확장이 자기 나름대로 시스템 언어를 고르는데, 확장의 선호 언어는
+    /// 자신을 띄운 호스트 앱의 맥락을 따를 수 있어 앱과 어긋난다(앱은 영어인데 공유 시트만
+    /// 한국어로 뜨던 문제).
+    @Test @MainActor func resolvedLanguageIsPersistedEvenWithoutAnExplicitChoice() {
+        let suite = "LocalizationStoreTests.autopersist"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let store = LocalizationStore(defaults: defaults)
+        #expect(defaults.string(forKey: LocalizationStore.storageKey) == store.language.rawValue,
+                "고르지 않아도 결정된 언어가 저장돼야 확장이 같은 값을 본다")
+    }
+
     // MARK: - 선택 유지
 
     @Test @MainActor func persistsSelectionAcrossInstances() {

@@ -22,7 +22,11 @@ final class LocalizationStore {
     /// 그룹을 못 여는 상황(엔타이틀먼트 누락·테스트)에서는 standard 로 떨어진다 —
     /// 언어 선택이 확장과 어긋날 뿐 화면은 정상 동작한다.
     static var sharedDefaults: UserDefaults {
-        UserDefaults(suiteName: SharedURLStore.appGroupID) ?? .standard
+        guard let shared = UserDefaults(suiteName: SharedURLStore.appGroupID) else {
+            log.error("App Group 을 열지 못했다 — 확장과 표시 언어가 어긋난다 (엔타이틀먼트 확인)")
+            return .standard
+        }
+        return shared
     }
 
     private(set) var language: AppLanguage
@@ -34,14 +38,21 @@ final class LocalizationStore {
     init(defaults: UserDefaults = LocalizationStore.sharedDefaults) {
         self.defaults = defaults
         let saved = defaults.string(forKey: Self.storageKey).flatMap(AppLanguage.init(rawValue:))
-        if saved == nil {
-            // 앱에서 언어를 고른 적이 있는데도 여기가 비면 저장 위치가 어긋난 것이다
-            // (확장이 App Group 을 못 여는 경우). 그러면 시스템 언어로 떨어진다.
-            Self.log.notice("저장된 표시 언어가 없다 — 시스템 언어로 시작 (번들 \(Bundle.main.bundleIdentifier ?? "?", privacy: .public))")
-        }
         let initial = saved ?? AppLanguage.matchingSystem()
         self.language = initial
         self.bundle = Self.bundle(for: initial)
+
+        // **시스템 언어로 정해졌어도 그 결과를 저장한다.**
+        //
+        // 전에는 `select(_:)` 로 바꿀 때만 저장했다. 그러면 사용자가 언어를 한 번도 안 바꾼
+        // 기기에서는 App Group 이 비어 있고, 공유 확장이 자기 나름대로 `matchingSystem()` 을
+        // 돌린다. 확장의 선호 언어는 **자신을 띄운 호스트 앱의 맥락**을 따를 수 있어서,
+        // 앱은 영어인데 공유 시트만 한국어로 뜨는 일이 생긴다.
+        //
+        // 앱이든 확장이든 먼저 뜬 쪽이 한 번 적어 두면 이후로는 같은 값을 본다.
+        if saved == nil {
+            defaults.set(initial.rawValue, forKey: Self.storageKey)
+        }
     }
 
     func select(_ language: AppLanguage) {
