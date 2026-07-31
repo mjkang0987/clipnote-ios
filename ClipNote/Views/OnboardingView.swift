@@ -39,7 +39,6 @@ struct OnboardingView: View {
         ]
     }
 
-    var body
     var body: some View {
         ZStack {
             NavigationStack {
