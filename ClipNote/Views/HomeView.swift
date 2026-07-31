@@ -328,9 +328,14 @@ struct HomeView: View {
         .opacity(disabled ? 0.5 : 1)
     }
 
+    /// 메타를 읽는 동안 보이는 행.
+    ///
+    /// 원본 사이트를 대신 열어 보는 일이라 사이트에 따라 몇 초씩 걸린다. 스피너만 돌면 멈춘
+    /// 것처럼 느껴져서 달리는 공룡을 얹었다. 문구는 그대로 둔다 — 무슨 일이 벌어지는지 알리는
+    /// 건 글이고, 공룡은 기다리는 시간을 견딜 만하게 만드는 장식이다.
     private var metaLoadingRow: some View {
-        HStack(spacing: 8) {
-            ProgressView().controlSize(.small)
+        VStack(alignment: .leading, spacing: 6) {
+            RunningDino()
             Text(i18n.t("home.metaLoading"))
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
         }
