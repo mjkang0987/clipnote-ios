@@ -262,25 +262,43 @@ final class ShareViewController: UIViewController {
                 return
             }
             Self.log.error("extensionContext.open 실패 — responder chain 으로 재시도")
-            if self.openViaResponderChain(url) { return }
-            Self.log.error("호스트 앱을 열지 못했다 — 직접 열기 안내로 전환")
-            self.showOpenFailed()
+            self.openViaResponderChain(url)
+            self.reportFailureIfStillHere()
         }
     }
 
-    /// responder chain 우회. 열었으면 true.
-    private func openViaResponderChain(_ url: URL) -> Bool {
+    /// responder chain 우회 시도.
+    ///
+    /// **성공 여부를 돌려주지 않는다.** 전에는 `responds(to:)` 가 참이면 열었다고 봤는데,
+    /// 그건 그 selector 가 **존재한다**는 뜻일 뿐 호출이 무슨 일을 했는지는 알려 주지 않는다.
+    /// 그래서 아무 일도 안 일어났는데 성공으로 처리돼, 실패 안내가 영영 뜨지 않았다.
+    private func openViaResponderChain(_ url: URL) {
         var responder: UIResponder? = self
         let selector = sel_registerName("openURL:")
         while let current = responder {
             if current.responds(to: selector) {
                 current.perform(selector, with: url)
-                return true
+                return
             }
             responder = current.next
         }
-        return false
+        Self.log.error("responder chain 에 openURL: 이 없다")
     }
+
+    /// 잠시 뒤에도 **우리가 아직 화면에 있으면** 열기가 실패한 것이다.
+    ///
+    /// 여는 데 성공했는지 물어볼 API 가 없다. 대신 결과를 본다 — 앱이 떴다면 이 확장은
+    /// 가려지거나 걷혀서 창에서 빠진다. 그대로 남아 있다는 건 아무 일도 없었다는 뜻이다.
+    private func reportFailureIfStillHere() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.openGrace) { [weak self] in
+            guard let self, self.view.window != nil else { return }
+            Self.log.error("호스트 앱을 열지 못했다 — 직접 열기 안내로 전환")
+            self.showOpenFailed()
+        }
+    }
+
+    /// 앱이 뜰 때까지 기다려 주는 시간(초).
+    private static let openGrace: TimeInterval = 1.5
 
     /// 앱을 못 열었을 때. 실패를 삼키지 않고 다음 할 일을 알려 준다.
     private func showOpenFailed() {
