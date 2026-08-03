@@ -37,6 +37,8 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Clips/MigrateLocalClips.swift` | 로컬→DB 업로드 실행(§5). 전량 성공 시에만 로컬을 비운다 |
 | `Clips/MigrateLocalClipsLayer.swift` | 옮기기 확인·진행·결과 알림(공용 modifier). 로그인 훅과 로컬 클립 화면이 함께 쓴다 |
 | `Clips/LocalClipsView.swift` | ‘이 기기에 남은 클립’ — 로그인 상태에서 로컬 클립만 보는 화면(옮기기·모두 삭제) |
+| `scripts/check-secrets.sh` | 시크릿 형식 검증(값은 출력 안 함). 배포 게이트·`Secrets Check` 가 쓴다 |
+| `scripts/check-localizations.py` | 문자열 카탈로그 무결성 검사. CI 첫 스텝 |
 | `Views/RootView.swift` | 루트 게이트(온보딩 분기 + 로그인 마이그레이션 훅) |
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
@@ -104,6 +106,13 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
     기기에서도 보인다. 겉모습이 같은데 할 수 있는 일이 다르면 눌러 보고 나서야 알게 된다.
   - 옮기기 확인·진행·결과 알림은 `MigrateLocalClipsLayer` 하나를 로그인 훅과 로컬 화면이 함께 쓴다.
   - 웹 `clipnote` 도 같은 구성(`LocalClipsPanel`). **한쪽만 바꾸지 않는다.**
+- **🔴 1.1.0 배포 상태(2026-08-03)**: TestFlight 업로드는 성공했으나 **그 빌드는 실행 즉시 죽는다.**
+  `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 에 광고 단위 ID 가 들어가 있어 GoogleMobileAds SDK 가
+  앱을 종료시킨다. **시크릿을 고치고 다시 빌드해야 한다** — 코드 수정으로는 못 막는다
+  (형식만 맞으면 SDK 가 자체 검증에서 거부한다). 경위·재발 방지는 `plan.md` 사후 기록 참고.
+  - 배포에 검증 게이트가 걸려 있어, 시크릿이 정상화되기 전에는 빌드가 만들어지지 않는다.
+  - `ADMOB_APP_ID` 를 **별도 시크릿**으로 넣으면 6줄 덩어리를 덮어쓰지 않고 고칠 수 있다
+    (`docs/DEPLOY.md` ④). 정상화 후에는 그 시크릿을 지우고 `SECRETS_XCCONFIG` 를 정본으로 되돌린다.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
