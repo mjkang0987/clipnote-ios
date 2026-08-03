@@ -72,7 +72,7 @@ import Testing
             "common.myClips", "home.hero.subtitle", "homeActions.createLink",
             "clips.empty", "login.continueAsGuest", "compare.guestTitle",
             "settings.title", "about.howTitle", "faq.q2", "menu.tour",
-            "onboarding.skip", "share.open", "language.koreanOnlyNotice",
+            "onboarding.skip", "share.foundTitle", "language.koreanOnlyNotice",
         ]
         let store = LocalizationStore(defaults: Self.scratchDefaults("namespaces"))
         for key in keys {

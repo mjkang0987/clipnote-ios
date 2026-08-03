@@ -399,6 +399,36 @@ def check_view_builder_targets(errors: list[str]) -> None:
                 break
 
 
+# `네임스페이스.이름` 꼴. 카탈로그 키가 이 모양이라 같은 규칙으로 찾는다.
+KEY_SHAPE = re.compile(r"^[a-zA-Z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+$")
+
+
+def check_dangling_key_literals(strings: dict, errors: list[str]) -> None:
+    """`t(...)` **밖에** 적힌 키가 카탈로그에 있는지 본다.
+
+    키는 호출부에만 있는 게 아니다 — 테스트가 대표 키를 배열로 들고 있고
+    (`LocalizationStoreTests`), 거기서는 `store.t(key)` 처럼 변수로 넘긴다. `check_usage` 는
+    `t(` 안의 리터럴만 보므로 이런 건 검사망 밖이었다. 그래서 키를 지웠을 때 로컬 검사는
+    통과하고 CI 에서 테스트가 깨졌다 — 두 번 그랬다.
+
+    **네임스페이스가 카탈로그에 있는 리터럴만** 본다. 그래야 `clipnote.share`(로거 이름)나
+    `com.apple.share-services` 같은 것을 키로 오인하지 않는다.
+    """
+    namespaces = {key.split(".", 1)[0] for key in strings}
+    for path in swift_files():
+        text = strip_log_calls(strip_previews(strip_comments(path.read_text(encoding="utf-8"))))
+        for literal in STRING_LITERAL.findall(text):
+            if not KEY_SHAPE.match(literal):
+                continue
+            if literal.split(".", 1)[0] not in namespaces or literal in strings:
+                continue
+            fail(
+                errors,
+                f'{path.relative_to(ROOT)} 이 없는 키를 가리킨다: "{literal}" — '
+                f"카탈로그에서 지웠다면 이 자리도 함께 고친다",
+            )
+
+
 def check_clean_files(errors: list[str]) -> None:
     for relative in CLEAN_FILES:
         path = ROOT / relative
@@ -427,6 +457,7 @@ def main() -> int:
     check_format(raw, catalog, errors)
     strings = check_catalog(catalog, errors)
     check_usage(strings, errors)
+    check_dangling_key_literals(strings, errors)
     check_clean_files(errors)
     check_text_literals(errors)
     check_view_builder_targets(errors)
