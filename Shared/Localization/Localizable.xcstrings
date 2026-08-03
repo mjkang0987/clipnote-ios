@@ -795,95 +795,6 @@
         }
       }
     },
-    "clips.discardBody" : {
-      "comment" : "%1$@ 는 clips.countUnit 결과, %2$@ 는 clips.discardIrreversible. 웹은 같은 키가 ‘이 브라우저’ — 저장 위치의 이름만 플랫폼에 맞춘다",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If you don't move them, all %1$@ saved on this device will be deleted. They exist only on this device, so %2$@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移動しない場合、この端末に保存された%1$@すべてが削除されます。このクリップはこの端末にしかないため%2$@"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "옮기지 않으면 이 기기에 저장된 %1$@ 클립이 모두 삭제됩니다. 이 클립은 이 기기에만 있어서 %2$@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "如果不迁移，此设备上保存的%1$@将全部删除。这些剪藏只存在于此设备，所以%2$@"
-          }
-        }
-      }
-    },
-    "clips.discardIrreversible" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "this can't be undone."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "取り消せません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "되돌릴 수 없어요."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法撤销。"
-          }
-        }
-      }
-    },
-    "clips.discardTitle" : {
-      "comment" : "웹은 같은 키가 ‘이 브라우저’ — 저장 위치의 이름만 플랫폼에 맞춘다",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete the clips on this device?"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この端末のクリップを削除しますか?"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 기기의 클립을 삭제할까요?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "要删除此设备上的剪藏吗?"
-          }
-        }
-      }
-    },
     "clips.edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1467,6 +1378,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "+ 新建剪藏"
+          }
+        }
+      }
+    },
+    "clips.onThisDevice" : {
+      "comment" : "로그인 목록에서 서버가 아니라 이 기기에만 있는 클립임을 알리는 배지. 짧게 — 한 줄에 붙는다.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本机"
           }
         }
       }

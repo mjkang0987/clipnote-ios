@@ -53,7 +53,27 @@ final class ClipsStore {
             if clips == nil { apply([]) }
             return
         }
-        apply(result.clips.map(UClip.init))
+        apply(merged(db: result.clips.map(UClip.init), local: localStore.all().map(UClip.init)))
+    }
+
+    /// 로그인 상태의 목록 = **서버 + 이 기기**.
+    ///
+    /// 전에는 서버 것만 보여줬다. 그러면 옮기지 않은 로컬 클립은 로그인하는 순간 볼 방법이
+    /// 없어져서, "안 옮김" 을 고를 수 있게 해 놓고 그 선택의 결과가 "안 보임" 이었다 —
+    /// 실제로는 선택지가 없는 것과 같다. 옮기기는 이제 권유일 뿐이고 안 옮겨도 잃는 게 없다.
+    ///
+    /// **로컬 클립을 서버로 올리지는 않는다.** 화면에서만 합친다.
+    ///
+    /// 같은 주소가 양쪽에 있으면 **서버 쪽만** 남긴다. 서버 사본은 slug 가 있어 공유 링크를
+    /// 만들 수 있으니 남길 쪽이 그쪽이다. 로컬 사본은 지우지 않고 가리기만 한다.
+    /// 주소 비교는 서버가 저장할 때 쓰는 규칙과 같은 정규화를 거친다(`canonicalURLKey`) —
+    /// 규칙이 다르면 같은 링크가 두 줄로 남는다.
+    private func merged(db: [UClip], local: [UClip]) -> [UClip] {
+        let onServer = Set(db.map { canonicalURLKey($0.url) })
+        let onlyLocal = local.filter { !onServer.contains(canonicalURLKey($0.url)) }
+        // 담은 시각 내림차순 한 줄로 섞는다. 로컬을 위로 몰면 최신순이 깨져
+        // "방금 담은 게 어디 갔지" 가 된다. 날짜 그룹 머리글도 그대로 살아난다.
+        return (db + onlyLocal).sorted { $0.savedAt > $1.savedAt }
     }
 
     /// 목록과 그로부터 나오는 값을 함께 갱신한다. 목록은 여기서만 바뀐다.
