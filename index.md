@@ -31,10 +31,12 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Util/ShareText.swift` | 공유 텍스트 유틸 |
 | `Util/URLHelpers.swift` | `isFetchableUrl`·`prettyHost`·`proxiedImageURL`(`/api/image?url=` 이미지 프록시) |
 | `Clips/ClipsStore.swift` | 목록 상태·로직(@MainActor @Observable): 로드·편집·삭제·makeShared·applyTags·shareText |
-| `Clips/ClipsView.swift` | 내 클립 목록(필터칩·카드·스와이프·⋯메뉴·다중선택) |
+| `Clips/ClipsView.swift` | 내 클립 목록(필터칩·카드·스와이프·⋯메뉴·다중선택 + 로컬 클립 진입 줄) |
 | `Clips/FilterChip.swift` | 태그 필터 칩 |
 | `Clips/ClipsRefresh.swift` | 목록 새로고침 신호(NotificationCenter) |
-| `Clips/MigrateLocalClips.swift` | 로그인 시 로컬→DB 마이그레이션(§5) |
+| `Clips/MigrateLocalClips.swift` | 로컬→DB 업로드 실행(§5). 전량 성공 시에만 로컬을 비운다 |
+| `Clips/MigrateLocalClipsLayer.swift` | 옮기기 확인·진행·결과 알림(공용 modifier). 로그인 훅과 로컬 클립 화면이 함께 쓴다 |
+| `Clips/LocalClipsView.swift` | ‘이 기기에 남은 클립’ — 로그인 상태에서 로컬 클립만 보는 화면(옮기기·모두 삭제) |
 | `Views/RootView.swift` | 루트 게이트(온보딩 분기 + 로그인 마이그레이션 훅) |
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
@@ -92,6 +94,16 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - **남은 것: 시뮬레이터/실기기에서 4개 언어 눈으로 확인**(고정 높이 시트의 번역문 잘림 등) — 사람만 가능.
   - 범위·결정·순서는 `plan.md` "앱 다국어" 절 참고.
 - **로그인 첫 진입 깜빡임 수정(2026-07-23)**: 로그인 사용자가 처음 진입 시 홈 액션이 게스트→로그인 UI로 튀던 문제. `AuthStore`가 지난 실행 로그인 여부를 `UserDefaults`에 저장하고 세션 확정 전(loading)엔 `displayLoggedIn` 힌트로 렌더, `HomeView.actions`가 이를 사용. CI(`pr-review.yml`)에 `claude/**` push 트리거 추가. (PR #107)
+- **로그인 상태의 로컬 클립 처리(2026-08-03)**: 로그인 목록은 **계정 클립만** 보여 준다.
+  이 기기에만 남은 클립은 목록 위 ‘이 기기에 남은 클립 n개 ›’ 진입 줄에서 전용 화면
+  (`LocalClipsView`)으로 들어가 옮기거나 모두 지운다.
+  - 로그인 직후 옮기기를 **한 번 권하되**, 거절해도 아무것도 지우지 않는다. 전에는 거절이 곧
+    "그럼 지울까?" 로 이어졌는데 — 로그인 목록에서 볼 방법이 없어 남겨 둘 자리가 없었다 —
+    거절이 삭제를 뜻하면 그건 선택지가 아니다.
+  - 한 목록에 **섞지 않는다.** 계정 클립만 공유 링크를 만들 수 있고(로컬은 slug 가 없다) 다른
+    기기에서도 보인다. 겉모습이 같은데 할 수 있는 일이 다르면 눌러 보고 나서야 알게 된다.
+  - 옮기기 확인·진행·결과 알림은 `MigrateLocalClipsLayer` 하나를 로그인 훅과 로컬 화면이 함께 쓴다.
+  - 웹 `clipnote` 도 같은 구성(`LocalClipsPanel`). **한쪽만 바꾸지 않는다.**
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
