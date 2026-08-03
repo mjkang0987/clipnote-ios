@@ -96,6 +96,27 @@ check_admob() {
 check_admob ADMOB_APP_ID '~' '물결(~)'
 check_admob ADMOB_BANNER_UNIT_ID '/' '슬래시(/)'
 
+# 판정이 미심쩍을 때를 위한 근거. **값은 찍지 않고 모양만 센다** —
+# 길이와 구분자 개수, 두 값이 같은지. 흔한 실수가 App ID 칸에 배너 unit ID 를
+# 붙여넣는 것이라(둘 다 ca-app-pub- 로 시작하고 ~ 와 / 만 다르다) 그 경우를 가른다.
+shape() {
+  local key="$1" v t s
+  v="$(value_of "$key")"
+  t="$(printf '%s' "$v" | tr -cd '~' | wc -c)"
+  s="$(printf '%s' "$v" | tr -cd '/' | wc -c)"
+  echo "  $key : 길이 ${#v}, '~' ${t}개, '/' ${s}개"
+}
+echo
+echo "형태 요약(값은 출력하지 않음)"
+shape ADMOB_APP_ID
+shape ADMOB_BANNER_UNIT_ID
+if [ "$(value_of ADMOB_APP_ID)" = "$(value_of ADMOB_BANNER_UNIT_ID)" ]; then
+  echo "::error::두 AdMob ID 가 **완전히 같은 값**이다 — App ID 칸에 배너 unit ID 를 넣은 것이다."
+  fail=1
+else
+  echo "  두 값은 서로 다름"
+fi
+
 echo
 if [ "$fail" -ne 0 ]; then
   echo "::error::시크릿 검증 실패 — 배포를 중단한다. 갱신 방법은 docs/DEPLOY.md 참고."
