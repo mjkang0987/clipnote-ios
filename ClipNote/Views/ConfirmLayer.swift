@@ -76,16 +76,6 @@ struct ConfirmLayer: View {
                 color: emphasis == .destructive ? AppColor.danger : AppColor.brand))
             .disabled(busy)
     }
-
-    /// 내용 높이를 재서 detent 에 넘긴다. 시트 폭은 detent 와 무관하게 고정이라
-    /// 줄바꿈이 다시 바뀌지 않고 한 번에 수렴한다.
-    private var heightReader: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear { contentHeight = proxy.size.height }
-                .onChange(of: proxy.size.height) { _, height in contentHeight = height }
-        }
-    }
 }
 
 /// 레이어에 개수를 **값으로 실어 보내기 위한 래퍼.**
