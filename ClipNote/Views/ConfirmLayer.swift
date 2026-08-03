@@ -140,7 +140,12 @@ struct ModalOutlinedDangerButton: ButtonStyle {
             .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(AppColor.danger)
             .frame(maxWidth: .infinity).frame(height: 46)
-            .background(configuration.isPressed ? AppColor.danger.opacity(0.1) : Color.clear)
+            // 배경을 비워 두면 시트 바탕이 그대로 비쳐 테두리만 뜬 채 버튼으로 안 읽힌다.
+            // 흰 면을 깔아 옆의 채운 버튼과 같은 무게로 보이게 한다.
+            .background {
+                AppColor.white
+                if configuration.isPressed { AppColor.danger.opacity(0.1) }
+            }
             .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.danger, lineWidth: 1))
     }
