@@ -73,7 +73,20 @@ private func stubbedClient() -> APIClient {
         let out = await stubbedClient().getClips(accessToken: "t")
         #expect(out.loggedIn == false)
         #expect(out.clips.isEmpty)
+        #expect(out.failed)
         #expect(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization") == "Bearer t")
+    }
+
+    /// 로그아웃 상태의 **빈 목록**은 실패가 아니다.
+    ///
+    /// 이 둘을 구분하지 못하면 화면이 "아직 저장한 클립이 없어요" 를 띄운다. 클립이 날아간 줄
+    /// 알고 다시 만들게 되는 화면이라, 두 경우가 갈리는지 못을 박아 둔다.
+    @Test func getClipsSucceedsWithEmptyListWithoutFailing() async {
+        StubURLProtocol.handler = { _ in (200, #"{"loggedIn":false,"clips":[]}"#.data(using: .utf8)!) }
+        let out = await stubbedClient().getClips(accessToken: nil)
+        #expect(out.loggedIn == false)
+        #expect(out.clips.isEmpty)
+        #expect(out.failed == false)
     }
 
     @Test func ogImageURLBuildsQuery() async {

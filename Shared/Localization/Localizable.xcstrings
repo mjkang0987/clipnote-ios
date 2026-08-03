@@ -1176,6 +1176,34 @@
         }
       }
     },
+    "clips.loadFailed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load the list. Your saved clips are still there."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一覧を読み込めませんでした。保存したクリップが消えたわけではありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목록을 불러오지 못했어요. 저장된 클립이 사라진 건 아니에요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法加载列表。已保存的剪藏并没有丢失。"
+          }
+        }
+      }
+    },
     "clips.loading" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1467,6 +1495,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开"
+          }
+        }
+      }
+    },
+    "clips.retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试"
           }
         }
       }

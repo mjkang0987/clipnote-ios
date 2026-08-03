@@ -63,18 +63,22 @@ actor APIClient {
     }
 
     // GET /api/clips
-    func getClips(accessToken: String?) async -> (loggedIn: Bool, clips: [DbClip]) {
+    //
+    // `failed` 를 따로 돌려준다. 전에는 실패도 `(false, [])` 라 **로그아웃 상태의 빈 목록과
+    // 구분되지 않았다** — 지하철에서 목록을 열면 DB 에 클립이 있는데도 "아직 저장한 클립이
+    // 없어요" 가 뜨고, 사용자는 클립이 날아간 줄 안다. 웹도 같은 이유로 고쳤다(`a6a4984`).
+    func getClips(accessToken: String?) async -> (loggedIn: Bool, clips: [DbClip], failed: Bool) {
         var req = URLRequest(url: baseURL.appendingPathComponent("api/clips"))
         if let t = accessToken { req.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization") }
         do {
             let (data, resp) = try await session.data(for: req)
             guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                return (false, [])
+                return (false, [], true)
             }
             let decoded = try JSONDecoder().decode(ClipsResponse.self, from: data)
-            return (decoded.loggedIn, decoded.clips)
+            return (decoded.loggedIn, decoded.clips, false)
         } catch {
-            return (false, [])
+            return (false, [], true)
         }
     }
 

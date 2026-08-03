@@ -140,6 +140,10 @@ struct ClipsView: View {
     private func content(_ store: ClipsStore) -> some View {
         if store.clips == nil {
             loadingState
+        } else if store.loadFailed {
+            // 빈 목록보다 **먼저** 본다. 실패했는데 "저장한 클립이 없어요" 가 뜨면
+            // 사용자는 클립이 날아간 줄 안다.
+            loadFailedState
         } else if store.clips?.isEmpty == true {
             emptyState
         } else {
@@ -209,6 +213,29 @@ struct ClipsView: View {
                 .foregroundStyle(AppColor.fgMuted)
             Button { dismiss() } label: {
                 Text(i18n.t("clips.emptyCta"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColor.white)
+                    .padding(.horizontal, 20).frame(height: 46)
+                    .background(AppColor.brand)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
+    }
+
+    /// 목록 조회가 실패했을 때. 빈 목록과 **다른 화면**이어야 한다.
+    ///
+    /// 문구가 "사라진 건 아니에요" 까지 말하는 이유는, 이 화면에서 사용자가 가장 먼저
+    /// 떠올리는 게 "내 클립이 날아갔나" 이기 때문이다(웹 `a6a4984` 와 같은 문구).
+    private var loadFailedState: some View {
+        VStack(spacing: 16) {
+            Text(i18n.t("clips.loadFailed"))
+                .font(.system(size: 15))
+                .foregroundStyle(AppColor.fgMuted)
+                .multilineTextAlignment(.center)
+            Button { Task { await reloadWithAuth() } } label: {
+                Text(i18n.t("clips.retry"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .padding(.horizontal, 20).frame(height: 46)

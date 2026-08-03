@@ -32,14 +32,28 @@ final class ClipsStore {
 
     // MARK: - Load
 
+    /// 마지막 조회가 **실패**했는가. 빈 목록과 구분해야 한다.
+    ///
+    /// 실패를 빈 목록으로 흘리면 "아직 저장한 클립이 없어요" 가 뜬다. 클립이 사라진 줄 알고
+    /// 다시 만들게 되는 화면이라, 실패는 실패라고 말하고 다시 시도할 길을 준다.
+    private(set) var loadFailed = false
+
     func load(loggedIn: Bool, accessToken: String?) async {
         ctx = (loggedIn, accessToken)
-        if loggedIn {
-            let (_, db) = await api.getClips(accessToken: accessToken)
-            apply(db.map(UClip.init))
-        } else {
+        guard loggedIn else {
+            loadFailed = false
             apply(localStore.all().map(UClip.init))
+            return
         }
+        let result = await api.getClips(accessToken: accessToken)
+        loadFailed = result.failed
+        guard !result.failed else {
+            // 이미 받아 둔 목록이 있으면 지우지 않는다 — 잠깐 끊겼다고 화면에서 비우면
+            // 그것도 사라진 것처럼 보인다. 첫 조회였다면 로딩 상태에서는 빠져나온다.
+            if clips == nil { apply([]) }
+            return
+        }
+        apply(result.clips.map(UClip.init))
     }
 
     /// 목록과 그로부터 나오는 값을 함께 갱신한다. 목록은 여기서만 바뀐다.
