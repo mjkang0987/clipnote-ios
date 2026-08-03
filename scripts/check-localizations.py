@@ -217,6 +217,12 @@ def check_catalog(catalog: dict, errors: list[str]) -> dict[str, dict]:
         if "." not in key:
             fail(errors, f"[{key}] 키에 네임스페이스가 없다 — `화면.이름` 꼴로 짓는다")
 
+        # `extractionState` 가 없으면 **Xcode 가 열 때마다 채워 넣는다** — 내용이 그대로여도
+        # 파일이 바뀌어 `git pull` 이 막힌다. 손으로(스크립트로) 넣은 키는 소스에서 추출된 게
+        # 아니므로 "manual" 이다. 이 한 줄을 빠뜨려 pull 이 또 막힌 적이 있다.
+        if "extractionState" not in entry:
+            fail(errors, f'[{key}] extractionState 가 없다 — 손으로 넣은 키는 "manual" 을 붙인다')
+
         locs = entry.get("localizations", {})
 
         missing = [lang for lang in LANGUAGES if lang not in locs]

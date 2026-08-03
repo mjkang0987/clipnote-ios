@@ -1177,6 +1177,7 @@
       }
     },
     "clips.loadFailed" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1500,6 +1501,7 @@
       }
     },
     "clips.retry" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
