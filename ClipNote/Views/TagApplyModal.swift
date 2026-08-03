@@ -49,9 +49,7 @@ struct TagApplyModal: View {
             .padding(.top, 8)
         }
         .padding(20)
-        // 대상 수 안내를 한 줄 늘렸고, 번역문이 한국어보다 길어 줄바꿈될 수 있다(영어가 특히).
-        // 고정 높이라 모자라면 잘리므로 여유를 준다.
-        .presentationDetents([.height(340)])
+        .sheetHeightFitsContent()
     }
 
     private func modeChip(_ label: String, _ value: TagMode) -> some View {

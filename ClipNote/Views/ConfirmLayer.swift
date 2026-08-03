@@ -34,8 +34,6 @@ struct ConfirmLayer: View {
     /// 후자는 호출부의 `.sheet(onDismiss:)` 가 받는다.
     let onCancel: () -> Void
 
-    @State private var contentHeight: CGFloat = 220
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -55,12 +53,7 @@ struct ConfirmLayer: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // 높이 제안을 무시하고 **본래 높이**를 갖게 한다. 이게 없으면 시트가 초기 detent 만큼만
-        // 공간을 제안하고, 내용은 거기 맞춰 눌려서 측정값도 그 값이 나온다 — 초기값에 갇혀
-        // 영영 커지지 않는다. 폭은 그대로 둬야 글줄이 정상적으로 접힌다.
-        .fixedSize(horizontal: false, vertical: true)
-        .background(heightReader)
-        .presentationDetents([.height(contentHeight)])
+        .sheetHeightFitsContent()
     }
 
     private var cancelButton: some View {
@@ -120,6 +113,38 @@ struct ModalFilledButton: ButtonStyle {
     }
 }
 
+
+/// 시트 높이를 **내용에 맞춘다**.
+///
+/// `presentationDetents` 는 숫자를 요구하는데, 그 숫자를 손으로 박으면 번역이 길어질 때
+/// 아래가 잘린다. 영어·일본어가 한국어보다 길어 한국어 기준으로 잡은 값이 모자란다.
+/// 눈으로 확인해서 숫자를 늘리는 대신 **재서 넘긴다**.
+///
+/// `fixedSize` 가 없으면 안 된다. 시트는 현재 detent 만큼만 공간을 제안하고, 내용은 거기
+/// 맞춰 눌려서 측정값도 그 값이 나온다 — 초기값에 갇혀 영영 커지지 않는다. 폭은 그대로
+/// 둬야 글줄이 정상적으로 접힌다.
+private struct SheetHeightFitsContent: ViewModifier {
+    /// 첫 프레임에만 쓰는 값. 재고 나면 곧바로 덮인다.
+    @State private var height: CGFloat = 220
+
+    func body(content: Content) -> some View {
+        content
+            .fixedSize(horizontal: false, vertical: true)
+            .background(
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { height = proxy.size.height }
+                        .onChange(of: proxy.size.height) { _, measured in height = measured }
+                }
+            )
+            .presentationDetents([.height(height)])
+    }
+}
+
+extension View {
+    /// 시트 높이를 내용에 맞춘다 — `SheetHeightFitsContent` 참고.
+    func sheetHeightFitsContent() -> some View { modifier(SheetHeightFitsContent()) }
+}
 
 /// 문장 안의 낱말만 강조한 `Text`.
 ///

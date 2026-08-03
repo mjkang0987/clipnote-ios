@@ -40,7 +40,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
 | `Views/ClipThumbnail.swift` | 공용 썸네일(그라디언트 + **프록시 경유** 원본 이미지). 홈 카드·목록 행이 함께 쓴다 — 전에 따로 그리다 목록만 프록시가 빠졌었다 |
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
-| `Views/ConfirmLayer.swift` | 공용 확인 레이어(제목·본문·확인/취소) + `emphasized()` 강조 텍스트. 웹 `ModalShell` 대응 — 확인 계열은 액션 시트가 아니라 레이어로 띄운다 |
+| `Views/ConfirmLayer.swift` | 공용 확인 레이어(제목·본문·확인/취소) + `emphasized()` 강조 텍스트 + `sheetHeightFitsContent()`(시트 높이를 내용에 맞춤 — 모달 4곳이 함께 쓴다). 웹 `ModalShell` 대응 — 확인 계열은 액션 시트가 아니라 레이어로 띄운다 |
 | `Views/SpinnerLabel.swift` | 공용 인라인 로딩 스피너 라벨 |
 | `Views/RunningDino.swift` | 로딩 중 **화면 가장자리 안쪽을 걸어 다니는** 도트 공룡(4프레임, `Canvas`). 네 면 중 한 면은 건너뛰고 코너는 점프로 돈다. 동작 줄이기 설정 존중 |
 | `Views/SpotlightTour.swift` | 온보딩 스포트라이트 투어(앵커·오버레이·역마스크·`ClipsPreviewMock`) |

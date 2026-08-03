@@ -47,7 +47,7 @@ struct EditClipModal: View {
             title = initialTitle
             tagInput = initialTags.joined(separator: ", ")
         }
-        .presentationDetents([.height(280)])
+        .sheetHeightFitsContent()
     }
 
     private func save() async {

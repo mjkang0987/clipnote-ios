@@ -75,7 +75,7 @@ struct ShareResultModal: View {
                 .padding(.top, 2)
         }
         .padding(20)
-        .presentationDetents([.height(320)])
+        .sheetHeightFitsContent()
         .sheet(isPresented: $showSafari) {
             if let safariURL { SafariView(url: safariURL) }
         }
