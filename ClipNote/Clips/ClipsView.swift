@@ -23,6 +23,8 @@ func openableWebURL(_ raw: String) -> URL? {
 struct ClipsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
+    @Environment(AppRouter.self) private var router
     @EnvironmentObject private var auth: AuthStore
 
     @State private var store: ClipsStore?
@@ -35,20 +37,26 @@ struct ClipsView: View {
     // 다중선택(로그인 전용)
     @State private var selectMode = false
     @State private var selected: Set<String> = []
-    @State private var showTagModal = false
-    @State private var showBulkDeleteConfirm = false
+    // 개수를 그리는 레이어는 전부 `.sheet(item:)` 으로 값을 실어 보낸다 — `ClipCount` 주석 참고.
+    @State private var tagApplyRequest: ClipCount?
+    @State private var bulkDeleteRequest: ClipCount?
     @State private var bulkBusy = false
+
+    /// 날짜 그룹 머리글은 선택 언어를 따른다 — 시스템 언어가 아니라(앱 안에서 바꿀 수 있다).
+    private var locale: Locale { Locale(identifier: i18n.language.rawValue) }
 
     var body: some View {
         Group {
             if let store {
                 content(store)
             } else {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                loadingState
             }
         }
         .overlay { if bulkBusy { blockingOverlay } }
-        .navigationTitle(selectMode ? "\(selected.count)개 선택" : "내 클립")
+        .navigationTitle(selectMode
+                         ? i18n.t("clips.selectedCount", args: selected.count)
+                         : i18n.t("common.myClips"))
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
         .toolbar {
@@ -68,8 +76,8 @@ struct ClipsView: View {
         .onReceive(NotificationCenter.default.publisher(for: ClipsRefresh.name)) { _ in
             Task { await reloadWithAuth() }
         }
-        .sheet(isPresented: $showTagModal) {
-            TagApplyModal(count: selected.count) { tags, mode in
+        .sheet(item: $tagApplyRequest) { request in
+            TagApplyModal(count: request.value) { tags, mode in
                 Task {
                     bulkBusy = true
                     await store?.applyTags(ids: Array(selected), tags: tags, mode: mode)
@@ -78,19 +86,8 @@ struct ClipsView: View {
                 }
             }
         }
-        .confirmationDialog("클립 삭제", isPresented: $showBulkDeleteConfirm) {
-            Button("삭제", role: .destructive) {
-                Task {
-                    bulkBusy = true
-                    await store?.bulkDelete(ids: Array(selected))
-                    bulkBusy = false
-                    exitSelect()
-                }
-            }
-            Button("취소", role: .cancel) {}
-        } message: {
-            Text("선택한 \(selected.count)개 클립을 삭제할까요?")
-        }
+        // 확인 계열은 전부 레이어로 띄운다(웹과 동일) — `ConfirmLayer` 주석 참고.
+        .sheet(item: $bulkDeleteRequest) { bulkDeleteLayer($0.value) }
         .sheet(item: $editing) { clip in
             EditClipModal(initialTitle: clip.title, initialTags: clip.tags) { title, tags in
                 await store?.saveEdit(clip, title: title, tags: tags)
@@ -100,21 +97,16 @@ struct ClipsView: View {
                              set: { if $0 == nil { safariURL = nil } })) { item in
             SafariView(url: item.url)
         }
-        .confirmationDialog("클립 삭제", isPresented: deleteBinding, presenting: pendingDelete) { clip in
-            Button("삭제", role: .destructive) { Task { await store?.delete(clip) } }
-            Button("취소", role: .cancel) {}
-        } message: { clip in
-            Text("‘\(clip.title)’ 클립을 삭제할까요?")
-        }
+        .sheet(item: $pendingDelete) { clip in deleteLayer(clip) }
     }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             if selectMode {
-                Button("취소") { exitSelect() }
+                Button(i18n.t("common.cancel")) { exitSelect() }
             } else if auth.loggedIn, store?.clips?.isEmpty == false {
-                Button("선택") { selectMode = true }
+                Button(i18n.t("clips.select")) { selectMode = true }
             }
         }
     }
@@ -122,16 +114,16 @@ struct ClipsView: View {
     /// 다중선택 하단 바 — 태그 적용 / 삭제(n).
     private var bulkBar: some View {
         HStack(spacing: 8) {
-            Button { showTagModal = true } label: {
-                Text("태그 적용")
+            Button { tagApplyRequest = ClipCount(value: selected.count) } label: {
+                Text(i18n.t("clips.applyTags"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
                     .frame(maxWidth: .infinity).frame(height: 48)
                     .background(AppColor.brandSoft)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
-            Button { showBulkDeleteConfirm = true } label: {
-                Text("삭제 (\(selected.count))")
+            Button { bulkDeleteRequest = ClipCount(value: selected.count) } label: {
+                Text(i18n.t("clips.bulkDeleteButton", args: selected.count))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .frame(maxWidth: .infinity).frame(height: 48)
@@ -151,25 +143,43 @@ struct ClipsView: View {
     @ViewBuilder
     private func content(_ store: ClipsStore) -> some View {
         if store.clips == nil {
-            Text("불러오는 중…")
-                .font(.system(size: 14))
-                .foregroundStyle(AppColor.fgMuted)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            loadingState
+        } else if store.loadFailed {
+            // 빈 목록보다 **먼저** 본다. 실패했는데 "저장한 클립이 없어요" 가 뜨면
+            // 사용자는 클립이 날아간 줄 안다.
+            loadFailedState
         } else if store.clips?.isEmpty == true {
-            emptyState
+            // 계정 목록이 비어도 이 기기 클립은 남아 있을 수 있다(옮기기를 거절한 경우).
+            // 진입 줄을 여기에도 두지 않으면 그 클립에 닿을 길이 아예 없어진다.
+            VStack(spacing: 0) {
+                localEntryRow(store)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                emptyState
+            }
         } else {
             List {
+                localEntryRow(store).plainRow()
                 if !store.allTags.isEmpty {
                     filterRow(store).plainRow()
                 }
                 if store.filtered.isEmpty {
-                    Text("‘\(store.activeTag ?? "")’ 태그의 클립이 없어요.")
+                    Text(i18n.t("clips.emptyForTag", args: store.activeTag ?? ""))
                         .font(.system(size: 14))
                         .foregroundStyle(AppColor.fgMuted)
                         .plainRow()
                 }
-                ForEach(store.filtered) { clip in
-                    row(clip)
+                // 저장 시각으로 묶어 머리글을 붙인다(웹과 같은 구성).
+                // 목록이 이미 최신순이라 그룹도 최신순으로 나온다.
+                ForEach(groupClipsByDate(store.filtered, locale: locale)) { group in
+                    Text(group.label)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                        .padding(.top, 8)
+                        .plainRow()
+                    ForEach(group.clips) { clip in
+                        row(clip)
+                    }
                 }
             }
             .listStyle(.plain)
@@ -199,16 +209,47 @@ struct ClipsView: View {
             base
         } else {
             base.swipeActions(edge: .trailing) {
-                Button("삭제", role: .destructive) { pendingDelete = clip }
-                Button("편집") { editing = clip }.tint(AppColor.brand)
+                Button(i18n.t("common.delete"), role: .destructive) { pendingDelete = clip }
+                Button(i18n.t("clips.edit")) { editing = clip }.tint(AppColor.brand)
             }
+        }
+    }
+
+    /// ‘이 기기에 남은 클립 3개 ›’ — 옮기기를 거절했을 때 그 클립으로 가는 **유일한 길**이다.
+    ///
+    /// 계정 목록에 섞지 않는 이유는 `LocalClipsView` 주석 참고. 다중선택 중에는 감춘다 —
+    /// 선택 대상이 아닌 줄이 목록에 섞이면 무엇이 선택되는지 흐려진다.
+    @ViewBuilder
+    private func localEntryRow(_ store: ClipsStore) -> some View {
+        if store.localOnlyCount > 0, !selectMode {
+            Button { router.go(.localClips) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "iphone")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                    Text(i18n.t("clips.localEntry", args: countUnit(store.localOnlyCount)))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppColor.fg)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .background(AppColor.surface)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                .overlay(RoundedRectangle(cornerRadius: Radius.md)
+                    .stroke(AppColor.border, lineWidth: 0.5))
+            }
+            .buttonStyle(.plain)
         }
     }
 
     private func filterRow(_ store: ClipsStore) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(label: "전체", active: store.activeTag == nil) { store.activeTag = nil }
+                FilterChip(label: i18n.t("clips.allTags"), active: store.activeTag == nil) { store.activeTag = nil }
                 ForEach(store.allTags, id: \.self) { tag in
                     FilterChip(label: tag, active: store.activeTag == tag) { store.activeTag = tag }
                 }
@@ -219,11 +260,34 @@ struct ClipsView: View {
 
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Text("아직 저장한 클립이 없어요.")
+            Text(i18n.t("clips.empty"))
                 .font(.system(size: 15))
                 .foregroundStyle(AppColor.fgMuted)
             Button { dismiss() } label: {
-                Text("첫 클립 만들기")
+                Text(i18n.t("clips.emptyCta"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColor.white)
+                    .padding(.horizontal, 20).frame(height: 46)
+                    .background(AppColor.brand)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
+    }
+
+    /// 목록 조회가 실패했을 때. 빈 목록과 **다른 화면**이어야 한다.
+    ///
+    /// 문구가 "사라진 건 아니에요" 까지 말하는 이유는, 이 화면에서 사용자가 가장 먼저
+    /// 떠올리는 게 "내 클립이 날아갔나" 이기 때문이다(웹 `a6a4984` 와 같은 문구).
+    private var loadFailedState: some View {
+        VStack(spacing: 16) {
+            Text(i18n.t("clips.loadFailed"))
+                .font(.system(size: 15))
+                .foregroundStyle(AppColor.fgMuted)
+                .multilineTextAlignment(.center)
+            Button { Task { await reloadWithAuth() } } label: {
+                Text(i18n.t("clips.retry"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .padding(.horizontal, 20).frame(height: 46)
@@ -237,6 +301,27 @@ struct ClipsView: View {
 
     // MARK: - Helpers
 
+    /// 목록을 기다리는 동안 보이는 화면.
+    ///
+    /// 기다리는 구간이 둘이라 한 곳으로 모은다 — 스토어를 만드는 동안(`store == nil`)과
+    /// 목록을 받아오는 동안(`store.clips == nil`). 전자는 `.task` 한 프레임이라 눈에 띄지
+    /// 않고, **실제로 기다리는 건 후자**다. 공룡을 앞엣것에만 달아 두면 사실상 안 나온다.
+    ///
+    /// 공룡은 홈과 같은 자리 — 화면 가장자리를 돈다. 무슨 일이 벌어지는지 알리는 건 글이고,
+    /// 공룡은 기다리는 시간을 견딜 만하게 만드는 장식이라 둘 다 둔다.
+    private var loadingState: some View {
+        Text(i18n.t("clips.loading"))
+            .font(.system(size: 14))
+            .foregroundStyle(AppColor.fgMuted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay {
+                RunningDino()
+                    // 도는 사각형을 **배너 위로** 올린다. 아래쪽 면은 이미 걷지 않지만,
+                    // 양옆 벽이 바닥까지 내려와 공룡이 배너 위에 걸친 채 나타났다 사라졌다.
+                    .padding(.bottom, AdConfig.bannerHeight)
+            }
+    }
+
     private var blockingOverlay: some View {
         ZStack {
             Color.black.opacity(0.25).ignoresSafeArea()
@@ -248,8 +333,47 @@ struct ClipsView: View {
         }
     }
 
-    private var deleteBinding: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })
+    /// 수량 표기(`3개`·`3 clips`) — 언어마다 단위 위치가 달라 문장에서 떼어 만든다.
+    private func countUnit(_ count: Int) -> String {
+        i18n.t("clips.countUnit", args: count)
+    }
+
+    // MARK: - 확인 레이어
+
+    private func deleteLayer(_ clip: UClip) -> some View {
+        ConfirmLayer(
+            title: i18n.t("clips.deleteTitle"),
+            message: emphasized(i18n.t("clips.deleteBody", args: clip.title), [clip.title]),
+            confirmLabel: i18n.t("common.delete"),
+            emphasis: .destructive,
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: {
+                pendingDelete = nil
+                Task { await store?.delete(clip) }
+            },
+            onCancel: { pendingDelete = nil }
+        )
+    }
+
+    private func bulkDeleteLayer(_ pending: Int) -> some View {
+        let count = countUnit(pending)
+        return ConfirmLayer(
+            title: i18n.t("clips.bulkDeleteTitle", args: count),
+            message: Text(i18n.t("clips.irreversible")),
+            confirmLabel: i18n.t("common.delete"),
+            emphasis: .destructive,
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: {
+                bulkDeleteRequest = nil
+                Task {
+                    bulkBusy = true
+                    await store?.bulkDelete(ids: Array(selected))
+                    bulkBusy = false
+                    exitSelect()
+                }
+            },
+            onCancel: { bulkDeleteRequest = nil }
+        )
     }
 
     private func setup() async {
@@ -298,8 +422,9 @@ private struct IdURL: Identifiable {
     var id: String { url.absoluteString }
 }
 
-private extension View {
+extension View {
     /// 카드형 리스트 행 — 구분선·배경 제거, 좌우 16 여백.
+    /// 계정 목록과 `LocalClipsView` 가 같은 여백을 써야 화면을 오갈 때 줄이 어긋나 보이지 않는다.
     func plainRow() -> some View {
         self
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -310,6 +435,8 @@ private extension View {
 
 /// 목록 카드 한 줄 — 썸네일·제목·호스트·태그 + ⋯메뉴 + 액션행(공유/바로가기).
 private struct ClipRow: View {
+    @Environment(LocalizationStore.self) private var i18n
+
     let clip: UClip
     let selectMode: Bool
     let isSelected: Bool
@@ -331,7 +458,7 @@ private struct ClipRow: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 if selectMode { checkbox }
-                thumbnail
+                ClipThumbnail(imageURL: clip.image, gradient: gradient)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 VStack(alignment: .leading, spacing: 2) {
@@ -353,10 +480,10 @@ private struct ClipRow: View {
                 Spacer(minLength: 0)
                 if !selectMode {
                     Menu {
-                        Button("편집", action: onEdit)
-                        Button("삭제", role: .destructive, action: onDelete)
+                        Button(i18n.t("clips.edit"), action: onEdit)
+                        Button(i18n.t("common.delete"), role: .destructive, action: onDelete)
                     } label: {
-                        Text("⋯")
+                        Text(verbatim: "⋯")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(AppColor.fgMuted)
                             .frame(width: 32, height: 32)
@@ -396,9 +523,9 @@ private struct ClipRow: View {
         HStack(spacing: 0) {
             if !clip.local {
                 Button(action: clip.shared ? onCopyShare : onMakeShared) {
-                    SpinnerLabel(title: clip.shared
-                                 ? (copied ? "복사됨 ✓" : "공유 링크 복사")
-                                 : (makingShared ? "켜는 중…" : "공유 링크 만들기"),
+                    SpinnerLabel(title: i18n.t(clip.shared
+                                 ? (copied ? "clips.copied" : "clips.copyShareLink")
+                                 : (makingShared ? "clips.creatingShareLink" : "clips.createShareLink")),
                                  loading: makingShared, tint: AppColor.brandStrong)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppColor.brandStrong)
@@ -408,7 +535,7 @@ private struct ClipRow: View {
                 Divider().frame(height: 24).background(AppColor.border)
             }
             Button(action: onOpen) {
-                Text("바로가기")
+                Text(i18n.t("clips.openOriginal"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppColor.fg)
                     .frame(maxWidth: .infinity).frame(height: 44)
@@ -417,16 +544,4 @@ private struct ClipRow: View {
         }
     }
 
-    @ViewBuilder
-    private var thumbnail: some View {
-        ZStack {
-            LinearGradient(colors: [gradient.from, gradient.to],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            if let s = clip.image, let url = URL(string: s) {
-                AsyncImage(url: url) { phase in
-                    if let img = phase.image { img.resizable().scaledToFill() } else { Color.clear }
-                }
-            }
-        }
-    }
 }

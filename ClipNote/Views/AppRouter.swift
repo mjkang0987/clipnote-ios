@@ -3,6 +3,8 @@ import SwiftUI
 /// 상위 화면 라우트(헤더 메뉴 이동 대상).
 enum AppRoute: Hashable {
     case clips
+    /// 이 기기에만 남은 클립 — 로그인 목록 위의 진입 줄에서만 들어간다.
+    case localClips
     case about
     case faq
     case privacy
@@ -26,6 +28,12 @@ final class AppRouter {
     /// NavigationStack이 RootView NavigationStack에 중첩돼 크래시. 첫 실행 온보딩과 같은 토폴로지 유지.
     var showTour = false
     var safari: SafariItem?
+    /// 로그아웃 확인 레이어 표시 여부.
+    ///
+    /// **라우터가 들고 있는 이유** — 로그아웃을 부르는 곳이 헤더 메뉴와 설정 두 군데인데,
+    /// 각자 레이어를 달면 같은 확인이 두 벌 생긴다. 상태를 한 곳에 두고 레이어도 `RootView`
+    /// 한 곳에만 단다.
+    var confirmLogout = false
     /// 공유 확장이 넘긴 URL — 홈 입력칸에 채우고 소비 후 nil. (§공유 확장)
     var pendingSharedURL: String?
 

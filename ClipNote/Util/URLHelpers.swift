@@ -27,3 +27,4 @@ func prettyHost(_ raw: String) -> String {
     let path = u.path
     return h + (path != "/" && !path.isEmpty ? path : "")
 }
+

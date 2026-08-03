@@ -1,24 +1,31 @@
 import SwiftUI
 
-/// 자주 묻는 질문. RN `app/faq.tsx` 이식.
+/// 자주 묻는 질문. 웹 홈 하단 FAQ 와 **같은 6문항·같은 문구**를 쓴다.
+///
+/// 답변에 버튼 이름이 나오는 문항은 실제 라벨(`homeActions.*`)을 끼워 넣는다. 문장에 직접
+/// 적으면 버튼 이름이 바뀔 때 FAQ 만 옛 이름으로 남아 사용자가 화면에서 못 찾는다.
 struct FaqView: View {
+    @Environment(LocalizationStore.self) private var i18n
+
     private struct QA: Identifiable {
         let q: String
         let a: String
         var id: String { q }
     }
 
-    private let items: [QA] = [
-        QA(q: "태그는 어떻게 쓰나요?",
-           a: "태그 칸에 쉼표(,)로 최대 6개까지 달 수 있어요. '내 클립'에서 같은 태그끼리 모아 볼 수 있어요."),
-        QA(q: "로그인 없이도 쓸 수 있나요?",
-           a: "네. 비로그인 상태에서도 URL을 이 기기에 저장할 수 있어요. 다만 공유 링크 생성은 로그인(Google·Kakao)이 필요합니다."),
-        QA(q: "네이버 카페·인스타그램 링크도 되나요?",
-           a: "네. 전용 추출 기능으로 네이버 카페 게시글 제목, 인스타그램 릴·게시물 정보까지 가져와요. (비공개·멤버 전용 글은 제한될 수 있어요.)"),
-        QA(q: "공유 링크를 열면 어떻게 되나요?",
-           a: "클릭하면 미리보기 카드가 잠깐 보였다가, 원본 페이지로 자연스럽게 넘어가요."),
-        QA(q: "무료인가요?", a: "네, 무료로 사용할 수 있어요."),
-    ]
+    private var items: [QA] {
+        let copyLink = i18n.t("homeActions.copyLink")
+        let copyOriginal = i18n.t("homeActions.copyOriginal")
+        return [
+            QA(q: i18n.t("faq.q1", args: copyLink, copyOriginal),
+               a: i18n.t("faq.a1", args: copyLink, copyOriginal)),
+            QA(q: i18n.t("faq.q2"), a: i18n.t("faq.a2", args: i18n.t("common.myClips"))),
+            QA(q: i18n.t("faq.q3"), a: i18n.t("faq.a3")),
+            QA(q: i18n.t("faq.q4"), a: i18n.t("faq.a4")),
+            QA(q: i18n.t("faq.q5"), a: i18n.t("faq.a5")),
+            QA(q: i18n.t("faq.q6"), a: i18n.t("faq.a6")),
+        ]
+    }
 
     var body: some View {
         ScrollView {
@@ -38,7 +45,7 @@ struct FaqView: View {
             .padding(20)
         }
         .background(AppColor.bg)
-        .navigationTitle("자주 묻는 질문")
+        .navigationTitle(i18n.t("faq.title"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

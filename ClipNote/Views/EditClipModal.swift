@@ -8,32 +8,34 @@ struct EditClipModal: View {
     let onSubmit: (String, [String]) async -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
     @State private var title = ""
     @State private var tagInput = ""
     @State private var saving = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("클립 편집")
+            Text(i18n.t("clips.editTitle"))
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(AppColor.fg)
 
-            labeled("제목") {
-                TextField("제목", text: $title).modalField()
+            labeled(i18n.t("clips.editTitleLabel")) {
+                TextField(i18n.t("clips.editTitleLabel"), text: $title).modalField()
             }
-            labeled("태그 (쉼표로 구분, 최대 6개)") {
-                TextField("개발, 디자인", text: $tagInput)
+            // 라벨과 보조 설명은 사전에서 따로 둔다 — 웹도 굵게/흐리게로 나눠 그린다.
+            labeled("\(i18n.t("clips.editTagsLabel")) \(i18n.t("clips.editTagsNote"))") {
+                TextField(i18n.t("clips.editTagsPlaceholder"), text: $tagInput)
                     .textInputAutocapitalization(.never)
                     .modalField()
             }
 
             HStack(spacing: 8) {
-                Button("취소") { dismiss() }
+                Button(i18n.t("common.cancel")) { dismiss() }
                     .buttonStyle(ModalGhostButton())
                 Button {
                     Task { await save() }
                 } label: {
-                    SpinnerLabel(title: saving ? "저장 중…" : "저장", loading: saving)
+                    SpinnerLabel(title: i18n.t(saving ? "clips.savingEdit" : "common.save"), loading: saving)
                 }
                 .buttonStyle(ModalPrimaryButton())
                 .disabled(saving)
@@ -45,7 +47,7 @@ struct EditClipModal: View {
             title = initialTitle
             tagInput = initialTags.joined(separator: ", ")
         }
-        .presentationDetents([.height(280)])
+        .sheetHeightFitsContent()
     }
 
     private func save() async {

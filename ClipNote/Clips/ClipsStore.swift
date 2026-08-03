@@ -3,12 +3,22 @@ import Observation
 
 enum TagMode { case add, replace }
 
-/// 내 클립 목록 상태·로직. RN `app/clips.tsx` 이식. 로컬(게스트)/DB(로그인) 통합.
+/// 내 클립 목록 상태·로직. RN `app/clips.tsx` 이식.
+///
+/// 목록의 출처는 로그인 여부로 갈린다 — 게스트는 이 기기(로컬), 로그인은 계정(DB). 섞지 않는다.
+/// 로그인 상태에서 이 기기에 남은 클립은 `localOnlyCount` 로만 알리고 `LocalClipsView` 가 맡는다.
 @MainActor
 @Observable
 final class ClipsStore {
     /// nil = 로딩 중.
     private(set) var clips: [UClip]?
+
+    /// 목록에 있는 모든 태그(순서 보존·중복 제거).
+    ///
+    /// **목록이 바뀔 때 한 번만 계산한다.** 전에는 계산 프로퍼티라 접근할 때마다 전체를 훑었는데,
+    /// 필터 칩과 `filtered` 가 각각 읽어서 렌더 한 번에 클립 수만큼을 두 번씩 순회했다.
+    private(set) var allTags: [String] = []
+
     var activeTag: String?
 
     private let api: APIClient
@@ -25,14 +35,42 @@ final class ClipsStore {
 
     // MARK: - Load
 
+    /// 마지막 조회가 **실패**했는가. 빈 목록과 구분해야 한다.
+    ///
+    /// 실패를 빈 목록으로 흘리면 "아직 저장한 클립이 없어요" 가 뜬다. 클립이 사라진 줄 알고
+    /// 다시 만들게 되는 화면이라, 실패는 실패라고 말하고 다시 시도할 길을 준다.
+    private(set) var loadFailed = false
+
+    /// 이 기기에만 남아 있는 클립 수. 로그인 목록 위의 진입 줄이 쓴다.
+    ///
+    /// 목록과 함께 갱신한다 — 옮기거나 지운 뒤 `reload()` 가 돌면 이 값도 따라온다.
+    /// 게스트일 때는 목록 자체가 로컬이라 0 으로 둔다(진입 줄을 띄울 이유가 없다).
+    private(set) var localOnlyCount = 0
+
     func load(loggedIn: Bool, accessToken: String?) async {
         ctx = (loggedIn, accessToken)
-        if loggedIn {
-            let (_, db) = await api.getClips(accessToken: accessToken)
-            clips = db.map(UClip.init)
-        } else {
-            clips = localStore.all().map(UClip.init)
+        guard loggedIn else {
+            loadFailed = false
+            localOnlyCount = 0
+            apply(localStore.all().map(UClip.init))
+            return
         }
+        localOnlyCount = localStore.all().count
+        let result = await api.getClips(accessToken: accessToken)
+        loadFailed = result.failed
+        guard !result.failed else {
+            // 이미 받아 둔 목록이 있으면 지우지 않는다 — 잠깐 끊겼다고 화면에서 비우면
+            // 그것도 사라진 것처럼 보인다. 첫 조회였다면 로딩 상태에서는 빠져나온다.
+            if clips == nil { apply([]) }
+            return
+        }
+        apply(result.clips.map(UClip.init))
+    }
+
+    /// 목록과 그로부터 나오는 값을 함께 갱신한다. 목록은 여기서만 바뀐다.
+    private func apply(_ next: [UClip]) {
+        clips = next
+        allTags = orderedUnique(next.flatMap(\.tags))
     }
 
     func reload() async {
@@ -40,10 +78,6 @@ final class ClipsStore {
     }
 
     // MARK: - Derived
-
-    var allTags: [String] {
-        orderedUnique((clips ?? []).flatMap(\.tags))
-    }
 
     var filtered: [UClip] {
         guard let clips else { return [] }
@@ -75,12 +109,44 @@ final class ClipsStore {
         await reload()
     }
 
+    /// 다중선택 일괄 삭제.
+    ///
+    /// 서버 왕복을 **동시에** 보낸다. 전에는 순차 `await` 라 10개를 지우면 왕복 10번을 줄줄이
+    /// 기다렸다 — 모바일 네트워크에서 체감이 크다. 대상 조회도 매번 배열을 훑는 대신 사전을 쓴다.
     func bulkDelete(ids: [String]) async {
-        guard let clips else { return }
-        for id in ids {
-            if let c = clips.first(where: { $0.id == id }) { await removeOne(c) }
-        }
+        let targets = lookup(ids)
+        guard !targets.isEmpty else { return }
+        await forEachConcurrently(targets) { await self.removeOne($0) }
         await reload()
+    }
+
+    /// id 목록을 클립으로 바꾼다. `ids` 하나마다 배열을 훑으면 선택이 늘수록 제곱으로 느려진다.
+    private func lookup(_ ids: [String]) -> [UClip] {
+        guard let clips else { return [] }
+        let byID = Dictionary(clips.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return ids.compactMap { byID[$0] }
+    }
+
+    /// 동시에 띄울 요청 수 상한. 무제한으로 풀면 선택이 많을 때(로컬 캡 300개) 서버를 때린다.
+    private static let maxInFlight = 6
+
+    /// 각 클립에 대해 `work` 를 **동시에, 그러나 상한을 두고** 실행한다.
+    /// 하나 끝날 때마다 다음 하나를 띄운다.
+    private func forEachConcurrently(
+        _ clips: [UClip],
+        _ work: @escaping @Sendable (UClip) async -> Void
+    ) async {
+        await withTaskGroup(of: Void.self) { group in
+            var pending = clips.makeIterator()
+            for _ in 0..<min(Self.maxInFlight, clips.count) {
+                guard let clip = pending.next() else { break }
+                group.addTask { await work(clip) }
+            }
+            while await group.next() != nil {
+                guard let clip = pending.next() else { continue }
+                group.addTask { await work(clip) }
+            }
+        }
     }
 
     func saveEdit(_ c: UClip, title: String, tags: [String]) async {
@@ -101,22 +167,27 @@ final class ClipsStore {
     }
 
     /// 다중선택 태그 일괄. add=기존∪신규(dedup·최대6), replace=신규(최대6).
+    /// 삭제와 같은 이유로 서버 왕복을 동시에 보낸다.
     func applyTags(ids: [String], tags: [String], mode: TagMode) async {
-        guard let clips else { return }
-        for id in ids {
-            guard let c = clips.first(where: { $0.id == id }) else { continue }
+        let targets = lookup(ids)
+        guard !targets.isEmpty else { return }
+        await forEachConcurrently(targets) { clip in
             let next: [String]
             switch mode {
-            case .add: next = Array(orderedUnique(c.tags + tags).prefix(6))
+            case .add: next = Array(orderedUnique(clip.tags + tags).prefix(6))
             case .replace: next = Array(tags.prefix(6))
             }
-            if c.local {
-                localStore.update(url: c.url, title: nil, tags: next)
-            } else if let slug = c.slug {
-                _ = await api.updateClip(slug: slug, title: nil, tags: next, shared: nil, accessToken: ctx.token)
-            }
+            await self.applyTags(to: clip, tags: next)
         }
         await reload()
+    }
+
+    private func applyTags(to clip: UClip, tags: [String]) async {
+        if clip.local {
+            localStore.update(url: clip.url, title: nil, tags: tags)
+        } else if let slug = clip.slug {
+            _ = await api.updateClip(slug: slug, title: nil, tags: tags, shared: nil, accessToken: ctx.token)
+        }
     }
 }
 
@@ -126,4 +197,62 @@ func orderedUnique(_ arr: [String]) -> [String] {
     var out: [String] = []
     for x in arr where seen.insert(x).inserted { out.append(x) }
     return out
+}
+
+/// 날짜 그룹 — 목록을 저장 시각으로 묶는다(웹 `groupByDate` 이식).
+struct ClipDateGroup: Identifiable {
+    let label: String
+    let clips: [UClip]
+    var id: String { label }
+}
+
+/// 날짜 그룹 라벨. **문자열 카탈로그에 넣지 않는다.**
+///
+/// 웹이 `Intl` 에 맡긴 것과 같은 이유다. 문구가 넷(오늘·어제·이번 주·이번 달)이라 사전에
+/// 넣을 수는 있지만, `2026년 7월` 같은 연월은 **형식 자체가 언어마다 다르다**
+/// (en `July 2026`, ja `2026年7月`). 형식은 사전으로 표현할 수 없어서 어차피 시스템
+/// 포매터가 필요하고, 그러면 넷도 같은 곳에 맡기는 게 일관된다.
+func clipDateGroupLabel(_ date: Date, now: Date = Date(), locale: Locale) -> String {
+    clipDateGroupLabel(date, now: now, locale: locale, formatter: relativeFormatter(locale))
+}
+
+/// 포매터를 **바깥에서 받는** 판. 목록 하나를 묶는 동안 하나만 만들어 돌려 쓴다.
+///
+/// `RelativeDateTimeFormatter` 는 만드는 비용이 있는 객체다. 클립마다 새로 만들면 로컬
+/// 상한(300개)에서 렌더 한 번에 300번을 만든다.
+private func clipDateGroupLabel(_ date: Date, now: Date, locale: Locale,
+                                formatter: RelativeDateTimeFormatter) -> String {
+    let calendar = Calendar(identifier: .gregorian)
+    let days = calendar.dateComponents([.day],
+                                       from: calendar.startOfDay(for: date),
+                                       to: calendar.startOfDay(for: now)).day ?? 0
+
+    if days <= 0 { return formatter.localizedString(from: DateComponents(day: 0)) }
+    if days == 1 { return formatter.localizedString(from: DateComponents(day: -1)) }
+    if days < 7 { return formatter.localizedString(from: DateComponents(weekOfMonth: 0)) }
+    if calendar.isDate(date, equalTo: now, toGranularity: .month) {
+        return formatter.localizedString(from: DateComponents(month: 0))
+    }
+    return date.formatted(.dateTime.year().month(.wide).locale(locale))
+}
+
+private func relativeFormatter(_ locale: Locale) -> RelativeDateTimeFormatter {
+    let formatter = RelativeDateTimeFormatter()
+    formatter.locale = locale
+    // `.named` 라야 "1일 전" 이 아니라 "오늘"·"어제" 가 나온다.
+    formatter.dateTimeStyle = .named
+    return formatter
+}
+
+/// 순서를 유지한 채 날짜로 묶는다. 목록은 이미 최신순이라 그룹도 최신순이 된다.
+func groupClipsByDate(_ clips: [UClip], now: Date = Date(), locale: Locale) -> [ClipDateGroup] {
+    let formatter = relativeFormatter(locale)
+    var order: [String] = []
+    var buckets: [String: [UClip]] = [:]
+    for clip in clips {
+        let label = clipDateGroupLabel(clip.savedAt, now: now, locale: locale, formatter: formatter)
+        if buckets[label] == nil { order.append(label) }
+        buckets[label, default: []].append(clip)
+    }
+    return order.map { ClipDateGroup(label: $0, clips: buckets[$0] ?? []) }
 }

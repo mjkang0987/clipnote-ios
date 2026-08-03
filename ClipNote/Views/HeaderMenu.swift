@@ -4,32 +4,33 @@ import SwiftUI
 /// RN `components/HeaderMenu.tsx` 이식(사이드 슬라이드 → iOS 네이티브 Menu). 상위 화면 toolbar에 배치.
 struct HeaderMenu: View {
     @Environment(AppRouter.self) private var router
+    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
 
     var body: some View {
         Menu {
-            Button("+ 새 클립") { router.home() }
-            Button("내 클립") { router.go(.clips) }
-            Button("사용법") { router.showTour = true }
-            Button("소개") { router.go(.about) }
-            Button("자주 묻는 질문") { router.go(.faq) }
+            Button(i18n.t("clips.newClip")) { router.home() }
+            Button(i18n.t("common.myClips")) { router.go(.clips) }
+            Button(i18n.t("menu.tour")) { router.showTour = true }
+            Button(i18n.t("menu.about")) { router.go(.about) }
+            Button(i18n.t("faq.title")) { router.go(.faq) }
 
             Divider()
 
             if auth.loggedIn {
-                Button("설정") { router.go(.settings) }
-                Button("로그아웃") { Task { await auth.signOut() } }
+                Button(i18n.t("common.settings")) { router.go(.settings) }
+                Button(i18n.t("common.logout")) { router.confirmLogout = true }
             } else {
-                Button("로그인") { router.showLogin = true }
+                Button(i18n.t("common.login")) { router.showLogin = true }
             }
 
             Divider()
 
-            Button("개인정보 처리방침") { router.go(.privacy) }
+            Button(i18n.t("common.privacy")) { router.go(.privacy) }
         } label: {
             Image(systemName: "line.3.horizontal")
                 .foregroundStyle(AppColor.fg)
         }
-        .accessibilityLabel("메뉴 열기")
+        .accessibilityLabel(i18n.t("menu.aria"))
     }
 }

@@ -6,7 +6,7 @@ import SwiftUI
 
 /// 강조 대상 영역 식별자. 실제 UI 요소에 `.tourAnchor(_:)`로 부착한다.
 enum TourAnchor: String, CaseIterable {
-    case url, options, save, share
+    case url, options, save, share, copyOriginal
 }
 
 /// 각 영역의 프레임을 named coordinate space "tour"에서 수집.
@@ -46,13 +46,15 @@ struct TourStep {
     let anchor: TourAnchor?
     let title: String
     let desc: String
-    /// 사용 대상 배지(예: "누구나", "로그인 필요"). nil이면 배지 없음.
+    /// 사용 대상 배지(`onboarding.audienceAnyone`·`onboarding.audienceLogin`). nil이면 배지 없음.
     let audience: String?
     let loginOnly: Bool
 }
 
 /// dim + 구멍(또는 미리보기) + 말풍선 오버레이. 실제 화면 위에 얹는다.
 struct SpotlightOverlay: View {
+    @Environment(LocalizationStore.self) private var i18n
+
     let steps: [TourStep]
     let anchors: [TourAnchor: CGRect]
     @Binding var index: Int
@@ -126,7 +128,7 @@ struct SpotlightOverlay: View {
     private var callout: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Text("\(index + 1) / \(steps.count)")
+                Text(verbatim: "\(index + 1) / \(steps.count)")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(AppColor.brand)
                 if let audience = step.audience {
@@ -138,7 +140,7 @@ struct SpotlightOverlay: View {
                         .clipShape(Capsule())
                 }
                 Spacer()
-                Button("건너뛰기") { onDone() }
+                Button(i18n.t("onboarding.skip")) { onDone() }
                     .font(.system(size: 13))
                     .foregroundStyle(AppColor.fgMuted)
             }
@@ -154,7 +156,7 @@ struct SpotlightOverlay: View {
             HStack(spacing: 8) {
                 if index > 0 {
                     Button { withAnimation { index -= 1 } } label: {
-                        Text("이전")
+                        Text(i18n.t("onboarding.previous"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(AppColor.brandStrong)
                             .frame(maxWidth: .infinity).frame(height: 46)
@@ -163,7 +165,7 @@ struct SpotlightOverlay: View {
                     }
                 }
                 Button { advance() } label: {
-                    Text(isLast ? "시작하기" : "다음")
+                    Text(i18n.t(isLast ? "onboarding.start" : "onboarding.next"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppColor.white)
                         .frame(maxWidth: .infinity).frame(height: 46)
@@ -188,22 +190,31 @@ struct SpotlightOverlay: View {
 
 /// 내 클립 페이지 미리보기 목업 — 실제 목록 대신 대표 예시를 보여준다(툴바 강조 대체).
 struct ClipsPreviewMock: View {
+    @Environment(LocalizationStore.self) private var i18n
+
+    private var title1: String { i18n.t("onboarding.mockTitle1") }
+    private var title2: String { i18n.t("onboarding.mockTitle2") }
+    private var tag1: String { i18n.t("onboarding.mockTag1") }
+    private var tag2: String { i18n.t("onboarding.mockTag2") }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("내 클립")
+            Text(i18n.t("common.myClips"))
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(AppColor.fg)
             HStack(spacing: 6) {
-                chip("전체", active: true)
-                chip("개발", active: false)
-                chip("읽을거리", active: false)
+                chip(i18n.t("clips.allTags"), active: true)
+                chip(tag1, active: false)
+                chip(tag2, active: false)
             }
-            ClipCardView(title: "SwiftUI 애니메이션 정리", host: "developer.apple.com",
-                         imageURL: nil, gradient: pickGradient("SwiftUI 애니메이션 정리"),
-                         tags: ["개발"])
-            ClipCardView(title: "좋은 글쓰기의 5가지 원칙", host: "brunch.co.kr",
-                         imageURL: nil, gradient: pickGradient("좋은 글쓰기의 5가지 원칙"),
-                         tags: ["읽을거리"])
+            // 예시 데이터도 번역한다 — 온보딩에서 실제로 보이는 화면이라, 영어로 쓰는 사용자에게
+            // 한국어 제목이 뜨면 그 자체가 앱이 번역되지 않았다는 인상을 준다.
+            ClipCardView(title: title1, host: "developer.apple.com",
+                         imageURL: nil, gradient: pickGradient(title1),
+                         tags: [tag1])
+            ClipCardView(title: title2, host: "brunch.co.kr",
+                         imageURL: nil, gradient: pickGradient(title2),
+                         tags: [tag2])
         }
         .padding(14)
         .background(AppColor.bg)

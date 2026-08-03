@@ -12,6 +12,7 @@ private struct IdentifiedURL: Identifiable {
 struct LoginView: View {
     @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var i18n
 
     /// 마지막 로그인 수단(이 기기 기준) — "최근 로그인" 배지용. 웹 localStorage 대응.
     @AppStorage("clipnote.lastLoginProvider") private var lastProvider = ""
@@ -30,12 +31,12 @@ struct LoginView: View {
                 consentBox
                 buttons
                 if consentError {
-                    Text("개인정보처리방침에 동의하셔야 로그인할 수 있어요.")
+                    Text(i18n.t("login.errorConsent"))
                         .font(.system(size: 13)).foregroundStyle(AppColor.danger)
                         .frame(maxWidth: .infinity)
                 }
                 if let error = auth.lastError {
-                    Text(error)
+                    Text(message(for: error))
                         .font(.system(size: 13)).foregroundStyle(AppColor.danger)
                         .multilineTextAlignment(.center)
                 }
@@ -64,10 +65,10 @@ struct LoginView: View {
                     .resizable().interpolation(.high).scaledToFit()
                     .frame(width: 34, height: 34)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                Text("ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
+                Text(verbatim: "ClipNote").font(.largeTitle.bold()).foregroundStyle(AppColor.fg)
             }
-            Text("로그인").font(.system(size: 20, weight: .bold)).foregroundStyle(AppColor.fg)
-            Text("Google·카카오 계정으로 간편하게 시작하세요.")
+            Text(i18n.t("common.login")).font(.system(size: 20, weight: .bold)).foregroundStyle(AppColor.fg)
+            Text(i18n.t("login.subtitleWithKakao"))
                 .font(.system(size: 14)).foregroundStyle(AppColor.fgMuted)
                 .multilineTextAlignment(.center)
         }
@@ -87,11 +88,11 @@ struct LoginView: View {
                     .foregroundStyle(agreed ? AppColor.brand : AppColor.fgMuted)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 이메일, 프로필 닉네임·이미지)가 수집되는 데 동의합니다.")
+                Text(i18n.t("login.consent"))
                     .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted)
                     .contentShape(Rectangle())
                     .onTapGesture { agreed.toggle(); if agreed { consentError = false } }
-                Button("개인정보처리방침 확인") { privacy = IdentifiedURL(url: privacyURL) }
+                Button(i18n.t("login.privacyCheck")) { privacy = IdentifiedURL(url: privacyURL) }
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(AppColor.brandStrong)
             }
             Spacer(minLength: 0)
@@ -104,26 +105,29 @@ struct LoginView: View {
 
     private var buttons: some View {
         VStack(spacing: 12) {
-            brandButton(title: "Google로 계속하기", key: "google",
+            // 공급자 이름은 라틴 표기로 고정한다 — 번역하면 사용자가 자기 계정을 못 알아본다.
+            brandButton(provider: "Google", key: "google",
                         bg: AppColor.bg, fg: AppColor.fg, border: true) {
                 start("google") { await auth.signIn(provider: .google) }
             }
-            brandButton(title: "카카오로 계속하기", key: "kakao",
+            brandButton(provider: "Kakao", key: "kakao",
                         bg: Color(hex: 0xFEE500), fg: Color(hex: 0x191600), border: false) {
                 start("kakao") { await auth.signIn(provider: .kakao) }
             }
-            brandButton(title: "네이버로 계속하기", key: "naver",
+            brandButton(provider: "Naver", key: "naver",
                         bg: Color(hex: 0x03C75A), fg: AppColor.white, border: false) {
                 startNaver()
             }
         }
     }
 
-    private func brandButton(title: String, key: String, bg: Color, fg: Color,
+    private func brandButton(provider: String, key: String, bg: Color, fg: Color,
                              border: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             ZStack {
-                Text(loadingProvider == key ? "이동 중…" : title)
+                Text(loadingProvider == key
+                     ? i18n.t("login.redirecting")
+                     : i18n.t("login.continueWith", args: provider))
                     .font(.system(size: 16, weight: .semibold)).foregroundStyle(fg)
                     .frame(maxWidth: .infinity).frame(height: 48)
                 if lastProvider == key && loadingProvider == nil {
@@ -140,7 +144,7 @@ struct LoginView: View {
     }
 
     private var recentBadge: some View {
-        Text("최근 로그인")
+        Text(i18n.t("login.recent"))
             .font(.system(size: 11, weight: .semibold)).foregroundStyle(AppColor.brandStrong)
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(AppColor.brandSoft).clipShape(Capsule())
@@ -151,13 +155,13 @@ struct LoginView: View {
     private var divider: some View {
         HStack(spacing: 12) {
             Rectangle().fill(AppColor.border).frame(height: 1)
-            Text("또는").font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
+            Text(i18n.t("login.or")).font(.system(size: 12)).foregroundStyle(AppColor.fgMuted)
             Rectangle().fill(AppColor.border).frame(height: 1)
         }
     }
 
     private var guestButton: some View {
-        Button("게스트로 계속하기") { dismiss() }
+        Button(i18n.t("login.continueAsGuest")) { dismiss() }
             .font(.system(size: 16, weight: .semibold)).foregroundStyle(AppColor.fgMuted)
             .frame(maxWidth: .infinity).frame(height: 48)
     }
@@ -166,18 +170,22 @@ struct LoginView: View {
 
     private var infoSection: some View {
         VStack(spacing: 12) {
-            Text("로그인 / 게스트 모드 안내")
+            Text(i18n.t("login.compareTitle"))
                 .font(.system(size: 12, weight: .semibold)).kerning(0.5)
                 .foregroundStyle(AppColor.fgMuted)
-            infoBox(title: "로그인 하면", accent: true, items: [
-                "· 짧은 공유 링크를 만들어 카카오톡·SNS에 보낼 수 있어요.",
-                "· 공유한 링크가 제목·이미지가 담긴 미리보기 카드로 떠요.",
-                "· 클립이 계정에 쌓여 다른 기기에서도 그대로 보이고, 태그로 정리돼요.",
+            // 강조 낱말은 문장 안에 자리표시자로 두고 여기서 끼워 넣는다. 앞/뒤로 쪼개 적으면
+            // 어순이 다른 언어에서 깨진다 — 웹 CompareBoxes 와 같은 한 벌·같은 순서다.
+            infoBox(title: i18n.t("compare.signedInTitle"), accent: true, items: [
+                i18n.t("compare.signedInItem1", args: i18n.t("compare.signedInItem1Emphasis")),
+                i18n.t("compare.signedInItem2"),
+                i18n.t("compare.signedInItem3", args: i18n.t("compare.signedInItem3Emphasis")),
             ])
-            infoBox(title: "로그인 안 해도", accent: false, items: [
-                "· URL을 붙여넣어 미리보기 카드를 만들 수 있어요.",
-                "· 만든 클립을 이 기기에 저장하고 '내 클립'에서 다시 봐요.",
-                "· 단, 저장은 이 기기에만 남고 짧은 공유 링크는 못 만들어요.",
+            infoBox(title: i18n.t("compare.guestTitle"), accent: false, items: [
+                i18n.t("compare.guestItem1"),
+                i18n.t("compare.guestItem2", args: i18n.t("common.myClips")),
+                i18n.t("compare.guestItem3",
+                       args: i18n.t("compare.guestItem3Device"),
+                       i18n.t("compare.guestItem3NoLink")),
             ])
         }
         .padding(.top, 12)
@@ -188,7 +196,8 @@ struct LoginView: View {
             Text(title).font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(accent ? AppColor.brandStrong : AppColor.fg)
             ForEach(items, id: \.self) { item in
-                Text(item).font(.system(size: 13)).lineSpacing(2)
+                // 글머리표는 문구가 아니라 목록 표시라 사전에 넣지 않는다(번역 대상이 아니다).
+                Text(verbatim: "· \(item)").font(.system(size: 13)).lineSpacing(2)
                     .foregroundStyle(AppColor.fgMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -201,6 +210,14 @@ struct LoginView: View {
     }
 
     // MARK: - 액션
+
+    /// 로그인 실패 사유를 현재 언어의 문장으로. 시스템/Supabase 문장은 그대로 쓴다.
+    private func message(for error: AuthErrorMessage) -> String {
+        switch error {
+        case .naverNotConfigured: i18n.t("login.errorNaverNotConfigured")
+        case .system(let text): text
+        }
+    }
 
     private func start(_ key: String, _ action: @escaping () async -> Void) {
         guard agreed else { consentError = true; return }

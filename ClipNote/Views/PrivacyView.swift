@@ -2,7 +2,14 @@ import SwiftUI
 
 /// 개인정보처리방침 — 네이티브 정적 화면. 원문: clipnote.co.kr/privacy (동일 내용).
 /// 방침은 거의 바뀌지 않아 앱 내장. 추후 백엔드 API 제공 시 데이터 소스만 교체 가능.
+///
+/// **본문은 번역하지 않는다.** 법적 효력을 갖는 문서라 기계 번역본을 게시하면 어느 쪽이
+/// 구속력을 갖는지가 불분명해진다(웹 `/{en,ja,zh}/privacy` 도 같은 결정이다). 대신 한국어가
+/// 아닌 표시 언어에서는 본문 위에 `language.koreanOnlyNotice` 안내를 붙이고, 제목·내비게이션
+/// 라벨만 번역한다.
 struct PrivacyView: View {
+    @Environment(LocalizationStore.self) private var i18n
+
     private struct Section: Identifiable {
         let heading: String
         let body: [String]
@@ -58,9 +65,19 @@ struct PrivacyView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("개인정보처리방침")
+                Text(i18n.t("common.privacy"))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(AppColor.fg)
+                if i18n.language != .korean {
+                    Text(i18n.t("language.koreanOnlyNotice"))
+                        .font(.system(size: 13))
+                        .foregroundStyle(AppColor.fgMuted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                        .background(AppColor.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+                        .padding(.top, 10)
+                }
                 Text(effectiveDate)
                     .font(.system(size: 13))
                     .foregroundStyle(AppColor.fgMuted)
@@ -85,7 +102,7 @@ struct PrivacyView: View {
                     .padding(.top, 22)
                 }
 
-                Text("© 2026 PIKAWORKS")
+                Text(verbatim: "© 2026 PIKAWORKS")
                     .font(.system(size: 12))
                     .foregroundStyle(AppColor.fgMuted)
                     .padding(.top, 28)
@@ -93,7 +110,7 @@ struct PrivacyView: View {
             .padding(20)
         }
         .background(AppColor.bg)
-        .navigationTitle("개인정보처리방침")
+        .navigationTitle(i18n.t("common.privacy"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

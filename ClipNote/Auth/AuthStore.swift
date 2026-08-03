@@ -13,17 +13,29 @@ struct AuthState: Equatable {
 struct AccountInfo: Equatable {
     var email: String?
     var provider: String?
-    /// 표시 라벨: 이메일 우선, 없으면 provider 한글명.
-    var label: String { email ?? providerLabel }
-    /// provider 한글명(웹 설정과 동일 매핑).
-    var providerLabel: String {
+
+    /// 공급자 표시 이름. **라틴 표기로 고정하고 번역하지 않는다** — 언어마다 `카카오`/`カカオ`/
+    /// `卡考` 로 갈리면 사용자가 자기가 무엇으로 로그인했는지 못 알아본다(웹과 같은 결정).
+    ///
+    /// 모르는 공급자는 nil 을 돌려주고, 화면이 `settings.providerUnknown`("소셜")을 쓴다.
+    /// 여기서 한국어 대체 문구를 만들면 표시 언어를 바꿔도 그 낱말만 한국어로 남는다.
+    var providerName: String? {
         switch provider {
-        case "google": return "Google"
-        case "kakao": return "카카오"
-        case "naver": return "네이버"
-        default: return "소셜"
+        case "google": "Google"
+        case "kakao": "Kakao"
+        case "naver": "Naver"
+        default: nil
         }
     }
+}
+
+/// 로그인 실패 사유. 문자열이 아니라 케이스로 두는 이유는 `HomeError` 와 같다 —
+/// 표시 언어를 아는 건 뷰이고, 스토어가 문장을 만들면 그 시점 언어로 굳는다.
+enum AuthErrorMessage: Equatable {
+    /// 네이버 client_id 가 빌드에 없다(`Secrets.xcconfig` 누락).
+    case naverNotConfigured
+    /// Supabase·시스템이 준 설명. 이미 사람이 읽는 문장이라 그대로 보여 준다.
+    case system(String)
 }
 
 /// Wraps `supabase-swift` auth. Session persistence (Keychain) and token refresh are
@@ -33,7 +45,7 @@ struct AccountInfo: Equatable {
 final class AuthStore: ObservableObject {
     @Published private(set) var state = AuthState(accessToken: nil, loading: true)
     /// 마지막 로그인 실패 메시지(유저 취소는 제외). LoginView가 표시.
-    @Published var lastError: String?
+    @Published var lastError: AuthErrorMessage?
     /// 네이버 콜백 딥링크가 도착할 때마다 증가. LoginView가 이 변화에 맞춰 SFSafari 시트를 닫는다.
     /// (scenePhase `.active`는 SFSafari 표시 정착 등으로도 떠서 로그인 완료 전 시트가 닫히는 문제 회피.)
     @Published private(set) var naverCallbackCount = 0
@@ -130,7 +142,7 @@ final class AuthStore: ObservableObject {
                 try await client.auth.verifyOTP(tokenHash: tokenHash, type: .magiclink)
             } catch {
                 releaseTokenHash(tokenHash)  // 실패 시 재시도 허용(RN lib/naver.ts 동작)
-                lastError = error.localizedDescription
+                lastError = .system(error.localizedDescription)
             }
         case nil:
             break
@@ -155,7 +167,7 @@ final class AuthStore: ObservableObject {
             try await client.auth.signInWithOAuth(provider: provider, redirectTo: Self.oauthRedirect)
         } catch {
             if !Self.isUserCancellation(error) {
-                lastError = error.localizedDescription
+                lastError = .system(error.localizedDescription)
             }
         }
     }
@@ -197,7 +209,7 @@ final class AuthStore: ObservableObject {
     /// 실제 로그인은 SFSafariViewController로 이 URL을 열고, 복귀는 딥링크(#6 `handle`)가 완료한다.
     func naverAuthURL(nonce: String) -> URL? {
         guard let clientID = Config.naverClientID else {
-            lastError = "네이버 설정 없음"
+            lastError = .naverNotConfigured
             return nil
         }
         return Self.makeNaverAuthURL(clientID: clientID, nonce: nonce)
