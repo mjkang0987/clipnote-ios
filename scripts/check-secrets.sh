@@ -43,6 +43,16 @@ require() {
 
 echo "SECRETS_XCCONFIG 검증"
 
+# 키 개수를 먼저 센다. **복구가 일부만 된 경우를 잡기 위해서다** —
+# GitHub Secret 은 전체 덮어쓰기만 되고 되읽을 수 없어서, 손으로 복원하면 몇 줄이
+# 빠진 채 올라가기 쉽다. 개별 키 검사는 그 뒤에 이어진다. 값은 세지 않고 개수만 본다.
+KEY_COUNT="$(grep -cE '^[[:space:]]*[A-Z_]+[[:space:]]*=' "$FILE" || true)"
+echo "  키 $KEY_COUNT 개 (기대: 6)"
+if [ "$KEY_COUNT" -lt 6 ]; then
+  echo "::error::키가 모자란다 — 복구가 일부만 된 것으로 보인다."
+  fail=1
+fi
+
 require API_BASE && {
   v="$(value_of API_BASE)"
   # xcconfig 는 `//` 를 주석으로 먹는다. 그래서 URL 은 `https:/$()/host` 로 우회해야 한다.
@@ -68,6 +78,11 @@ check_admob() {
       echo "::error::$key 가 구글 테스트 ID($GOOGLE_TEST_PUB)다 — 실광고가 붙지 않는다. AdMob 콘솔의 실제 ID로 교체해라."
       fail=1 ;;
     ca-app-pub-*)
+      # `$()` 는 URL 의 `//` 를 피하려고 쓰는 표기다. AdMob ID 에는 `//` 가 없으니
+      # 들어 있을 이유가 없다 — 있으면 복사하다 섞인 것이고, 그대로 ID 가 깨진다.
+      case "$v" in
+        *'$()'*) echo "::error::$key 에 \$() 가 섞여 있다 — ID 가 깨진다. 그 표기는 API_BASE 에만 쓴다."; fail=1 ;;
+      esac
       case "$v" in
         *"$sep"*) echo "    └ 형식 정상($sepname 포함)" ;;
         *) echo "::error::$key 에 $sepname 가 없다 — 앱 ID(~)와 광고 단위 ID(/)를 바꿔 넣은 것 같다."; fail=1 ;;
