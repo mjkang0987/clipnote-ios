@@ -42,6 +42,8 @@ CLEAN_FILES = [
     "ClipNote/Views/HomeView.swift",
     "ClipNote/Views/HomeViewModel.swift",
     "ClipNote/Clips/ClipsView.swift",
+    "ClipNote/Clips/LocalClipsView.swift",
+    "ClipNote/Clips/MigrateLocalClipsLayer.swift",
     "ClipNote/Views/EditClipModal.swift",
     "ClipNote/Views/TagApplyModal.swift",
     "ClipNote/Views/ShareResultModal.swift",

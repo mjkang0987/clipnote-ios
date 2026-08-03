@@ -1145,6 +1145,36 @@
         }
       }
     },
+    "clips.localEntry" : {
+      "comment" : "로그인 목록 위의 진입 줄. %@ 는 clips.countUnit 결과",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ left on this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末に残っているクリップ %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기에 남은 클립 %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此设备上还有剪藏 %@"
+          }
+        }
+      }
+    },
     "clips.migrateBody" : {
       "comment" : "%@ 는 clips.countUnit 결과(‘3개’·‘3 clips’)",
       "extractionState" : "manual",
@@ -1378,36 +1408,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "+ 新建剪藏"
-          }
-        }
-      }
-    },
-    "clips.onThisDevice" : {
-      "comment" : "로그인 목록에서 서버가 아니라 이 기기에만 있는 클립임을 알리는 배지. 짧게 — 한 줄에 붙는다.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On this device"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この端末"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 기기"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "本机"
           }
         }
       }
@@ -3714,6 +3714,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "本文件仅提供韩文版本。"
+          }
+        }
+      }
+    },
+    "localClips.deleteAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete all"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모두 삭제"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部删除"
+          }
+        }
+      }
+    },
+    "localClips.deleteAllBody" : {
+      "comment" : "%@ 는 clips.countUnit 결과",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All %@ saved on this device will be deleted. They exist only on this device, so this can't be undone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末に保存された%@をすべて削除します。このクリップはこの端末にしかないため取り消せません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기에 저장된 %@ 클립을 모두 삭제합니다. 이 클립은 이 기기에만 있어서 되돌릴 수 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将删除此设备上保存的%@。这些剪藏只存在于此设备，因此无法撤销。"
+          }
+        }
+      }
+    },
+    "localClips.deleteAllTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete the clips on this device?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末のクリップを削除しますか?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기의 클립을 삭제할까요?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要删除此设备上的剪藏吗?"
+          }
+        }
+      }
+    },
+    "localClips.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No clips left on this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末に残っているクリップはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기에 남은 클립이 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此设备上没有剩余的剪藏。"
+          }
+        }
+      }
+    },
+    "localClips.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These clips exist only on this device. Move them to your account to see them anywhere and create share links."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このクリップはこの端末にしかありません。アカウントに移動すると他の端末でも見られ、共有リンクも作れます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 클립은 이 기기에만 있어요. 계정으로 옮기면 다른 기기에서도 보이고 공유 링크를 만들 수 있어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些剪藏只存在于此设备。迁移到账号后可在其他设备查看，也能创建共享链接。"
+          }
+        }
+      }
+    },
+    "localClips.move" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントに移動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정으로 옮기기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "迁移到账号"
+          }
+        }
+      }
+    },
+    "localClips.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clips on this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末に残っているクリップ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 기기에 남은 클립"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此设备上的剪藏"
           }
         }
       }

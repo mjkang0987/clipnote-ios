@@ -21,6 +21,7 @@ struct RootView: View {
                     .navigationDestination(for: AppRoute.self) { route in
                         switch route {
                         case .clips: ClipsView()
+                        case .localClips: LocalClipsView()
                         case .about: AboutView()
                         case .faq: FaqView()
                         case .privacy: PrivacyView()

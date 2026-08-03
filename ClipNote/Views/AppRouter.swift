@@ -3,6 +3,8 @@ import SwiftUI
 /// 상위 화면 라우트(헤더 메뉴 이동 대상).
 enum AppRoute: Hashable {
     case clips
+    /// 이 기기에만 남은 클립 — 로그인 목록 위의 진입 줄에서만 들어간다.
+    case localClips
     case about
     case faq
     case privacy

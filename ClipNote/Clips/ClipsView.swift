@@ -24,6 +24,7 @@ struct ClipsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(LocalizationStore.self) private var i18n
+    @Environment(AppRouter.self) private var router
     @EnvironmentObject private var auth: AuthStore
 
     @State private var store: ClipsStore?
@@ -148,9 +149,17 @@ struct ClipsView: View {
             // 사용자는 클립이 날아간 줄 안다.
             loadFailedState
         } else if store.clips?.isEmpty == true {
-            emptyState
+            // 계정 목록이 비어도 이 기기 클립은 남아 있을 수 있다(옮기기를 거절한 경우).
+            // 진입 줄을 여기에도 두지 않으면 그 클립에 닿을 길이 아예 없어진다.
+            VStack(spacing: 0) {
+                localEntryRow(store)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                emptyState
+            }
         } else {
             List {
+                localEntryRow(store).plainRow()
                 if !store.allTags.isEmpty {
                     filterRow(store).plainRow()
                 }
@@ -203,6 +212,37 @@ struct ClipsView: View {
                 Button(i18n.t("common.delete"), role: .destructive) { pendingDelete = clip }
                 Button(i18n.t("clips.edit")) { editing = clip }.tint(AppColor.brand)
             }
+        }
+    }
+
+    /// ‘이 기기에 남은 클립 3개 ›’ — 옮기기를 거절했을 때 그 클립으로 가는 **유일한 길**이다.
+    ///
+    /// 계정 목록에 섞지 않는 이유는 `LocalClipsView` 주석 참고. 다중선택 중에는 감춘다 —
+    /// 선택 대상이 아닌 줄이 목록에 섞이면 무엇이 선택되는지 흐려진다.
+    @ViewBuilder
+    private func localEntryRow(_ store: ClipsStore) -> some View {
+        if store.localOnlyCount > 0, !selectMode {
+            Button { router.go(.localClips) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "iphone")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                    Text(i18n.t("clips.localEntry", args: countUnit(store.localOnlyCount)))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppColor.fg)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .background(AppColor.surface)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                .overlay(RoundedRectangle(cornerRadius: Radius.md)
+                    .stroke(AppColor.border, lineWidth: 0.5))
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -382,8 +422,9 @@ private struct IdURL: Identifiable {
     var id: String { url.absoluteString }
 }
 
-private extension View {
+extension View {
     /// 카드형 리스트 행 — 구분선·배경 제거, 좌우 16 여백.
+    /// 계정 목록과 `LocalClipsView` 가 같은 여백을 써야 화면을 오갈 때 줄이 어긋나 보이지 않는다.
     func plainRow() -> some View {
         self
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
