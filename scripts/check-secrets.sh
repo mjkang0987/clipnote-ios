@@ -19,8 +19,12 @@ if [ ! -f "$FILE" ]; then
 fi
 
 # `KEY = value` 에서 값만 뽑는다(앞뒤 공백 제거). 값은 변수에만 담고 출력하지 않는다.
+#
+# **마지막 정의를 읽는다(`tail -1`).** xcconfig 는 같은 키가 여러 번 나오면 뒤가 이긴다.
+# 워크플로가 `ADMOB_APP_ID` 별도 시크릿을 파일 끝에 덧붙여 덮어쓰므로, 첫 줄을 읽으면
+# 덮어쓰기 전 값을 검사하게 된다 — 검사와 빌드가 서로 다른 값을 보는 셈이다.
 value_of() {
-  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$FILE" | head -1 | sed 's/[[:space:]]*$//'
+  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$FILE" | tail -1 | sed 's/[[:space:]]*$//'
 }
 
 # 구글 공식 테스트 퍼블리셔 — 실배포에 들어가면 실광고가 절대 붙지 않는다.
@@ -47,7 +51,7 @@ echo "SECRETS_XCCONFIG 검증"
 # GitHub Secret 은 전체 덮어쓰기만 되고 되읽을 수 없어서, 손으로 복원하면 몇 줄이
 # 빠진 채 올라가기 쉽다. 개별 키 검사는 그 뒤에 이어진다. 값은 세지 않고 개수만 본다.
 KEY_COUNT="$(grep -cE '^[[:space:]]*[A-Z_]+[[:space:]]*=' "$FILE" || true)"
-echo "  키 $KEY_COUNT 개 (기대: 6)"
+echo "  키 $KEY_COUNT 개 (기대: 6, ADMOB_APP_ID 덮어쓰기가 있으면 7)"
 if [ "$KEY_COUNT" -lt 6 ]; then
   echo "::error::키가 모자란다 — 복구가 일부만 된 것으로 보인다."
   fail=1
@@ -127,5 +131,3 @@ if [ "$warn" -ne 0 ]; then
 else
   echo "검증 통과."
 fi
-
-# 재실행 트리거(내용 변경 없음) — 시크릿 갱신 후 현재 상태를 다시 읽는다.
