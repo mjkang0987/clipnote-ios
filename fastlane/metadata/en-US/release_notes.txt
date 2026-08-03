@@ -1,3 +1,4 @@
+· Clips saved on this device stay reachable after you sign in. Open them from the top of your list to move them to your account or delete them — declining to move them never deletes anything.
 · Added English, Japanese, and Simplified Chinese. Switch anytime in Settings > Language — no restart needed.
 · A dinosaur now runs along the edge of the screen while we read the link. Waiting is a little less dull.
 · Fixed a bug where a failed load looked like "no clips yet". It now says the load failed and lets you retry.
