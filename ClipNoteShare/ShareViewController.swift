@@ -12,6 +12,16 @@ final class ShareViewController: UIViewController {
 
     private var deepLink: URL?
 
+    /// 카드 뒤를 덮는 **실제 뷰**.
+    ///
+    /// 처음에는 투명한 root view 에 탭 제스처만 붙였는데 시뮬레이터에서 안 먹었다. 공유
+    /// 확장은 시스템이 감싸는 컨테이너 안에서 도는 특수한 환경이라, 아무것도 그리지 않은
+    /// 자리의 터치가 확장까지 온다는 보장이 없다. 실제 뷰를 깔면 그 자리는 확실히 이쪽이
+    /// 받는다.
+    ///
+    /// 살짝 어둡게 깐 건 진단이자 디자인이다 — 어두워지지 않으면 이 뷰가 화면을 덮지
+    /// 못한다는 뜻이고, 어두워지면 "바깥을 눌러 닫는 레이어" 라는 신호가 된다.
+    private let backdrop = UIView()
     private let card = UIView()
     private let titleLabel = UILabel()
     private let bodyLabel = UILabel()
@@ -52,14 +62,15 @@ final class ShareViewController: UIViewController {
     // MARK: - UI
 
     private func buildUI() {
-        // 카드 위쪽 빈 자리(backdrop)를 눌러도 닫힌다.
+        // 바깥을 눌러 닫는다. 시트에서 몸에 밴 동작이라 반응이 없으면 갇힌 것처럼 느껴진다.
         //
-        // 그 자리는 투명해서 호스트 화면이 비치는데, 시트에서 바깥을 눌러 닫는 건 iOS 에서
-        // 몸에 밴 동작이라 아무 반응이 없으면 갇힌 것처럼 느껴진다. 카드 안쪽 탭은
-        // 그대로 흘려보내야 버튼이 계속 동작한다.
-        let backdrop = UITapGestureRecognizer(target: self, action: #selector(backdropTapped))
-        backdrop.cancelsTouchesInView = false
-        view.addGestureRecognizer(backdrop)
+        // 제스처를 backdrop **에** 붙인다. 카드는 이 위에 얹히므로 카드 안쪽 탭은 여기까지
+        // 내려오지 않는다 — 좌표를 비교해 걸러낼 필요가 없다.
+        backdrop.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        backdrop.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(backdropTapped)))
+        view.addSubview(backdrop)
 
         // 카드를 아래로 쓸어내려도 닫힌다.
         //
@@ -114,7 +125,11 @@ final class ShareViewController: UIViewController {
         card.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            // 하단 카드 — 좌우·하단 화면 끝, 내용 높이만큼(위쪽은 투명해 호스트가 비침).
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // 하단 카드 — 좌우·하단 화면 끝, 내용 높이만큼(위쪽은 backdrop 이 덮는다).
             card.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             card.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             card.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -153,10 +168,8 @@ final class ShareViewController: UIViewController {
         extensionContext?.completeRequest(returningItems: nil)
     }
 
-    /// 카드 **바깥**을 눌렀을 때만 닫는다. 카드 안쪽이면 아무것도 하지 않는다 —
-    /// 제스처가 `view` 에 붙어 있어 카드 위 빈 곳을 눌러도 여기로 들어온다.
-    @objc private func backdropTapped(_ gesture: UITapGestureRecognizer) {
-        guard !card.frame.contains(gesture.location(in: view)) else { return }
+    /// 카드 뒤 어두운 자리를 눌렀을 때. 카드는 이 위에 얹혀 있어 여기로 오지 않는다.
+    @objc private func backdropTapped() {
         extensionContext?.completeRequest(returningItems: nil)
     }
 
