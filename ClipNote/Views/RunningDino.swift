@@ -55,6 +55,14 @@ struct RunningDino: View {
     /// 자리라 공룡이 거기 붙어 걸으면 지저분하다. 남는 세 면(오른쪽 → 위 → 왼쪽)만 돈다.
     private static let skipped = 2
 
+    /// 이번 로딩에 **어디서 나타날지**(경로 위 0~1 지점).
+    ///
+    /// 건너뛰는 면을 고정하면서 경로가 늘 오른쪽 벽 아래에서 시작하게 됐다. 매번 같은
+    /// 자리에서 같은 방향으로 나오면 두 번째부터는 그냥 배경이 된다. 도는 자리는 그대로 두고
+    /// **출발점만** 옮긴다 — `@State` 라 뷰가 새로 생길 때 한 번만 뽑히고, 이 뷰는 로딩
+    /// 중에만 존재하므로 "로딩마다 한 번" 이 그대로 성립한다.
+    @State private var startFraction = Double.random(in: 0..<1)
+
     var body: some View {
         // **`Canvas` 로 그린다. `GeometryReader` 를 쓰지 않는다.**
         //
@@ -114,7 +122,7 @@ struct RunningDino: View {
 
         let lap = min(max(Double(total) / Self.targetSpeed, Self.lapRange.lowerBound),
                       Self.lapRange.upperBound)
-        let progress = (elapsed / lap).truncatingRemainder(dividingBy: 1)
+        let progress = (elapsed / lap + startFraction).truncatingRemainder(dividingBy: 1)
         // 멈춰 세울 때는 첫 면 한가운데에 세운다 — 모서리에 걸치면 잘린 것처럼 보인다.
         let distance = reduceMotion ? lengths[0] / 2 : total * CGFloat(progress)
 
