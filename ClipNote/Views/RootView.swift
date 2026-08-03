@@ -91,67 +91,29 @@ struct RootView: View {
 
 /// 로그인 전환 감지 → 로컬 클립이 있으면 계정으로 옮길지 **권한다**(§5). 중복 프롬프트 가드.
 ///
-/// **거절해도 잃는 게 없다.** 로그인 목록이 서버와 이 기기를 함께 보여주기 때문이다
-/// (`ClipsStore.merged`). 전에는 서버 것만 보여줘서, 옮기지 않은 로컬 클립은 로그인하는 순간
-/// 볼 방법이 없어졌다 — 그래서 거절하면 "그럼 지울까?" 를 물어야 했다. 이제 그 확인이 없다.
+/// **거절해도 잃는 게 없다.** 로그인 목록 위에 ‘이 기기에 남은 클립 3개’ 진입 줄이 서고,
+/// 거기서 언제든 다시 옮기거나 지울 수 있다(`LocalClipsView`). 전에는 서버 것만 보여줘서
+/// 옮기지 않은 로컬 클립은 로그인하는 순간 볼 방법이 없어졌고 — 그래서 거절하면 "그럼
+/// 지울까?" 를 물어야 했다. 이제 그 확인이 없다.
 ///
 /// 옮기면 좋은 이유는 남아 있다. 서버 사본만 **공유 링크를 만들 수 있고**(로컬은 slug 가 없다)
 /// 다른 기기에서도 보인다. 그래서 묻기는 하되 강요하지 않는다.
+///
+/// 레이어·결과 알림은 `MigrateLocalClipsLayer` 가 들고 있다 — 로컬 클립 화면과 같은 것을 쓴다.
 private struct LoginMigrationModifier: ViewModifier {
     @Environment(\.modelContext) private var modelContext
-    @Environment(LocalizationStore.self) private var i18n
     @EnvironmentObject private var auth: AuthStore
 
     // 개수를 그리는 레이어는 `.sheet(item:)` 으로 값을 실어 보낸다 — `ClipCount` 주석 참고.
     @State private var migrateRequest: ClipCount?
-    @State private var migrating = false
-    @State private var resultMessage: String?
     @State private var prompted = false
-
-    /// 수량 표기(`3개`·`3 clips`)는 언어마다 단위 위치가 달라 문장에서 떼어 둔다.
-    /// 이걸 만들어 `%@` 자리에 끼워 넣는다 — 웹 `clips.countUnit` 과 같은 방식.
-    private func countUnit(_ count: Int) -> String {
-        i18n.t("clips.countUnit", args: count)
-    }
 
     func body(content: Content) -> some View {
         content
             .onChange(of: auth.loggedIn) { _, now in
                 if now { check() } else { prompted = false }
             }
-            .sheet(item: $migrateRequest) { migrateLayer($0.value) }
-            // 옮기기 결과는 결정이 아니라 알림이라 레이어로 만들지 않는다.
-            // (웹은 페이지가 그 자리에서 갱신돼 알림이 없지만, 앱은 네트워크 작업이라 결과를 알린다.)
-            .alert(i18n.t("clips.migrateResultTitle"), isPresented: resultBinding) {
-                Button(i18n.t("common.confirm"), role: .cancel) { resultMessage = nil }
-            } message: {
-                Text(resultMessage ?? "")
-            }
-    }
-
-    // MARK: - 레이어
-
-    private func migrateLayer(_ pending: Int) -> some View {
-        let count = countUnit(pending)
-        return ConfirmLayer(
-            title: i18n.t("clips.migrateTitle"),
-            message: emphasized(i18n.t("clips.migrateBody", args: count), [count]),
-            confirmLabel: i18n.t("clips.migrateConfirm", args: count),
-            busy: migrating,
-            busyLabel: i18n.t("clips.migrating"),
-            cancelLabel: i18n.t("common.cancel"),
-            // 옮기는 동안 레이어를 열어 둔 채 스피너를 보여 준다(웹과 동일). 끝나면 닫는다.
-            onConfirm: { migrate(pending) },
-            onCancel: { migrateRequest = nil }
-        )
-        // 진행 중에는 스와이프로 닫지 못하게 막는다 — 중간에 닫히면 무엇이 옮겨졌는지 알 수 없다.
-        .interactiveDismissDisabled(migrating)
-    }
-
-    // MARK: - 동작
-
-    private var resultBinding: Binding<Bool> {
-        Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })
+            .migrateLocalClipsLayer(request: $migrateRequest)
     }
 
     private func check() {
@@ -161,20 +123,4 @@ private struct LoginMigrationModifier: ViewModifier {
         prompted = true
         migrateRequest = ClipCount(value: count)
     }
-
-    private func migrate(_ pending: Int) {
-        let store = LocalClipStore(container: modelContext.container)
-        let token = auth.accessToken
-        migrating = true
-        Task {
-            let (uploaded, allOK) = await MigrateLocalClips(localStore: store).run(accessToken: token)
-            migrating = false
-            migrateRequest = nil
-            resultMessage = allOK
-                ? i18n.t("clips.migrateDone", args: countUnit(uploaded))
-                : i18n.t("clips.migratePartial")
-            ClipsRefresh.emit()
-        }
-    }
-
 }
