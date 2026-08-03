@@ -57,7 +57,13 @@ targets:
           - CFBundleURLName: kr.co.clipnote.app
             CFBundleURLSchemes:
               - clipnote
-        UILaunchScreen: {}
+        # 런치 스크린 — iOS 가 앱 코드 없이 그리는 정지 화면이다(애니메이션 불가).
+        # 배경을 흰색 자산으로 못박는 이유: 생략하면 시스템 배경을 따라가 다크 모드 기기에서
+        # 검게 떴다가 흰 앱으로 바뀐다. 앱 팔레트가 라이트 고정이라 흰색이 맞다.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+          UIImageName: LaunchLogo
+          UIImageRespectsSafeAreaInsets: true
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
