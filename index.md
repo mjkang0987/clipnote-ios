@@ -7,7 +7,7 @@
 - **번들 ID**: `kr.co.clipnote.app` (URL 스킴 `clipnote://`)
 - **스택**: Swift 6 · SwiftUI · iOS 17+ · **XcodeGen**(`project.yml` → `ClipNote.xcodeproj`)
 - **백엔드**: `API_BASE`(clipnote.co.kr) · Supabase · 네이버 로그인 · AdMob (설정은 `Secrets.xcconfig`)
-- **배포**: App Store/TestFlight (수동)
+- **배포**: `main` push → `deploy.yml` 이 fastlane 으로 TestFlight 자동 업로드. App Store 심사 제출만 수동
 
 ## 빌드
 ```bash
@@ -81,7 +81,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - Phase 5: `HeaderMenu`+`AppRouter`(공통 메뉴·로그아웃·전 화면 라우팅)·`AboutView`/`FaqView`/`AccountDeleteView`·`OnboardingView`(실제 슬라이드)·`deleteAccount` API·`PrivacyInfo.xcprivacy`(심사).
   - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider·서버 콜백 설정에 따라 실동작 별도 확인 필요.
   - AdMob(#48 재개·완료): `AdConfig`(DEBUG 테스트/RELEASE Secrets)·`AdBannerView`(앵커 적응형)·App ID 가드 start. Home(키보드 숨김)·Clips 하단. 실 App ID `~9380940221`, 배너 unit `/6008671423`(Secrets, gitignored).
-- **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `fastlane ios beta`로 빌드 **3까지 업로드**. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 섹션 참고**.
+- **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `main` push 마다 `fastlane ios beta` 가 자동 업로드한다(빌드번호 = TestFlight 최신+1). 최근 업로드는 **1.1.0(2026-08-03, 배포 #15)** 이고 **그 빌드는 실행 즉시 죽는다** — 아래 항목 참고. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 절**과 `docs/DEPLOY.md` 참고.
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 내 클립 무한스크롤(임계 도달 시 cursor 방식). 다국어는 보류 해제 — 아래 항목 참고.
