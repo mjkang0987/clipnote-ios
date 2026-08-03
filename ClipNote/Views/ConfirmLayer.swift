@@ -18,9 +18,6 @@ struct ConfirmLayer: View {
         case normal
         /// 되돌릴 수 없다 — 확인을 위험색으로 채운다(클립 삭제).
         case destructive
-        /// 되돌릴 수 없고 **서버 사본도 없다** — 취소를 채워 기본 동작으로 만들고,
-        /// 확인은 테두리만 남긴다. 손이 미끄러져 눌리는 쪽이 안전해야 한다(로컬 클립 삭제).
-        case cautious
     }
 
     let title: String
@@ -66,15 +63,12 @@ struct ConfirmLayer: View {
         .presentationDetents([.height(contentHeight)])
     }
 
-    @ViewBuilder
     private var cancelButton: some View {
-        let button = Button(cancelLabel, action: onCancel).disabled(busy)
-        // 가장 위험한 경우에만 취소를 채운다 — 나머지는 확인 쪽이 기본 동작이다.
-        if emphasis == .cautious {
-            button.buttonStyle(ModalFilledButton(color: AppColor.brand))
-        } else {
-            button.buttonStyle(ModalGhostButton())
-        }
+        // 취소는 항상 같은 모양이다 — 레이어마다 다르면 같은 자리의 버튼이 화면마다
+        // 달라 보여 어느 쪽이 취소인지 매번 다시 읽어야 한다.
+        Button(cancelLabel, action: onCancel)
+            .buttonStyle(ModalGhostButton())
+            .disabled(busy)
     }
 
     @ViewBuilder
@@ -82,19 +76,12 @@ struct ConfirmLayer: View {
         let label = SpinnerLabel(
             title: busy ? (busyLabel ?? confirmLabel) : confirmLabel,
             loading: busy,
-            tint: emphasis == .cautious ? AppColor.danger : AppColor.white
+            tint: AppColor.white
         )
-        switch emphasis {
-        case .normal:
-            Button(action: onConfirm) { label }
-                .buttonStyle(ModalFilledButton(color: AppColor.brand)).disabled(busy)
-        case .destructive:
-            Button(action: onConfirm) { label }
-                .buttonStyle(ModalFilledButton(color: AppColor.danger)).disabled(busy)
-        case .cautious:
-            Button(action: onConfirm) { label }
-                .buttonStyle(ModalOutlinedDangerButton()).disabled(busy)
-        }
+        Button(action: onConfirm) { label }
+            .buttonStyle(ModalFilledButton(
+                color: emphasis == .destructive ? AppColor.danger : AppColor.brand))
+            .disabled(busy)
     }
 
     /// 내용 높이를 재서 detent 에 넘긴다. 시트 폭은 detent 와 무관하게 고정이라
@@ -133,23 +120,6 @@ struct ModalFilledButton: ButtonStyle {
     }
 }
 
-/// 테두리만 있는 위험 버튼 — 취소가 기본 동작인 레이어에서 확인 쪽에 쓴다.
-struct ModalOutlinedDangerButton: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(AppColor.danger)
-            .frame(maxWidth: .infinity).frame(height: 46)
-            // 배경을 비워 두면 시트 바탕이 그대로 비쳐 테두리만 뜬 채 버튼으로 안 읽힌다.
-            // 흰 면을 깔아 옆의 채운 버튼과 같은 무게로 보이게 한다.
-            .background {
-                AppColor.white
-                if configuration.isPressed { AppColor.danger.opacity(0.1) }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
-            .overlay(RoundedRectangle(cornerRadius: Radius.sm).stroke(AppColor.danger, lineWidth: 1))
-    }
-}
 
 /// 문장 안의 낱말만 강조한 `Text`.
 ///
