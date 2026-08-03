@@ -4101,6 +4101,64 @@
         }
       }
     },
+    "logout.confirmBody" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your saved clips stay where they are — sign back in and they'll be waiting."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存したクリップはそのまま残ります。再度ログインすれば続けて見られます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장한 클립은 그대로 있어요. 다시 로그인하면 이어서 볼 수 있어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的剪藏会保留。重新登录后即可继续查看。"
+          }
+        }
+      }
+    },
+    "logout.confirmTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログアウトしますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그아웃 하시겠습니까?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要退出登录吗？"
+          }
+        }
+      }
+    },
     "menu.about" : {
       "comment" : "앱 전용 — 소개 화면으로 가는 메뉴 항목. 웹은 홈 하단 섹션이라 내비 라벨이 없다",
       "extractionState" : "manual",

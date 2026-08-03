@@ -54,7 +54,7 @@ struct SettingsView: View {
                         .font(.system(size: 13)).foregroundStyle(AppColor.fgMuted).lineLimit(1)
                 }
                 Spacer(minLength: 12)
-                Button(i18n.t("common.logout")) { Task { await auth.signOut() } }
+                Button(i18n.t("common.logout")) { router.confirmLogout = true }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.fgMuted)
             }

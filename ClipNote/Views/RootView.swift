@@ -43,6 +43,9 @@ struct RootView: View {
             }
             .onAppear { consumeSharedFromAppGroup() }
             .sheet(isPresented: $router.showLogin) { LoginView() }
+            // 로그아웃 확인 — 헤더 메뉴와 설정 두 곳이 부르지만 레이어는 여기 하나뿐이다.
+            // 확인 계열은 전부 레이어로 띄운다(웹과 동일) — `ConfirmLayer` 주석 참고.
+            .sheet(isPresented: $router.confirmLogout) { logoutLayer }
             .sheet(item: $router.safari) { item in SafariView(url: item.url) }
             // 사용법 투어 — 모달로 띄워 NavigationStack 중첩(크래시)을 피한다. 첫 실행 온보딩과 동일 구조.
             .fullScreenCover(isPresented: $router.showTour) {
@@ -56,6 +59,25 @@ struct RootView: View {
         } else {
             OnboardingView { onboardingSeen = true }
         }
+    }
+
+    /// 로그아웃 확인.
+    ///
+    /// 되돌릴 수 없는 일은 아니지만, 다시 들어오려면 OAuth 를 한 번 더 거쳐야 해서 잘못
+    /// 누르면 성가시다. 본문이 "클립은 그대로 있다" 를 먼저 말하는 것도 그래서다 — 이 화면에서
+    /// 사용자가 가장 먼저 떠올리는 게 "지금 나가면 저장한 게 사라지나" 이다.
+    private var logoutLayer: some View {
+        ConfirmLayer(
+            title: i18n.t("logout.confirmTitle"),
+            message: Text(i18n.t("logout.confirmBody")),
+            confirmLabel: i18n.t("common.logout"),
+            cancelLabel: i18n.t("common.cancel"),
+            onConfirm: {
+                router.confirmLogout = false
+                Task { await auth.signOut() }
+            },
+            onCancel: { router.confirmLogout = false }
+        )
     }
 
     /// 공유 확장이 App Group에 저장한 URL이 있으면 홈 입력칸에 채운다(1회 소비).

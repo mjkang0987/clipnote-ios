@@ -19,7 +19,7 @@ struct HeaderMenu: View {
 
             if auth.loggedIn {
                 Button(i18n.t("common.settings")) { router.go(.settings) }
-                Button(i18n.t("common.logout")) { Task { await auth.signOut() } }
+                Button(i18n.t("common.logout")) { router.confirmLogout = true }
             } else {
                 Button(i18n.t("common.login")) { router.showLogin = true }
             }
