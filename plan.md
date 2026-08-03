@@ -57,6 +57,49 @@ GoogleMobileAds SDK 는 `GADApplicationIdentifier` 를 스스로 검증하고, �
 - **아무도 앱을 켜보지 않는다.** 시뮬레이터로 실행해 즉시 죽는지 보는 스모크 테스트가 없다.
   이번 건을 자동으로 잡을 수 있었던 **유일한** 검사다.
 
+### 다른 원인 가능성 — 재확인 (2026-08-03 밤, 다음 세션 인계용)
+
+**크래시 로그를 확보하지 못했다.** 그래서 "키가 유일한 원인"은 증명되지 않았다.
+아래는 그 상태에서 정적으로 훑은 결과다. **같은 것을 다시 파지 않도록 방법까지 적는다.**
+
+#### 확정
+`ADMOB_APP_ID` 와 `ADMOB_BANNER_UNIT_ID` 가 **바이트 단위로 동일**(3회 측정: 7/30 #1, 8/3 #2~#5).
+둘 다 `~` 0개 · `/` 1개 · 38자. 앱 ID 칸에 광고 단위 ID 가 들어가 있다.
+
+#### 배제한 후보
+
+| 후보 | 확인 방법 | 결과 |
+|---|---|---|
+| 포맷 문자열 크래시 | `t(key, args:)` 호출부를 카탈로그 지시자와 대조하는 스크립트로 전수 | 265개 중 불일치 **0** |
+| 환경 주입 누락 | `@Environment(X.self)` 선언 23곳 ↔ 주입 지점 대조 | `ClipsView`·`LocalClipsView` 는 `RootView` 의 `.environment(router)` 범위 안 |
+| 런치 스크린 자산 | `LaunchLogo.imageset`(1x/2x/3x png)·`LaunchBackground.colorset` 존재·형식 | 정상 |
+| 강제 언래핑 · `fatalError` | 앱 소스 전체 grep | 없음. `Config`·`LocalizationStore`·`AppLanguage`·`AuthStore` 모두 폴백 처리 |
+| SwiftData 스키마 변경 | `LocalClip.swift` 델타(`fbb386a`→`main`) | **변경 없음** → 마이그레이션 크래시 아님 |
+| 엔타이틀먼트 · App Group | 도입 커밋 추적 | `fbb386a`(정상 동작 빌드)에 이미 있었음 |
+| `AuthStore` 초기화 | 델타 확인 | 표시 문구·에러 타입만. init 경로 무변경 |
+| 앱/확장 버전 불일치 | `project.yml` | 둘 다 `1.1.0` |
+
+#### 아직 검증 못 한 것
+
+1. **의존성 버전 드리프트** — `Package.resolved` 가 커밋돼 있지 않고 `.xcodeproj` 는 gitignore 라
+   **매 빌드 최신 버전을 새로 해석한다**(`GoogleMobileAds from: 12.0.0`, `Supabase from: 2.51.0`).
+   7/24 빌드와 8/3 빌드의 SDK 버전이 다를 수 있는데 대조할 방법이 없다.
+   → 확인법: 배포 로그의 패키지 해석 구간을 두 실행에서 비교, 또는 `Package.resolved` 를 커밋해 고정.
+2. **크래시 로그 미확보** — `Exception Type` 한 줄이면 끝난다.
+   `GADInvalidInitializationException` 이면 키가 원인으로 확정, 아니면 다른 원인이 있다.
+   경로: 기기 `설정 → 개인정보 보호 및 보안 → 분석 및 개선 사항 → 분석 데이터 → ClipNote-...`
+3. **Release 구성이 한 번도 실행된 적 없다** — CI 는 Debug 만 빌드하고, Release 는 배포 때
+   한 번 만들어져 그대로 업로드된다. Debug/Release 가 갈리는 코드는 현재 `AdConfig.bannerUnitID`
+   한 곳뿐이지만, 이 사실 자체가 검증 공백이다.
+
+#### 다음 세션 판단 기준
+
+- 시크릿을 고치고 새 빌드 → **켜지면** 키가 원인으로 확정, 종료.
+- **여전히 죽으면** 크래시 로그를 반드시 확보한다. 그다음 후보는 위 1번(의존성 드리프트)이다.
+- 어느 쪽이든 키는 고쳐야 한다 — 잘못된 값인 것 자체는 로그와 무관하게 확정이다.
+
+수정 절차는 `docs/DEPLOY.md` ③④ 참고. 값은 거기에 적어 뒀다(비밀값 아님).
+
 ### 남는 교훈
 
 1번은 도구로 못 막는다 — 검사를 만들어 놓고 결과를 안 보면 없는 것과 같다. 그래서 게이트로
