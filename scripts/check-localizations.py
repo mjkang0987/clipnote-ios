@@ -289,6 +289,32 @@ def check_usage(strings: dict, errors: list[str]) -> None:
             fail(errors, f"[{key}] 카탈로그에만 있고 쓰는 곳이 없다")
 
 
+LOG_CALL = re.compile(r"\blog\.(debug|info|notice|warning|error|fault|critical|trace)\s*\(")
+
+
+def strip_log_calls(text: str) -> str:
+    """로그 호출의 인자를 검사 대상에서 뺀다.
+
+    로그는 사용자에게 도달하지 않는다 — Console.app 에서 개발자가 보는 글이다. 오히려
+    한국어로 적는 게 이 저장소의 관행이고(`AdBannerView` 의 "배너 광고 로드 요청"),
+    번역하면 사고를 쫓을 때 원문과 대조가 안 된다.
+    """
+    out = []
+    i, n = 0, len(text)
+    while i < n:
+        match = LOG_CALL.search(text, i)
+        if not match:
+            out.append(text[i:])
+            break
+        out.append(text[i:match.start()])
+        depth, j = 1, match.end()
+        while j < n and depth > 0:
+            depth += (text[j] == "(") - (text[j] == ")")
+            j += 1
+        i = j
+    return "".join(out)
+
+
 def strip_previews(text: str) -> str:
     """`#Preview { … }` 블록을 들어낸다.
 
@@ -379,7 +405,7 @@ def check_clean_files(errors: list[str]) -> None:
         if not path.exists():
             fail(errors, f"{relative} 가 없다 — CLEAN_FILES 를 고쳐야 한다")
             continue
-        text = strip_previews(strip_comments(path.read_text(encoding="utf-8")))
+        text = strip_log_calls(strip_previews(strip_comments(path.read_text(encoding="utf-8"))))
         for literal in STRING_LITERAL.findall(text):
             if not HANGUL.search(literal):
                 continue

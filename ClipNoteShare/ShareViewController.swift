@@ -1,5 +1,6 @@
 import UIKit
 import UniformTypeIdentifiers
+import os
 
 /// 공유 확장 — 다른 앱의 공유 시트에서 URL을 받는다.
 /// URL을 App Group에 저장하고 확인 레이어를 띄운다. 사용자가 "앱 열기"를 누르면
@@ -157,11 +158,8 @@ final class ShareViewController: UIViewController {
     }
 
     @objc private func openTapped() {
-        if let deepLink { openHostApp(deepLink) }
-        // 앱이 뜰 시간을 준 뒤 확장 종료(즉시 종료하면 open이 취소될 수 있음).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.extensionContext?.completeRequest(returningItems: nil)
-        }
+        guard let deepLink else { return }
+        openHostApp(deepLink)
     }
 
     @objc private func closeTapped() {
@@ -245,18 +243,51 @@ final class ShareViewController: UIViewController {
 
     /// 확장에서 호스트 앱 열기 시도(둘 다 best-effort, iOS 버전에 따라 동작 여부 다름).
     /// 어느 것도 안 되면 App Group에 저장돼 있으므로 사용자가 앱을 직접 열면 채워진다.
+    /// 호스트 앱 열기.
+    ///
+    /// **애플이 보장하는 길이 없다.** `NSExtensionContext.open(_:)` 은 문서상 Today 위젯용이고,
+    /// 공유 확장에서 되는지는 iOS 판에 달렸다. 남은 건 responder chain 을 뒤져 `openURL:` 을
+    /// 찾는 우회인데 이것도 최근 판에서는 잘 끊긴다.
+    ///
+    /// 그래서 **열지 못하는 경우를 정상 경로로 다룬다.** URL 은 이미 App Group 에 저장돼
+    /// 있으므로, 못 열어도 사용자가 앱을 직접 켜면 입력칸이 채워져 있다 — 그 사실을 알려 준다.
     private func openHostApp(_ url: URL) {
-        // 1) 확장 컨텍스트 open — iOS 버전에 따라 호스트 앱을 열어준다.
-        extensionContext?.open(url, completionHandler: nil)
-        // 2) responder-chain openURL: 우회(확장은 UIApplication.shared 사용 불가).
-        var responder: UIResponder? = self
-        let selector = sel_registerName("openURL:")
-        while let r = responder {
-            if r.responds(to: selector) {
-                r.perform(selector, with: url)
+        // 결과를 받아야 실패를 알 수 있다. 전에는 `nil` 을 넘겨 성공·실패를 모두 버렸다.
+        extensionContext?.open(url) { [weak self] opened in
+            guard let self else { return }
+            if opened {
+                Self.log.debug("호스트 앱 열기 성공(extensionContext)")
+                // 여기서 확장을 닫지 않는다. 앱이 뜨면 시스템이 알아서 걷어간다 —
+                // 전에는 0.3 초 뒤 무조건 닫아서, 진행 중이던 열기까지 함께 취소됐다.
                 return
             }
-            responder = r.next
+            Self.log.error("extensionContext.open 실패 — responder chain 으로 재시도")
+            if self.openViaResponderChain(url) { return }
+            Self.log.error("호스트 앱을 열지 못했다 — 직접 열기 안내로 전환")
+            self.showOpenFailed()
         }
     }
+
+    /// responder chain 우회. 열었으면 true.
+    private func openViaResponderChain(_ url: URL) -> Bool {
+        var responder: UIResponder? = self
+        let selector = sel_registerName("openURL:")
+        while let current = responder {
+            if current.responds(to: selector) {
+                current.perform(selector, with: url)
+                return true
+            }
+            responder = current.next
+        }
+        return false
+    }
+
+    /// 앱을 못 열었을 때. 실패를 삼키지 않고 다음 할 일을 알려 준다.
+    private func showOpenFailed() {
+        titleLabel.text = i18n.t("share.openFailedTitle")
+        bodyLabel.text = i18n.t("share.openFailedBody")
+        openButton.isHidden = true
+    }
+
+    private static let log = Logger(subsystem: "clipnote.share", category: "extension")
 }
