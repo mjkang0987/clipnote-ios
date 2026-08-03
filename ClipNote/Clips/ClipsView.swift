@@ -274,7 +274,12 @@ struct ClipsView: View {
             .font(.system(size: 14))
             .foregroundStyle(AppColor.fgMuted)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay { RunningDino() }
+            .overlay {
+                RunningDino()
+                    // 도는 사각형을 **배너 위로** 올린다. 아래쪽 면은 이미 걷지 않지만,
+                    // 양옆 벽이 바닥까지 내려와 공룡이 배너 위에 걸친 채 나타났다 사라졌다.
+                    .padding(.bottom, AdConfig.bannerHeight)
+            }
     }
 
     private var blockingOverlay: some View {

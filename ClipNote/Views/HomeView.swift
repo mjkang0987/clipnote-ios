@@ -83,7 +83,14 @@ struct HomeView: View {
         // 않아, 스크롤·입력·광고 배너 어느 것도 밀리지 않는다.
         //
         // 세이프 에어리어는 그대로 존중한다 — 노치·홈 인디케이터 밑으로 들어가면 잘린다.
-        .overlay { if vm.loading { RunningDino() } }
+        .overlay {
+            if vm.loading {
+                RunningDino()
+                    // 도는 사각형을 **배너 위로** 올린다. 아래쪽 면은 이미 걷지 않지만,
+                    // 양옆 벽이 바닥까지 내려와 공룡이 배너 위에 걸친 채 나타났다 사라졌다.
+                    .padding(.bottom, AdConfig.bannerHeight)
+            }
+        }
     }
 
     // MARK: - Sections

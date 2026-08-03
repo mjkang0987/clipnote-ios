@@ -10,9 +10,9 @@ import SwiftUI
 /// — 안쪽 여백보다 공룡이 커서, 좌우 면으로 넘어가는 순간 사라졌다. 안에서 밟으면 잘릴
 /// 일이 없다. 대신 천장 면에서는 거꾸로 매달려 걷는다.
 ///
-/// **네 면 중 한 면은 쉬어 간다.** 어느 면을 건너뛸지는 로딩이 시작될 때마다 새로 뽑는다 —
-/// 매번 같은 자리를 같은 방향으로 돌면 두 번째부터는 그냥 배경이 된다. 건너뛴 면은 공룡이
-/// 잠깐 사라졌다 반대편에서 다시 나타나는 구간이 된다.
+/// **아래쪽 면은 걷지 않는다.** 광고 배너·홈 인디케이터와 겹치는 자리라 거기 붙어 걸으면
+/// 지저분하다. 오른쪽 → 위 → 왼쪽 세 면만 돌고, 빠진 아래쪽은 공룡이 잠깐 사라졌다
+/// 반대편에서 다시 나타나는 구간이 된다.
 ///
 /// 도는 자리는 **호출부가 준 사각형**이 정한다. 그 안에서만 그려지므로 어디에 얹어도 안전하다.
 struct RunningDino: View {
@@ -49,11 +49,11 @@ struct RunningDino: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var start = Date()
 
-    /// 이번 로딩에 **건너뛸 한 면**(0=위 1=오른쪽 2=아래 3=왼쪽).
+    /// **건너뛰는 면 — 아래쪽 고정**(0=위 1=오른쪽 2=아래 3=왼쪽).
     ///
-    /// `@State` 라 뷰가 새로 생길 때 한 번만 뽑힌다. 이 뷰는 로딩 중에만 존재하므로
-    /// "로딩마다 한 번" 이 그대로 성립하고, 프레임마다 다시 뽑혀 순간이동하는 일도 없다.
-    @State private var skipped = Int.random(in: 0..<4)
+    /// 전에는 로딩마다 무작위로 뽑았는데, 아래쪽 면은 광고 배너·홈 인디케이터와 겹치는
+    /// 자리라 공룡이 거기 붙어 걸으면 지저분하다. 남는 세 면(오른쪽 → 위 → 왼쪽)만 돈다.
+    private static let skipped = 2
 
     var body: some View {
         // **`Canvas` 로 그린다. `GeometryReader` 를 쓰지 않는다.**
@@ -99,11 +99,11 @@ struct RunningDino: View {
         let frame: Int
     }
 
-    /// 반시계 방향으로 도는 세 면. 건너뛴 면 **다음**부터 이어진다.
+    /// 반시계로 도는 세 면 — 오른쪽 → 위 → 왼쪽. 건너뛴 아래쪽 면 **다음**부터 이어진다.
     ///
     /// 안에서 벽을 밟으면 발이 바깥을 향하고, 회전이 진행 방향까지 같이 뒤집는다.
     /// 그래서 도는 방향도 반시계로 맞춘다 — 아니면 뒷걸음질이 된다.
-    private var route: [Int] { (1...3).map { (skipped + 4 - $0) % 4 } }
+    private var route: [Int] { (1...3).map { (Self.skipped + 4 - $0) % 4 } }
 
     private func spot(in box: CGSize, elapsed: TimeInterval) -> Spot {
         let lengths = route.map { length(of: $0, in: box) }
