@@ -52,6 +52,15 @@ final class ShareViewController: UIViewController {
     // MARK: - UI
 
     private func buildUI() {
+        // 카드 위쪽 빈 자리(backdrop)를 눌러도 닫힌다.
+        //
+        // 그 자리는 투명해서 호스트 화면이 비치는데, 시트에서 바깥을 눌러 닫는 건 iOS 에서
+        // 몸에 밴 동작이라 아무 반응이 없으면 갇힌 것처럼 느껴진다. 카드 안쪽 탭은
+        // 그대로 흘려보내야 버튼이 계속 동작한다.
+        let backdrop = UITapGestureRecognizer(target: self, action: #selector(backdropTapped))
+        backdrop.cancelsTouchesInView = false
+        view.addGestureRecognizer(backdrop)
+
         card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 24
         card.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -134,6 +143,13 @@ final class ShareViewController: UIViewController {
     }
 
     @objc private func closeTapped() {
+        extensionContext?.completeRequest(returningItems: nil)
+    }
+
+    /// 카드 **바깥**을 눌렀을 때만 닫는다. 카드 안쪽이면 아무것도 하지 않는다 —
+    /// 제스처가 `view` 에 붙어 있어 카드 위 빈 곳을 눌러도 여기로 들어온다.
+    @objc private func backdropTapped(_ gesture: UITapGestureRecognizer) {
+        guard !card.frame.contains(gesture.location(in: view)) else { return }
         extensionContext?.completeRequest(returningItems: nil)
     }
 
