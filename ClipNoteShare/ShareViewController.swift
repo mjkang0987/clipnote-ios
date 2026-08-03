@@ -61,6 +61,13 @@ final class ShareViewController: UIViewController {
         backdrop.cancelsTouchesInView = false
         view.addGestureRecognizer(backdrop)
 
+        // 카드를 아래로 쓸어내려도 닫힌다.
+        //
+        // 시트를 내려서 닫는 건 바깥 탭과 함께 iOS 에서 몸에 밴 두 가지 동작이다. 손가락을
+        // 따라 움직여야 "닫히는 중" 이 보이므로 스와이프가 아니라 팬으로 받는다 —
+        // 스와이프는 끝난 뒤에야 알 수 있어 잡아당기다 마음을 바꿀 수가 없다.
+        card.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(cardDragged)))
+
         card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 24
         card.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -152,6 +159,34 @@ final class ShareViewController: UIViewController {
         guard !card.frame.contains(gesture.location(in: view)) else { return }
         extensionContext?.completeRequest(returningItems: nil)
     }
+
+    /// 아래로 끌어 닫기. 위로는 끌리지 않는다 — 시트가 화면 위로 뜨면 어색하다.
+    @objc private func cardDragged(_ gesture: UIPanGestureRecognizer) {
+        let dragged = max(0, gesture.translation(in: view).y)
+
+        switch gesture.state {
+        case .changed:
+            card.transform = CGAffineTransform(translationX: 0, y: dragged)
+        case .ended, .cancelled:
+            // 많이 내렸거나 빠르게 튕겼으면 닫는다. 속도를 함께 보는 건 짧고 빠른 손짓도
+            // 닫으려는 뜻이기 때문이다 — 거리만 보면 그 손짓이 무시된다.
+            let flicked = gesture.velocity(in: view).y > 800
+            guard dragged > Self.dismissDrag || flicked else {
+                UIView.animate(withDuration: 0.2) { self.card.transform = .identity }
+                return
+            }
+            UIView.animate(withDuration: 0.2) {
+                self.card.transform = CGAffineTransform(translationX: 0, y: self.card.bounds.height)
+            } completion: { [weak self] _ in
+                self?.extensionContext?.completeRequest(returningItems: nil)
+            }
+        default:
+            break
+        }
+    }
+
+    /// 이만큼 내리면 닫는다(pt). 짧게 스치는 손짓으로 닫히면 실수로 닫는 일이 생긴다.
+    private static let dismissDrag: CGFloat = 80
 
     // MARK: - URL 추출
 
