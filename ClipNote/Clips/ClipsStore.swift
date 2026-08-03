@@ -187,3 +187,61 @@ func orderedUnique(_ arr: [String]) -> [String] {
     for x in arr where seen.insert(x).inserted { out.append(x) }
     return out
 }
+
+/// 날짜 그룹 — 목록을 저장 시각으로 묶는다(웹 `groupByDate` 이식).
+struct ClipDateGroup: Identifiable {
+    let label: String
+    let clips: [UClip]
+    var id: String { label }
+}
+
+/// 날짜 그룹 라벨. **문자열 카탈로그에 넣지 않는다.**
+///
+/// 웹이 `Intl` 에 맡긴 것과 같은 이유다. 문구가 넷(오늘·어제·이번 주·이번 달)이라 사전에
+/// 넣을 수는 있지만, `2026년 7월` 같은 연월은 **형식 자체가 언어마다 다르다**
+/// (en `July 2026`, ja `2026年7月`). 형식은 사전으로 표현할 수 없어서 어차피 시스템
+/// 포매터가 필요하고, 그러면 넷도 같은 곳에 맡기는 게 일관된다.
+func clipDateGroupLabel(_ date: Date, now: Date = Date(), locale: Locale) -> String {
+    clipDateGroupLabel(date, now: now, locale: locale, formatter: relativeFormatter(locale))
+}
+
+/// 포매터를 **바깥에서 받는** 판. 목록 하나를 묶는 동안 하나만 만들어 돌려 쓴다.
+///
+/// `RelativeDateTimeFormatter` 는 만드는 비용이 있는 객체다. 클립마다 새로 만들면 로컬
+/// 상한(300개)에서 렌더 한 번에 300번을 만든다.
+private func clipDateGroupLabel(_ date: Date, now: Date, locale: Locale,
+                                formatter: RelativeDateTimeFormatter) -> String {
+    let calendar = Calendar(identifier: .gregorian)
+    let days = calendar.dateComponents([.day],
+                                       from: calendar.startOfDay(for: date),
+                                       to: calendar.startOfDay(for: now)).day ?? 0
+
+    if days <= 0 { return formatter.localizedString(from: DateComponents(day: 0)) }
+    if days == 1 { return formatter.localizedString(from: DateComponents(day: -1)) }
+    if days < 7 { return formatter.localizedString(from: DateComponents(weekOfMonth: 0)) }
+    if calendar.isDate(date, equalTo: now, toGranularity: .month) {
+        return formatter.localizedString(from: DateComponents(month: 0))
+    }
+    return date.formatted(.dateTime.year().month(.wide).locale(locale))
+}
+
+private func relativeFormatter(_ locale: Locale) -> RelativeDateTimeFormatter {
+    let formatter = RelativeDateTimeFormatter()
+    formatter.locale = locale
+    // `.named` 라야 "1일 전" 이 아니라 "오늘"·"어제" 가 나온다.
+    formatter.dateTimeStyle = .named
+    return formatter
+}
+
+/// 순서를 유지한 채 날짜로 묶는다. 목록은 이미 최신순이라 그룹도 최신순이 된다.
+func groupClipsByDate(_ clips: [UClip], now: Date = Date(), locale: Locale) -> [ClipDateGroup] {
+    let formatter = relativeFormatter(locale)
+    var order: [String] = []
+    var buckets: [String: [UClip]] = [:]
+    for clip in clips {
+        let label = clipDateGroupLabel(clip.savedAt, now: now, locale: locale, formatter: formatter)
+        if buckets[label] == nil { order.append(label) }
+        buckets[label, default: []].append(clip)
+    }
+    return order.map { ClipDateGroup(label: $0, clips: buckets[$0] ?? []) }
+}

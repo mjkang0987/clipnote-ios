@@ -77,4 +77,9 @@ struct UClip: Identifiable, Equatable {
     let tags: [String]
     let shared: Bool
     let local: Bool
+    /// 저장 시각. 목록을 날짜로 묶는 데 쓴다(웹과 같은 구성).
+    ///
+    /// DB 클립은 `createdAt`(ISO 문자열), 로컬 클립은 `savedAt` 에서 온다. 전에는 통합
+    /// 모델이 이 값을 버려서 앱만 날짜 그룹이 없었다.
+    let savedAt: Date
 }

@@ -41,6 +41,9 @@ struct ClipsView: View {
     @State private var bulkDeleteRequest: ClipCount?
     @State private var bulkBusy = false
 
+    /// 날짜 그룹 머리글은 선택 언어를 따른다 — 시스템 언어가 아니라(앱 안에서 바꿀 수 있다).
+    private var locale: Locale { Locale(identifier: i18n.language.rawValue) }
+
     var body: some View {
         Group {
             if let store {
@@ -157,8 +160,17 @@ struct ClipsView: View {
                         .foregroundStyle(AppColor.fgMuted)
                         .plainRow()
                 }
-                ForEach(store.filtered) { clip in
-                    row(clip)
+                // 저장 시각으로 묶어 머리글을 붙인다(웹과 같은 구성).
+                // 목록이 이미 최신순이라 그룹도 최신순으로 나온다.
+                ForEach(groupClipsByDate(store.filtered, locale: locale)) { group in
+                    Text(group.label)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppColor.fgMuted)
+                        .padding(.top, 8)
+                        .plainRow()
+                    ForEach(group.clips) { clip in
+                        row(clip)
+                    }
                 }
             }
             .listStyle(.plain)
