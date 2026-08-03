@@ -3,7 +3,10 @@ import Observation
 
 enum TagMode { case add, replace }
 
-/// 내 클립 목록 상태·로직. RN `app/clips.tsx` 이식. 로컬(게스트)/DB(로그인) 통합.
+/// 내 클립 목록 상태·로직. RN `app/clips.tsx` 이식.
+///
+/// 목록의 출처는 로그인 여부로 갈린다 — 게스트는 이 기기(로컬), 로그인은 계정(DB). 섞지 않는다.
+/// 로그인 상태에서 이 기기에 남은 클립은 `localOnlyCount` 로만 알리고 `LocalClipsView` 가 맡는다.
 @MainActor
 @Observable
 final class ClipsStore {
@@ -38,13 +41,21 @@ final class ClipsStore {
     /// 다시 만들게 되는 화면이라, 실패는 실패라고 말하고 다시 시도할 길을 준다.
     private(set) var loadFailed = false
 
+    /// 이 기기에만 남아 있는 클립 수. 로그인 목록 위의 진입 줄이 쓴다.
+    ///
+    /// 목록과 함께 갱신한다 — 옮기거나 지운 뒤 `reload()` 가 돌면 이 값도 따라온다.
+    /// 게스트일 때는 목록 자체가 로컬이라 0 으로 둔다(진입 줄을 띄울 이유가 없다).
+    private(set) var localOnlyCount = 0
+
     func load(loggedIn: Bool, accessToken: String?) async {
         ctx = (loggedIn, accessToken)
         guard loggedIn else {
             loadFailed = false
+            localOnlyCount = 0
             apply(localStore.all().map(UClip.init))
             return
         }
+        localOnlyCount = localStore.all().count
         let result = await api.getClips(accessToken: accessToken)
         loadFailed = result.failed
         guard !result.failed else {
@@ -53,27 +64,7 @@ final class ClipsStore {
             if clips == nil { apply([]) }
             return
         }
-        apply(merged(db: result.clips.map(UClip.init), local: localStore.all().map(UClip.init)))
-    }
-
-    /// 로그인 상태의 목록 = **서버 + 이 기기**.
-    ///
-    /// 전에는 서버 것만 보여줬다. 그러면 옮기지 않은 로컬 클립은 로그인하는 순간 볼 방법이
-    /// 없어져서, "안 옮김" 을 고를 수 있게 해 놓고 그 선택의 결과가 "안 보임" 이었다 —
-    /// 실제로는 선택지가 없는 것과 같다. 옮기기는 이제 권유일 뿐이고 안 옮겨도 잃는 게 없다.
-    ///
-    /// **로컬 클립을 서버로 올리지는 않는다.** 화면에서만 합친다.
-    ///
-    /// 같은 주소가 양쪽에 있으면 **서버 쪽만** 남긴다. 서버 사본은 slug 가 있어 공유 링크를
-    /// 만들 수 있으니 남길 쪽이 그쪽이다. 로컬 사본은 지우지 않고 가리기만 한다.
-    /// 주소 비교는 서버가 저장할 때 쓰는 규칙과 같은 정규화를 거친다(`canonicalURLKey`) —
-    /// 규칙이 다르면 같은 링크가 두 줄로 남는다.
-    private func merged(db: [UClip], local: [UClip]) -> [UClip] {
-        let onServer = Set(db.map { canonicalURLKey($0.url) })
-        let onlyLocal = local.filter { !onServer.contains(canonicalURLKey($0.url)) }
-        // 담은 시각 내림차순 한 줄로 섞는다. 로컬을 위로 몰면 최신순이 깨져
-        // "방금 담은 게 어디 갔지" 가 된다. 날짜 그룹 머리글도 그대로 살아난다.
-        return (db + onlyLocal).sorted { $0.savedAt > $1.savedAt }
+        apply(result.clips.map(UClip.init))
     }
 
     /// 목록과 그로부터 나오는 값을 함께 갱신한다. 목록은 여기서만 바뀐다.

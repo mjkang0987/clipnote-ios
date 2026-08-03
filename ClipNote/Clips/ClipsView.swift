@@ -425,24 +425,10 @@ private struct ClipRow: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.fg)
                         .lineLimit(2)
-                    HStack(spacing: 6) {
-                        Text(prettyHost(clip.url))
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppColor.fgMuted)
-                            .lineLimit(1)
-                        // 이 기기에만 있는 클립임을 알린다. 공유 링크 버튼이 없는 이유이기도 하다
-                        // (slug 가 없어 링크를 만들 수 없다).
-                        if clip.local {
-                            Text(i18n.t("clips.onThisDevice"))
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(AppColor.fgMuted)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(AppColor.surface)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(AppColor.border, lineWidth: 0.5))
-                                .fixedSize()
-                        }
-                    }
+                    Text(prettyHost(clip.url))
+                        .font(.system(size: 13))
+                        .foregroundStyle(AppColor.fgMuted)
+                        .lineLimit(1)
                     if !clip.tags.isEmpty {
                         HStack(spacing: 4) {
                             ForEach(clip.tags, id: \.self) { TagChip(text: $0, small: true) }

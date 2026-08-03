@@ -141,6 +141,33 @@ final class ClipsStubURLProtocol: URLProtocol, @unchecked Sendable {
         #expect(ok == true)
     }
 
+    /// 로그인 목록은 **계정 클립만** 보여 주고, 이 기기 클립은 개수로만 알린다.
+    ///
+    /// 한 목록에 섞었다가 되돌린 자리다. 섞으면 공유 링크를 만들 수 없는 줄이 만들 수 있는 줄과
+    /// 나란히 서서 눌러 보고 나서야 안 되는 걸 알게 된다. 대신 목록 위에 ‘이 기기에 남은 클립
+    /// n개’ 진입 줄을 세우고 `LocalClipsView` 로 보낸다 — 그 줄이 쓰는 값이 `localOnlyCount` 다.
+    @Test func loggedInListIsAccountOnlyAndCountsLocal() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://only-local.com", title: "L", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        ClipsStubURLProtocol.handler = { _ in
+            (200, #"{"loggedIn":true,"clips":[{"slug":"s1","url":"https://x.com","title":"T","description":null,"image":null,"siteName":null,"gradient":"grape","tags":[],"saved":true,"shared":false,"createdAt":"2026-01-01T00:00:00Z"}]}"#.data(using: .utf8)!)
+        }
+        await store.load(loggedIn: true, accessToken: "tok")
+        #expect(store.clips?.map(\.id) == ["s1"])
+        #expect(store.localOnlyCount == 1)
+    }
+
+    /// 게스트 목록은 그 자체가 로컬이라 진입 줄이 설 이유가 없다 — 같은 클립을 두 번 세게 된다.
+    @Test func guestLoadKeepsLocalCountAtZero() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://a.com", title: "A", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        await store.load(loggedIn: false, accessToken: nil)
+        #expect(store.clips?.count == 1)
+        #expect(store.localOnlyCount == 0)
+    }
+
     @Test func clipsRefreshEmitFiresObserver() {
         final class Box: @unchecked Sendable { var fired = false }
         let box = Box()
