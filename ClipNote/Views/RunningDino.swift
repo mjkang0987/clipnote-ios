@@ -37,6 +37,13 @@ struct RunningDino: View {
     private static let height: CGFloat = 34
     private static let width: CGFloat = 34 * 47 / 45
 
+    /// 코너를 넘는 동안 지나가는 거리(pt). 코너 앞뒤로 절반씩 걸친다.
+    private static let turnSpan: CGFloat = 30
+    /// 도약 높이(pt). 벽에서 떨어지는 쪽, 즉 상자 안쪽으로 뛴다.
+    private static let jumpHeight: CGFloat = 12
+    /// 뛰는 동안 고정할 프레임(0부터). 다리가 벌어진 자세라 도약으로 읽힌다.
+    private static let leapFrame = 1
+
     /// 시스템 "동작 줄이기" 가 켜져 있으면 움직이지 않는다 — 전정기관 장애가 있는 사용자에게
     /// 화면을 가로지르는 반복 운동은 불편을 준다. 공룡은 그대로 두고 멈춰 세운다.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -111,25 +118,82 @@ struct RunningDino: View {
         // 멈춰 세울 때는 첫 면 한가운데에 세운다 — 모서리에 걸치면 잘린 것처럼 보인다.
         let distance = reduceMotion ? lengths[0] / 2 : total * CGFloat(progress)
 
-        var walked = distance
+        let step = Self.stride / Double(Self.frameCount)
+        let walking = stand(at: distance, in: box, lengths: lengths)
+        let frame = reduceMotion ? 0 : Int(Double(distance) / step) % Self.frameCount
+
+        guard !reduceMotion,
+              let turn = turn(at: distance, in: box, lengths: lengths) else {
+            return Spot(center: walking.center, angle: walking.angle, frame: frame)
+        }
+        return turn
+    }
+
+    /// 코너를 넘는 동작. 코너 근처가 아니면 nil.
+    ///
+    /// 전에는 면이 바뀌는 순간 각도가 90° 툭 꺾였다. 걷다가 몸만 홱 돌아가니 벽을 타는
+    /// 것보다 순간이동에 가까웠다. 코너 앞뒤 구간을 하나의 도약으로 묶는다 — 벽에서 떨어져
+    /// 나오면서 돌고, 다음 벽에 착지한다.
+    private func turn(at distance: CGFloat, in box: CGSize, lengths: [CGFloat]) -> Spot? {
+        // 짧은 면에서 도약 구간이 면보다 길면 앞뒤 코너가 겹친다.
+        let span = min(Self.turnSpan, (lengths.min() ?? 0))
+        guard span > 0 else { return nil }
+
+        // 건너뛰는 면 쪽 이음매(경로의 처음·끝)에서는 돌지 않는다 — 거기서는 공룡이
+        // 사라졌다 반대편에서 나타난다. 도는 건 경로 안쪽 두 코너뿐이다.
+        var corner: CGFloat = 0
+        for index in 0..<(lengths.count - 1) {
+            corner += lengths[index]
+            let entered = distance - (corner - span / 2)
+            guard entered >= 0, entered <= span else { continue }
+
+            let progress = Double(entered / span)
+            let before = stand(at: corner - span / 2, in: box, lengths: lengths)
+            let after = stand(at: corner + span / 2, in: box, lengths: lengths)
+
+            // 두 벽의 안쪽 방향을 합치면 코너에서 상자 안을 향하는 대각선이 된다.
+            let a = inward(of: route[index])
+            let b = inward(of: route[index + 1])
+            let lift = normalized(CGVector(dx: a.dx + b.dx, dy: a.dy + b.dy))
+            let height = CGFloat(sin(progress * .pi)) * Self.jumpHeight
+
+            let x = before.center.x + (after.center.x - before.center.x) * CGFloat(progress)
+            let y = before.center.y + (after.center.y - before.center.y) * CGFloat(progress)
+            return Spot(
+                center: CGPoint(x: x + lift.dx * height, y: y + lift.dy * height),
+                // 반시계로 도니 각도는 항상 90° 줄어든다. 사이를 이어서 몸이 따라 돌게 한다.
+                angle: before.angle - 90 * progress,
+                frame: Self.leapFrame
+            )
+        }
+        return nil
+    }
+
+    /// 그 거리에서 **걸어가고 있을 때**의 자리와 각도.
+    private func stand(at distance: CGFloat, in box: CGSize, lengths: [CGFloat]) -> Spot {
+        var walked = max(0, distance)
         var index = 0
         while index < lengths.count - 1, walked >= lengths[index] {
             walked -= lengths[index]
             index += 1
         }
-
         let side = route[index]
         let edge = point(on: side, at: min(walked, lengths[index]), in: box)
         let into = inward(of: side)
         // 발이 벽에 닿도록 그림의 중심을 안쪽으로 반 칸 민다. 스프라이트는 아랫변이 곧 발바닥이다.
         let standoff = Self.height / 2
-        let step = Self.stride / Double(Self.frameCount)
         return Spot(
             center: CGPoint(x: edge.x + into.dx * standoff, y: edge.y + into.dy * standoff),
             // 180° 를 더해 발이 바깥(벽)을 향하게 한다. 천장 면에서는 거꾸로 매달린다.
             angle: Double(side) * 90 + 180,
-            frame: reduceMotion ? 0 : Int(Double(distance) / step) % Self.frameCount
+            frame: 0
         )
+    }
+
+    private func normalized(_ v: CGVector) -> CGVector {
+        let length = (v.dx * v.dx + v.dy * v.dy).squareRoot()
+        guard length > 0 else { return v }
+        return CGVector(dx: v.dx / length, dy: v.dy / length)
     }
 
     private func length(of side: Int, in box: CGSize) -> CGFloat {
