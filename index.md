@@ -42,7 +42,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Views/EditClipModal·ShareResultModal·TagApplyModal.swift` | 편집·공유결과·태그일괄 모달 |
 | `Views/ConfirmLayer.swift` | 공용 확인 레이어(제목·본문·확인/취소) + `emphasized()` 강조 텍스트. 웹 `ModalShell` 대응 — 확인 계열은 액션 시트가 아니라 레이어로 띄운다 |
 | `Views/SpinnerLabel.swift` | 공용 인라인 로딩 스피너 라벨 |
-| `Views/RunningDino.swift` | 메타 추출 대기 중 뛰어가는 🦖. 동작 줄이기 설정 존중 |
+| `Views/RunningDino.swift` | 로딩 중 **화면 가장자리 안쪽을 걸어 다니는** 도트 공룡(4프레임, `Canvas`). 네 면 중 한 면은 건너뛰고 코너는 점프로 돈다. 동작 줄이기 설정 존중 |
 | `Views/SpotlightTour.swift` | 온보딩 스포트라이트 투어(앵커·오버레이·역마스크·`ClipsPreviewMock`) |
 | `Views/AppRouter.swift` | 내비게이션 상태(@Observable): path·로그인·Safari |
 | `Views/HeaderMenu.swift` | 공통 좌측 메뉴(이동·로그인/로그아웃/회원탈퇴·개인정보) |

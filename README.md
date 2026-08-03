@@ -67,6 +67,23 @@ git restore Shared/Localization/Localizable.xcstrings
 git pull origin develop && xcodegen generate
 ```
 
+## 자산
+
+앱에 실리는 이미지는 `ClipNote/Assets.xcassets`. 작업용 원본은 `art/` 에 두는데, 이쪽은
+`project.yml` 의 소스 경로(`ClipNote`·`Shared`) 밖이라 **번들에 들어가지 않는다.**
+
+로딩 공룡 스프라이트는 원본 시트에서 만들어 낸다.
+
+```bash
+pip install Pillow
+python3 scripts/slice-dino.py            # art/dino.png → DinoRun{1..4}.imageset
+python3 scripts/slice-dino.py --report   # 무엇을 찾았는지만 출력
+```
+
+`Contents.json` 은 **Xcode 형식**(구분자 `" : "`)으로 쓴다. 표준 JSON 으로 두면 Xcode 가
+자산 카탈로그를 열 때마다 고쳐 써서, 문자열 카탈로그와 똑같이 `git pull` 이 막힌다.
+자산을 손으로 추가할 때도 같은 형식을 지킬 것.
+
 ## 브랜치
 
 `main`(배포) ← `develop`(통합) ← `feature/*`.
