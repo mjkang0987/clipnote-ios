@@ -49,13 +49,25 @@ struct ClipDateGroupTests {
     }
 
     /// 선택 언어를 따른다. 시스템 언어를 따라가면 앱 안에서 언어를 바꿔도 머리글만 안 바뀐다.
+    ///
+    /// **네 언어가 모두 다르길 기대하지 않는다.** 일본어와 중국어 간체는 연월 형식이 같아
+    /// (`2026年3月`) 값이 겹친다 — 그건 정상이다. 확인해야 하는 건 "언어를 바꾸면 값이
+    /// 바뀐다" 이지 "네 값이 서로 다르다" 가 아니다.
     @Test func followsSelectedLanguage() {
         let now = date(2026, 8, 3)
-        let old = date(2026, 3, 5)
-        let labels = ["ko", "en", "ja", "zh-Hans"].map {
-            clipDateGroupLabel(old, now: now, locale: Locale(identifier: $0))
+        let labels: (Date) -> [String] = { when in
+            ["ko", "en", "ja", "zh-Hans"].map {
+                clipDateGroupLabel(when, now: now, locale: Locale(identifier: $0))
+            }
         }
-        #expect(Set(labels).count == labels.count, "언어별로 같은 값이 나온다: \(labels)")
+        // 잡아야 하는 회귀는 "로케일이 무시돼 전부 한 언어로 나온다" 이다. 어느 두 언어가
+        // 우연히 같은지까지 못 박으면(방금 그래서 깨졌다) 시스템 문구가 바뀔 때 또 깨진다.
+        for when in [now, date(2026, 3, 5)] {
+            let values = labels(when)
+            #expect(values.allSatisfy { !$0.isEmpty })
+            #expect(Set(values).count > 1, "로케일이 무시된다: \(values)")
+            #expect(values[0] != values[1], "한국어와 영어가 같다: \(values)")
+        }
     }
 
     /// 묶어도 순서와 개수가 보존되는지. 목록이 최신순이면 그룹도 최신순이어야 한다.
