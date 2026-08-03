@@ -64,7 +64,7 @@ ADMOB_BANNER_UNIT_ID = ca-app-pub-3019917862455282/6008671423
 **앱 ID 칸에 광고 단위 ID 를 넣으면 앱이 실행 즉시 죽는다** — GoogleMobileAds SDK 가
 `GADApplicationIdentifier` 를 스스로 검증하고, 유효하지 않으면
 `GADInvalidInitializationException` 으로 앱을 종료시킨다. 실제로 그렇게 배포된 적이 있다
-(2026-08-03, `plan.md` 사후 기록 참고).
+(2026-08-03, `plan.md` "진행 중 — 1.1.0 배포 크래시" 절 참고).
 
 ### ④ ADMOB_APP_ID (선택 — 한 줄만 고칠 때)
 `SECRETS_XCCONFIG` 는 6줄을 한 덩어리로 담아서, 앱 ID 한 줄을 고치려 해도 전부를 알아야 한다.

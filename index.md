@@ -109,7 +109,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 - **🔴 1.1.0 배포 상태(2026-08-03)**: TestFlight 업로드는 성공했으나 **그 빌드는 실행 즉시 죽는다.**
   `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 에 광고 단위 ID 가 들어가 있어 GoogleMobileAds SDK 가
   앱을 종료시킨다. **시크릿을 고치고 다시 빌드해야 한다** — 코드 수정으로는 못 막는다
-  (형식만 맞으면 SDK 가 자체 검증에서 거부한다). 경위·재발 방지는 `plan.md` 사후 기록 참고.
+  (형식만 맞으면 SDK 가 자체 검증에서 거부한다). 경위·재발 방지는 `plan.md` "진행 중 — 1.1.0 배포 크래시" 절 참고.
   - 배포에 검증 게이트가 걸려 있어, 시크릿이 정상화되기 전에는 빌드가 만들어지지 않는다.
   - `ADMOB_APP_ID` 를 **별도 시크릿**으로 넣으면 6줄 덩어리를 덮어쓰지 않고 고칠 수 있다
     (`docs/DEPLOY.md` ④). 정상화 후에는 그 시크릿을 지우고 `SECRETS_XCCONFIG` 를 정본으로 되돌린다.
