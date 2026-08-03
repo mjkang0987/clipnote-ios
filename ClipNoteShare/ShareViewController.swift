@@ -68,9 +68,10 @@ final class ShareViewController: UIViewController {
         // 제스처를 backdrop **에** 붙인다. 카드는 이 위에 얹히므로 카드 안쪽 탭은 여기까지
         // 내려오지 않는다 — 좌표를 비교해 걸러낼 필요가 없다.
         //
-        // 색은 채우지 않는다. 터치 판정은 배경색과 무관하고 `alpha`·`isUserInteractionEnabled`
-        // 만 본다. 호스트 화면이 그대로 비치는 편이 "위에 잠깐 뜬 카드" 로 읽힌다.
-        backdrop.backgroundColor = .clear
+        // **색을 채워 둔다.** 문서상 히트 테스트는 배경색을 보지 않지만, 색을 빼자 바깥 탭이
+        // 다시 먹지 않았다 — 확장이 시스템 컨테이너 안에서 도는 환경이라 문서대로만 굴러가지
+        // 않는다. 되는 쪽을 택한다. 옅게 하고 싶으면 이 값만 낮추고 **반드시 눌러서 확인**할 것.
+        backdrop.backgroundColor = UIColor.black.withAlphaComponent(0.25)
         backdrop.translatesAutoresizingMaskIntoConstraints = false
         backdrop.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(backdropTapped)))
