@@ -23,22 +23,33 @@
 ## Development Workflow
 - **작업 계획 수립:** 모든 작업을 시작하기 전 `plan.md`를 작성할 것. 요구사항, 구현 방식, 영향받는 파일,
   예상 결과를 기록하고 검토가 끝난 후 코드를 수정할 것. (개발 중 범위가 변경되면 `plan.md` 즉시 업데이트)
-- **작업 분할 및 브랜치 생성:** 작업 요청 시 가장 작은 단위의 이슈로 나누고, `develop` **최신본을 기준으로**
-  개별 `feature` 브랜치를 생성하여 시작할 것. (운영 긴급 버그 수정 시에만 예외적으로 `main`에서 파생)
+- **작업 분할 및 브랜치 생성:** 작업 요청 시 가장 작은 단위의 이슈로 나누고, **`main` 최신본을 기준으로**
+  개별 `feature` 브랜치를 생성하여 시작할 것.
+  > **왜 `develop`이 아니라 `main`인가** — feature를 `main`에 개별로 올리는 구조에서 `develop`을 기준으로 따면,
+  > 검증한 조합(`develop` = 내 것 + 남의 미출시분)과 배포되는 조합(`main` + 내 것)이 **달라진다.**
+  > 남의 미출시 변경에 기대는 코드를 짜도 `develop`에선 통과하고 `main`에서만 깨진다.
+  > `main`에서 따면 브랜치가 빌드하는 조합이 곧 배포될 조합이라 이 구멍이 닫힌다.
+  > (웹 `clipnote`·`tas` 저장소와 동일 규약)
 - **Feature 검증 사이클:** `작업` > `코드리뷰` > `개선` > `검증` > `수정작업` > `코드리뷰` > `개선` > `검증`
-  — 이 프로세스를 `feature` 브랜치 내에서 완벽히 완료할 것. 리뷰를 건너뛰고 푸시하지 않는다.
-- **Dev 병합 및 2차 검증:** 단일 `feature` 검증이 끝나면 `develop` 브랜치에 머지 + 푸시할 것.
-  `develop` 에서도 동일한 사이클을 거쳐 통합 부작용을 해결할 것.
-- **Main 배포:** `develop` 진행이 완료되면 PR을 생성하고 `main` 머지를 **요청**할 것.
+  — 이 프로세스를 `feature` 브랜치 내에서 **완벽히 완료**할 것. 리뷰를 건너뛰고 푸시하지 않는다. **검증은 여기서 끝난다.**
+- **Main 재동기화 (필수):** PR 직전 `origin/main`을 병합하고 **검증을 다시 통과**시킬 것.
+  브랜치를 딴 뒤 `main`이 움직였으면 검증 기준이 낡은 것이다. **이 단계가 이 워크플로의 안전핀이다.**
+- **Main 배포:** feature 브랜치에서 `main`으로 PR을 생성하고 머지를 **요청**할 것.
   지시자의 명시적 승인 없이 `main`에 머지하지 않는다.
-- **버전 펌핑:** PR 머지 시 변경 규모(Patch / Minor / Major)를 판단하여 버전을 올릴 것. (iOS: `project.yml` 의 `MARKETING_VERSION`)
+  > **왜 자동 머지가 없나** — `main` 푸시가 곧 `deploy.yml` → **TestFlight 업로드**다.
+  > 웹은 잘못 나가도 다시 배포하면 되지만, **TestFlight 빌드는 되돌릴 수 없다.**
+- **버전 펌핑:** PR 머지 시 변경 규모(Patch / Minor / Major)를 판단하여 올릴 것.
+  **세 곳을 함께 고친다** — `project.yml` 의 `MARKETING_VERSION`, 그리고 **앱·확장 두 타깃의
+  `info.properties` 안 `CFBundleShortVersionString`**. 빌드 세팅만 고치면 화면에 안 나온다
+  (XcodeGen 이 Info.plist 에 기본값 `"1.0"` 을 리터럴로 써넣어 덮이지 않는다).
+  빌드번호(`CFBundleVersion`)는 fastlane 이 TestFlight 최신+1 로 계산하므로 손대지 않는다.
 
 ## Work Request Flow (업무 처리 절차)
 > 사용자가 업무를 요청하면 아래 순서를 따른다.
 
 **세부 규약:**
-- **이슈당 브랜치 · 이슈당 PR.** 브랜치명 `feature/<짧은슬러그>`(또는 `claude/issue-<번호>-<슬러그>`), `develop`에서 분기·`develop`으로 머지. 한 번에 한 이슈.
-- **`develop` 까지만 자동 진행.** 검증·리뷰가 그린이면 `develop` 에 머지. `main` 머지는 지시자의 명시적 승인이 있을 때만.
+- **이슈당 브랜치 · 이슈당 PR.** 브랜치명 `feature/<짧은슬러그>`(또는 `claude/issue-<번호>-<슬러그>`), **`main`에서 분기 · `main`으로 PR**. `main`엔 직접 작업하지 않는다(항상 브랜치 경유). 한 번에 한 이슈.
+- **PR 생성까지만 자동 진행.** 검증·리뷰·CI 가 그린이면 PR 을 열어 두고 보고한다. **`main` 머지는 지시자의 명시적 승인이 있을 때만** — 머지가 곧 TestFlight 업로드다.
 - **라벨**: `feature`/`fix`/`chore`/`refactor`/`docs`(없으면 생성). 하위 3개 이상이면 에픽+서브이슈.
 - **검증 범위**: 항상 빌드(`xcodebuild build`). 로직 변경은 테스트(`xcodebuild test`)까지.
 
@@ -49,10 +60,13 @@
 5. **코드리뷰** — `/code-review`로 diff 리뷰.
    1. **리팩토링** — 지적 반영 + `/simplify`.
 6. **재검증** — 리팩토링 후 다시 빌드/테스트.
-7. **PR 생성** — 본문에 `Closes #<이슈>`. PR 생성 시 자동 CI(`.github/workflows/pr-review.yml`, macOS 빌드)가 실행된다.
+6. 1. **Main 재동기화(필수)** — `origin/main` 을 병합하고 **4~6을 다시 통과**시킨다.
+7. **PR 생성** — base 는 **`main`**, 본문에 `Closes #<이슈>`. PR 생성 시 자동 CI(`.github/workflows/pr-review.yml`, macOS 빌드)가 실행된다.
 8. **코드 검증** — PR 상태에서 CI(빌드) 결과 확인. 지적이 있으면 4~6 반복.
-9. **머지** — 그린이면 `develop`으로 머지(`main` 머지는 지시자 승인 후). 이슈 자동 종료, `index.md`·`plan.md` 갱신.
-10. **릴리스·배포** — App Store/TestFlight 배포는 수동(Xcode Archive 또는 fastlane). 릴리스 시 `project.yml` 버전 범프.
+9. **머지** — 그린이고 **지시자 승인이 있으면** `main` 으로 머지. 이슈 자동 종료, `index.md`·`plan.md` 갱신.
+10. **릴리스·배포** — `main` 푸시 시 `deploy.yml` 이 fastlane 으로 **TestFlight 자동 업로드**(문서만 바뀐 머지는 제외).
+    배포 전에 `scripts/check-secrets.sh` 가 시크릿을 검증해, 깨져 있으면 빌드가 만들어지지 않는다.
+    App Store 심사 제출은 App Store Connect 에서 **수동**.
 
 ## iOS/Swift Standards
 - **컴포넌트 재사용 우선:** 기존에 구현된 컴포넌트 재사용을 최우선 기준으로 삼을 것.
