@@ -114,8 +114,9 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - **재발 방지 3중**: 배포 전 시크릿 검증 게이트(`deploy.yml`) · `check-secrets.sh` 형태 검사
     (길이·구분자 개수·두 ID 동일 여부) · `AdConfig.enabled` 가 두 ID 를 모두 확인해 값이 이상하면
     광고만 끄고 앱은 산다.
-  - **아직 안 고친 것**: CI 가 Release 를 빌드하지 않는다(`-configuration` 없음). 앱을 한 번
-    켜 보는 스모크 테스트도 없다 — 이번 건을 자동으로 잡을 수 있었던 유일한 검사다.
+  - **아직 안 고친 것**: CI 가 Release 를 빌드하지 않는다(`-configuration` 없음). **CI 가 앱을
+    실행해 보는 자동 스모크 테스트도 없다** — 구동 확인이 사람 손에만 달려 있다. 이번 건도
+    사람이 실기기에서 켜서 잡았고, CI 는 끝까지 그린이었다. 자동으로 잡을 수 있었던 유일한 검사다.
 - **App Store 제출 준비(2026-08-04, `795612b`)**: 스토어 목록 정보를 저장소에서 관리한다.
   `fastlane/metadata/{ko,en-US,ja,zh-Hans}/` 에 부제·설명·키워드·프로모션 문구·URL 3종,
   `fastlane metadata` 레인이 ASC 에 올린다(바이너리·스크린샷·심사 제출은 하지 않는다).
