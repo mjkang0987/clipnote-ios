@@ -98,8 +98,7 @@ platform :ios do
       api_key: api_key,
       skip_binary_upload: true,
       skip_screenshots: true,
-      submit_for_review: false,
-      precheck_include_in_app_purchases: false
+      submit_for_review: false
     )
   end
 end

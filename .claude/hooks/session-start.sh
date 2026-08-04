@@ -38,16 +38,12 @@ do
   git clone --depth 1 --filter=blob:none --sparse -q "$url" "$repo" 2>/dev/null || continue
   git -C "$repo" sparse-checkout set "$path" >/dev/null 2>&1 || continue
 
-  if [ -f "$repo/$path/SKILL.md" ]; then
-    dirs="$repo/$path"
-  else
-    dirs=$(echo "$repo/$path"/*/)
-  fi
-
-  for d in $dirs; do
+  # 경로가 스킬 하나든 스킬 여럿을 담은 디렉터리든 SKILL.md 를 찾아 그 부모를 쓴다.
+  find "$repo/$path" -maxdepth 2 -name SKILL.md -print0 2>/dev/null | while IFS= read -r -d '' f; do
+    d=$(dirname "$f")
     name=$(basename "$d")
     # 이미 있으면 건드리지 않는다 — 계정에서 동기화된 같은 이름을 덮어쓰지 않기 위해서다.
-    [ -f "$d/SKILL.md" ] && [ ! -e "$DST/$name" ] && cp -r "$d" "$DST/$name"
+    [ -e "$DST/$name" ] || cp -r "$d" "$DST/$name"
   done
 done
 
