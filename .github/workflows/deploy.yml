@@ -15,7 +15,6 @@ on:
     paths-ignore:
       - "**/*.md"
       - "fastlane/metadata/**"
-      - ".claude/**"
   workflow_dispatch:
 
 # 배포를 직렬화 — 짧은 간격의 두 머지가 같은 빌드번호(TestFlight 최신+1)를 계산해
