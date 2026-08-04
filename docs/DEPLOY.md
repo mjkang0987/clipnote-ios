@@ -93,3 +93,35 @@ ADMOB_BANNER_UNIT_ID = ca-app-pub-3019917862455282/6008671423
 - 첫 실행 때 `match`가 **새 Apple Distribution 인증서**를 만든다(계정당 개수 제한 있음 — 부족하면 콘솔에서 오래된 것 정리).
 - `MATCH_PASSWORD`를 잃어버리면 `match-storage`의 서명 파일을 복호화 못 한다 → 안전하게 보관.
 - 심사 제출(정식 출시)은 이 파이프라인이 아니라 App Store Connect에서 수동으로 진행.
+
+---
+
+## App Store 심사 제출
+
+### 목록 정보 올리기 (`fastlane metadata`)
+
+부제·설명·키워드·프로모션 문구·URL 3종을 `fastlane/metadata/{ko,en-US,ja,zh-Hans}/` 에서 관리한다.
+
+```bash
+ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=<base64> bundle exec fastlane metadata
+```
+
+- **ASC 의 현재 값을 덮어쓴다.** 처음 올리기 전에 `bundle exec fastlane deliver download_metadata`.
+- 바이너리·스크린샷·심사 제출은 하지 않는다.
+- `name.txt`·`*_category.txt` 는 **일부러 두지 않았다** — 없는 파일은 건드리지 않으므로
+  앱 이름과 카테고리는 ASC 값이 유지된다. 바꾸려면 그때 파일을 만든다.
+
+### 사람이 ASC 에서 해야 하는 것
+
+`fastlane metadata` 가 못 채우는 것만 남는다. 위에서부터 순서대로.
+
+1. **스크린샷** — 맥에서 시뮬레이터로 찍는다. 6.9"·6.5" 는 필수.
+2. **카테고리·연령등급** — 앱 정보 화면.
+3. **App Privacy 설문** — AdMob 을 실은 상태에 맞춰 답한다. `PrivacyInfo.xcprivacy` 는
+   광고 도입 전 상태(`NSPrivacyTracking: false`, 추적 도메인 없음)라 설문 답과 어긋나지 않는지 본다.
+4. **수출 규정** — 암호화 사용 여부 신고.
+5. **빌드 선택 → 심사 제출.**
+
+> **제출 전 실기기에서 앱이 켜지는지 반드시 확인한다.** 1.1.0 이 실행 즉시 죽는 채로
+> TestFlight 에 올라간 적이 있다(`plan.md` 크래시 절). 죽는 빌드를 제출하면 리젝이고
+> 심사 사이클을 한 번 태운다.

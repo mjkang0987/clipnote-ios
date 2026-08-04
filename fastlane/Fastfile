@@ -76,4 +76,29 @@ platform :ios do
       changelog: notes
     )
   end
+
+  desc "App Store 목록 정보 업로드 — fastlane/metadata 의 4개 언어를 ASC 에 올린다. 바이너리·스크린샷·심사 제출은 하지 않는다."
+  lane :metadata do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_P8"],
+      is_key_content_base64: true
+    )
+
+    # ⚠️ **ASC 의 현재 목록 정보를 덮어쓴다.** 처음 올리기 전에
+    # `bundle exec fastlane deliver download_metadata` 로 현재 값을 받아 두는 것을 권한다.
+    #
+    # 없는 파일은 건드리지 않는다 — `name.txt`·`*_category.txt` 를 일부러 두지 않아
+    # 앱 이름과 카테고리는 ASC 값이 유지된다.
+    #
+    # 심사 제출은 사람이 ASC 에서 누른다. 되돌릴 수 없고, 죽는 빌드를 제출하면
+    # 심사 사이클을 한 번 태운다.
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: false
+    )
+  end
 end
