@@ -42,9 +42,45 @@ API_BASE = https:/$()/clipnote.co.kr
 SUPABASE_URL = https://<프로젝트>.supabase.co
 SUPABASE_ANON_KEY = <Supabase 대시보드 anon key>
 NAVER_CLIENT_ID = <네이버 개발자센터>
-ADMOB_APP_ID = <AdMob 콘솔 App ID>
-ADMOB_BANNER_UNIT_ID = <AdMob 콘솔 배너 unit ID>
+ADMOB_APP_ID = ca-app-pub-3019917862455282~9380940221
+ADMOB_BANNER_UNIT_ID = ca-app-pub-3019917862455282/6008671423
 ```
+
+> ⚠️ **이 시크릿은 되읽을 수 없고 전체 덮어쓰기만 된다.** 한 줄만 고치려 해도 6줄을 다
+> 손에 들고 있어야 한다. 준비 없이 Update 를 누르면 나머지 5줄을 잃는다.
+
+**AdMob ID 두 개는 비밀값이 아니다.** 앱 ID 는 앱 바이너리의 `Info.plist` 에 그대로 실려
+나가고, 퍼블리셔 ID 는 이미 `clipnote.co.kr/app-ads.txt` 로 공개돼 있다. 그래서 여기에
+실제 값을 적어 둔다 — 복구할 때 콘솔을 뒤지지 않아도 되게. **나머지 네 줄은 적지 않는다.**
+
+**두 ID 는 생김새가 거의 같다. 구분자 하나만 다르다.**
+
+| | 구분자 | 어디서 | 길이 |
+|---|---|---|---|
+| `ADMOB_APP_ID` | **`~`** (물결) | AdMob → 앱 → ClipNote → **앱 설정** | 38자 |
+| `ADMOB_BANNER_UNIT_ID` | **`/`** (슬래시) | AdMob → **광고 단위** | 38자 |
+
+둘 다 `ca-app-pub-` 로 시작하고 길이도 같아서 화면만 보고는 구분되지 않는다.
+**앱 ID 칸에 광고 단위 ID 를 넣으면 앱이 실행 즉시 죽는다** — GoogleMobileAds SDK 가
+`GADApplicationIdentifier` 를 스스로 검증하고, 유효하지 않으면
+`GADInvalidInitializationException` 으로 앱을 종료시킨다. 실제로 그렇게 배포된 적이 있다
+(2026-08-03, `plan.md` "진행 중 — 1.1.0 배포 크래시" 절 참고).
+
+### ④ ADMOB_APP_ID (선택 — 한 줄만 고칠 때)
+`SECRETS_XCCONFIG` 는 6줄을 한 덩어리로 담아서, 앱 ID 한 줄을 고치려 해도 전부를 알아야 한다.
+`ADMOB_APP_ID` 라는 **별도 시크릿**이 있으면 배포·검증 워크플로가 그 값을 파일 끝에 덧붙여
+덮어쓴다(xcconfig 는 뒤에 온 정의가 이긴다). 나머지 5줄을 건드리지 않고 앱 ID 만 고칠 수 있다.
+
+- 값을 **정상화한 뒤에는 이 시크릿을 지우고** `SECRETS_XCCONFIG` 를 정본으로 되돌린다.
+  같은 설정의 출처가 둘로 남으면, 나중에 `SECRETS_XCCONFIG` 를 고쳐도 이쪽이 조용히 이긴다.
+- 없으면 아무 동작도 하지 않는다(기존 동작 그대로).
+
+### 검증 — 배포 전에 자동으로 막힌다
+`Deploy TestFlight` 는 빌드 전에 `scripts/check-secrets.sh` 를 돌린다. 시크릿이 비었거나
+형식이 깨졌으면 **빌드 자체가 만들어지지 않는다.** 배포 없이 확인만 하려면
+`Actions → Secrets Check → Run workflow`.
+
+값은 절대 로그에 찍지 않는다(공개 저장소) — 존재 여부·형식·길이·구분자 개수만 판정한다.
 
 ---
 

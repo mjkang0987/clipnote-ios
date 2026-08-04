@@ -19,8 +19,12 @@ if [ ! -f "$FILE" ]; then
 fi
 
 # `KEY = value` 에서 값만 뽑는다(앞뒤 공백 제거). 값은 변수에만 담고 출력하지 않는다.
+#
+# **마지막 정의를 읽는다(`tail -1`).** xcconfig 는 같은 키가 여러 번 나오면 뒤가 이긴다.
+# 워크플로가 `ADMOB_APP_ID` 별도 시크릿을 파일 끝에 덧붙여 덮어쓰므로, 첫 줄을 읽으면
+# 덮어쓰기 전 값을 검사하게 된다 — 검사와 빌드가 서로 다른 값을 보는 셈이다.
 value_of() {
-  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$FILE" | head -1 | sed 's/[[:space:]]*$//'
+  sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$FILE" | tail -1 | sed 's/[[:space:]]*$//'
 }
 
 # 구글 공식 테스트 퍼블리셔 — 실배포에 들어가면 실광고가 절대 붙지 않는다.
@@ -42,6 +46,16 @@ require() {
 }
 
 echo "SECRETS_XCCONFIG 검증"
+
+# 키 개수를 먼저 센다. **복구가 일부만 된 경우를 잡기 위해서다** —
+# GitHub Secret 은 전체 덮어쓰기만 되고 되읽을 수 없어서, 손으로 복원하면 몇 줄이
+# 빠진 채 올라가기 쉽다. 개별 키 검사는 그 뒤에 이어진다. 값은 세지 않고 개수만 본다.
+KEY_COUNT="$(grep -cE '^[[:space:]]*[A-Z_]+[[:space:]]*=' "$FILE" || true)"
+echo "  키 $KEY_COUNT 개 (기대: 6, ADMOB_APP_ID 덮어쓰기가 있으면 7)"
+if [ "$KEY_COUNT" -lt 6 ]; then
+  echo "::error::키가 모자란다 — 복구가 일부만 된 것으로 보인다."
+  fail=1
+fi
 
 require API_BASE && {
   v="$(value_of API_BASE)"
@@ -68,6 +82,11 @@ check_admob() {
       echo "::error::$key 가 구글 테스트 ID($GOOGLE_TEST_PUB)다 — 실광고가 붙지 않는다. AdMob 콘솔의 실제 ID로 교체해라."
       fail=1 ;;
     ca-app-pub-*)
+      # `$()` 는 URL 의 `//` 를 피하려고 쓰는 표기다. AdMob ID 에는 `//` 가 없으니
+      # 들어 있을 이유가 없다 — 있으면 복사하다 섞인 것이고, 그대로 ID 가 깨진다.
+      case "$v" in
+        *'$()'*) echo "::error::$key 에 \$() 가 섞여 있다 — ID 가 깨진다. 그 표기는 API_BASE 에만 쓴다."; fail=1 ;;
+      esac
       case "$v" in
         *"$sep"*) echo "    └ 형식 정상($sepname 포함)" ;;
         *) echo "::error::$key 에 $sepname 가 없다 — 앱 ID(~)와 광고 단위 ID(/)를 바꿔 넣은 것 같다."; fail=1 ;;
@@ -80,6 +99,27 @@ check_admob() {
 
 check_admob ADMOB_APP_ID '~' '물결(~)'
 check_admob ADMOB_BANNER_UNIT_ID '/' '슬래시(/)'
+
+# 판정이 미심쩍을 때를 위한 근거. **값은 찍지 않고 모양만 센다** —
+# 길이와 구분자 개수, 두 값이 같은지. 흔한 실수가 App ID 칸에 배너 unit ID 를
+# 붙여넣는 것이라(둘 다 ca-app-pub- 로 시작하고 ~ 와 / 만 다르다) 그 경우를 가른다.
+shape() {
+  local key="$1" v t s
+  v="$(value_of "$key")"
+  t="$(printf '%s' "$v" | tr -cd '~' | wc -c)"
+  s="$(printf '%s' "$v" | tr -cd '/' | wc -c)"
+  echo "  $key : 길이 ${#v}, '~' ${t}개, '/' ${s}개"
+}
+echo
+echo "형태 요약(값은 출력하지 않음)"
+shape ADMOB_APP_ID
+shape ADMOB_BANNER_UNIT_ID
+if [ "$(value_of ADMOB_APP_ID)" = "$(value_of ADMOB_BANNER_UNIT_ID)" ]; then
+  echo "::error::두 AdMob ID 가 **완전히 같은 값**이다 — App ID 칸에 배너 unit ID 를 넣은 것이다."
+  fail=1
+else
+  echo "  두 값은 서로 다름"
+fi
 
 echo
 if [ "$fail" -ne 0 ]; then

@@ -4,6 +4,113 @@
 
 ---
 
+## 진행 중 — 1.1.0 배포 크래시: AdMob 앱 ID (2026-08-03)
+
+> **미해결.** `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 를 고치고 다시 빌드해야 끝난다.
+> 고쳐서 앱이 켜지는 것까지 확인되면 이 절을 `## 완료 —` 로 바꾼다.
+
+
+### 무슨 일이
+
+`1.1.0`(빌드 `cce6bf3`)이 TestFlight 에 정상 업로드됐는데, **켜자마자 죽었다.**
+원인은 `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 에 **광고 단위 ID 가 들어가 있던 것**이다
+(앱 ID 는 `~`, 광고 단위는 `/`. 둘 다 `ca-app-pub-` 로 시작하고 38자라 눈으로 구분되지 않는다).
+
+GoogleMobileAds SDK 는 `GADApplicationIdentifier` 를 스스로 검증하고, 없거나 유효하지 않으면
+`GADInvalidInitializationException` 으로 앱을 종료시킨다. 우리 코드가 `MobileAds.start()` 를
+부르든 말든 상관없다.
+
+### 타임라인
+
+| 시각 | 일 |
+|---|---|
+| 7/24 | 배포 #14(`fbb386a`) 성공 — **정상 동작하는 마지막 빌드** |
+| 7/30 새벽 | `SECRETS_XCCONFIG` 덮어쓰기 사고 (읽기·쓰기 명령을 한 묶음으로 안내한 건) |
+| 7/30 01:37 | `Secrets Check` #1 → **실패**: `ADMOB_APP_ID 에 물결(~) 가 없다` |
+| 7/30~8/2 | 배포 없음 |
+| 8/3 07:53 | 배포 #15(`cce6bf3`) → 업로드 성공 |
+| 8/3 | 실기기에서 실행 즉시 크래시 |
+
+손상 이후 만들어진 배포 빌드가 그 하나뿐이고, 그게 죽는 빌드다.
+
+### 왜 못 잡았나 — 층이 일곱 겹
+
+1. **검사는 이미 잡았는데 결과를 읽지 않았다.** 7/30 에 같은 오류가 떠 있었다. **가장 큰 구멍.**
+2. **검사가 배포에 연결돼 있지 않았다.** 독립 진단이라 실패해도 빌드는 그대로 올라갔다.
+3. **CI 는 실제 시크릿을 쓰지 않는다.** `Secrets.example.xcconfig`(구글 테스트 ID, 항상 유효)로
+   빌드한다 — CI 그린은 실제 값에 대해 아무 말도 하지 않는다.
+4. **CI 는 Release 를 빌드하지 않는다.** `xcodebuild test` 에 `-configuration` 이 없어 Debug 만 돈다.
+5. **앱의 가드가 형식을 보지 않았다.** `AdConfig.enabled` 가 "비어 있지 않은가" 만 확인했다.
+6. **업로드 성공 ≠ 앱이 켜짐.** 파이프라인 어디에서도 앱을 한 번 켜보지 않는다.
+7. **GitHub Secret 은 되읽을 수 없다.** 배포해 보는 것 말고 확인할 방법이 없었다.
+
+### 고친 것
+
+- **배포 전 검증 게이트**(`deploy.yml`) — 시크릿이 깨져 있으면 빌드가 만들어지지 않는다. (2·6)
+- **`ADMOB_APP_ID` 별도 시크릿** — 6줄 덩어리를 덮어쓰지 않고 한 줄만 고칠 수 있다. (7)
+- **`AdConfig.enabled` 가 두 ID 를 모두 확인** — 값이 이상하면 광고만 끄고 앱은 산다. (5)
+- **`check-secrets.sh` 보강** — 키 개수(복구 누락), `$()` 오염, 길이·구분자 개수,
+  두 AdMob ID 동일 여부. 값은 출력하지 않는다. `value_of` 가 **마지막 정의**를 읽는다
+  (덮어쓰기가 파일 끝에 붙으므로, 첫 줄을 읽으면 검사와 빌드가 다른 값을 본다).
+- **`docs/DEPLOY.md`** — 두 ID 의 구분자 차이, 실제 값, 되읽기 불가 경고.
+
+### 아직 안 고친 것
+
+- **CI 가 Release 를 빌드하지 않는다.** 지금 Debug/Release 가 갈리는 코드는
+  `AdConfig.bannerUnitID` 한 곳뿐이라 위험이 작지만, 늘어나면 같은 종류가 또 나온다.
+- **아무도 앱을 켜보지 않는다.** 시뮬레이터로 실행해 즉시 죽는지 보는 스모크 테스트가 없다.
+  이번 건을 자동으로 잡을 수 있었던 **유일한** 검사다.
+
+### 다른 원인 가능성 — 재확인 (2026-08-03 밤, 다음 세션 인계용)
+
+**크래시 로그를 확보하지 못했다.** 그래서 "키가 유일한 원인"은 증명되지 않았다.
+아래는 그 상태에서 정적으로 훑은 결과다. **같은 것을 다시 파지 않도록 방법까지 적는다.**
+
+#### 확정
+`ADMOB_APP_ID` 와 `ADMOB_BANNER_UNIT_ID` 가 **바이트 단위로 동일**(3회 측정: 7/30 #1, 8/3 #2~#5).
+둘 다 `~` 0개 · `/` 1개 · 38자. 앱 ID 칸에 광고 단위 ID 가 들어가 있다.
+
+#### 배제한 후보
+
+| 후보 | 확인 방법 | 결과 |
+|---|---|---|
+| 포맷 문자열 크래시 | `t(key, args:)` 호출부를 카탈로그 지시자와 대조하는 스크립트로 전수 | 265개 중 불일치 **0** |
+| 환경 주입 누락 | `@Environment(X.self)` 선언 23곳 ↔ 주입 지점 대조 | `ClipsView`·`LocalClipsView` 는 `RootView` 의 `.environment(router)` 범위 안 |
+| 런치 스크린 자산 | `LaunchLogo.imageset`(1x/2x/3x png)·`LaunchBackground.colorset` 존재·형식 | 정상 |
+| 강제 언래핑 · `fatalError` | 앱 소스 전체 grep | 없음. `Config`·`LocalizationStore`·`AppLanguage`·`AuthStore` 모두 폴백 처리 |
+| SwiftData 스키마 변경 | `LocalClip.swift` 델타(`fbb386a`→`main`) | **변경 없음** → 마이그레이션 크래시 아님 |
+| 엔타이틀먼트 · App Group | 도입 커밋 추적 | `fbb386a`(정상 동작 빌드)에 이미 있었음 |
+| `AuthStore` 초기화 | 델타 확인 | 표시 문구·에러 타입만. init 경로 무변경 |
+| 앱/확장 버전 불일치 | `project.yml` | 둘 다 `1.1.0` |
+
+#### 아직 검증 못 한 것
+
+1. **의존성 버전 드리프트** — `Package.resolved` 가 커밋돼 있지 않고 `.xcodeproj` 는 gitignore 라
+   **매 빌드 최신 버전을 새로 해석한다**(`GoogleMobileAds from: 12.0.0`, `Supabase from: 2.51.0`).
+   7/24 빌드와 8/3 빌드의 SDK 버전이 다를 수 있는데 대조할 방법이 없다.
+   → 확인법: 배포 로그의 패키지 해석 구간을 두 실행에서 비교, 또는 `Package.resolved` 를 커밋해 고정.
+2. **크래시 로그 미확보** — `Exception Type` 한 줄이면 끝난다.
+   `GADInvalidInitializationException` 이면 키가 원인으로 확정, 아니면 다른 원인이 있다.
+   경로: 기기 `설정 → 개인정보 보호 및 보안 → 분석 및 개선 사항 → 분석 데이터 → ClipNote-...`
+3. **Release 구성이 한 번도 실행된 적 없다** — CI 는 Debug 만 빌드하고, Release 는 배포 때
+   한 번 만들어져 그대로 업로드된다. Debug/Release 가 갈리는 코드는 현재 `AdConfig.bannerUnitID`
+   한 곳뿐이지만, 이 사실 자체가 검증 공백이다.
+
+#### 다음 세션 판단 기준
+
+- 시크릿을 고치고 새 빌드 → **켜지면** 키가 원인으로 확정, 종료.
+- **여전히 죽으면** 크래시 로그를 반드시 확보한다. 그다음 후보는 위 1번(의존성 드리프트)이다.
+- 어느 쪽이든 키는 고쳐야 한다 — 잘못된 값인 것 자체는 로그와 무관하게 확정이다.
+
+수정 절차는 `docs/DEPLOY.md` ③④ 참고. 값은 거기에 적어 뒀다(비밀값 아님).
+
+### 남는 교훈
+
+1번은 도구로 못 막는다 — 검사를 만들어 놓고 결과를 안 보면 없는 것과 같다. 그래서 게이트로
+바꿨다. **읽지 않아도 멈추게** 하는 것이 유일하게 신뢰할 수 있는 형태다.
+
+---
+
 ## 진행 중 — 출시 후 기능 업데이트 (2026-07-30)
 
 > **브랜치 규칙(이번 지시)**: 앱이 이미 스토어에 출시됐으므로 배포 안정성 우선.
@@ -372,109 +479,3 @@
 
 ### 파리티 감사 결과
 RN `app/`·`components/`·`lib/` 전부 네이티브에 매핑됨. 빠진 기능 없음. `getKnownTags`(태그 자동완성)는 RN에서도 미사용(기록만) — iOS도 동일.
-
----
-
-## 완료 — 로그인 상태 첫 진입 화면 깜빡임 수정 (2026-07-23)
-
-이미 로그인한 사용자가 처음 진입할 때 홈 액션이 게스트 UI→로그인 UI로 튀던 문제.
-
-- **원인**: `AuthStore.state`가 `loading:true, accessToken:nil`로 시작 → 첫 프레임 `loggedIn=false`. Supabase Keychain 세션 비동기 복원(`authStateChanges`→`apply`) 전까지 `HomeView.actions`가 게스트 UI를 먼저 렌더 → 복원 후 재렌더.
-- **수정**: `AuthStore`에 지난 실행 로그인 여부를 `UserDefaults`에 저장, 세션 확정 전(loading)엔 이 힌트로 판단하는 `displayLoggedIn` 추가. `HomeView.actions` 분기를 `displayLoggedIn`으로 교체. 토큰 필요한 동작은 여전히 `accessToken`으로 가드. 유닛 테스트 4개 추가. (PR #107)
-- **CI**: `claude/**` 브랜치 push에도 iOS 빌드가 돌도록 `pr-review.yml`에 push 트리거 추가(+concurrency 중복 방지, `if` 가드 push 허용). (PR #107)
-- ⚠️ 실제 깜빡임 제거는 실기기/시뮬 시각 확인 권장(빌드/테스트로는 검증 불가).
-
----
-
-## 완료 — TestFlight 배포 자동 트리거(main push) (2026-07-24)
-
-`deploy.yml`을 수동(`workflow_dispatch`) 전용에서 **main push 자동 배포**로 확장.
-
-- `on.push.branches: [main]` 추가(+`paths-ignore: **/*.md`로 문서만 바뀐 머지는 스킵). 수동 실행 유지.
-- `concurrency: deploy-testflight`(cancel-in-progress: false)로 배포 직렬화 — 짧은 간격 머지가 같은 빌드번호(TestFlight 최신+1)를 계산해 업로드 거부되는 충돌 방지.
-- 빌드번호는 fastlane이 TestFlight 최신+1로 계산하고 git에 커밋하지 않으므로 배포가 자기 자신을 재트리거하지 않음(무한루프 없음).
-
----
-
-## 완료 — CI에 유닛 테스트 자동 실행 추가 (2026-07-24)
-
-CI 게이트를 `xcodebuild build`(컴파일만) → `xcodebuild test`로 확장. push(`claude/**`)·PR 모두에서 build+test 실행. (PR #109)
-
-- `pr-review.yml`: `xcodebuild test`. 시뮬레이터는 `xcrun simctl`로 사용 가능한 iPhone UDID 동적 선택(러너 Xcode별 차이에 강건).
-- 테스트 추가로 드러난 **선재 이슈 2건 수정**(둘 다 기능 결함 아님):
-  - AdMob 빈 App ID → GoogleMobileAds SDK 자동 검증에서 테스트 호스트 앱이 부팅 중 크래시. `Secrets.example.xcconfig`에 구글 공식 테스트 App ID 지정(실배포 무관).
-  - `shareTextUsesBuildShareTextForDbClip` 기대값이 옛 동작(설명 포함)에 머물러 실패 → 현재 동작(설명 제외, #74/PR #75)에 맞게 수정. `ClipsStore.shareText` 주석도 정정.
-- 검증: 80 tests / 13 suites 그린.
-
----
-
-## 완료 — 출시 후속 UI 개선 (2026-07-20)
-
-기능 패리티 완성 후 UX 다듬기. 이슈당 브랜치·PR, CI(macOS 빌드) 그린 자동 머지.
-
-- #61 홈 헤더 `ClipNote` 타이틀 제거 — 헤더는 메뉴·내클립(·뒤로가기)만. (PR #65)
-- #62 `BrandLogo` 아이콘을 무관한 SF심볼(`link.circle.fill`)에서 앱 아이콘(`BrandIcon` 에셋, icon-512)으로 교체. (PR #66)
-- #63 주요 async 작업 로딩 인디케이터 — 공용 `SpinnerLabel`, 홈 공유/저장 버튼·메타 읽는 중 행, 편집/공유결과 모달, 클립 행 공유, 대량 삭제/태그 블로킹 오버레이. (PR #67)
-- #64 온보딩을 실제 홈 UI 스포트라이트 투어로 개편(슬라이드 4장 폐기) — `SpotlightTour`(앵커 프리퍼런스·dim+구멍 역마스크·말풍선). (PR #68)
-- #69 투어 툴바 단계 제거 + 내 클립 미리보기 목업 — 툴바(메뉴·내클립)는 nav bar 별도 호스팅이라 구멍 좌표 미도달. 메뉴 단계 제거, 내클립은 `ClipsPreviewMock`으로 대체. 투어 = URL·제목/태그·저장·공유(스포트라이트) + 내 클립 미리보기(목업). (PR #70)
-- #72 URL 입력 텍스트·커서 색을 검정(`fg`)으로 고정 — 파란 accent라 링크처럼 보이던 문제. (PR #73)
-- #74 공유 링크 복사 시 설명 제외, `제목\n링크`만 복사 — 붙여넣기 글이 길어지던 문제. 웹 clipnote c4c4ad9와 동일. (PR #75)
-- #76 공유 카드/썸네일에 원본 대표 이미지 표시 + 서버 이미지 프록시 — 웹 정책(5cc38dd·7815b41·bfdc553·c03c97e) 반영. `proxiedImageURL`(`/api/image?url=`)로 hotlink·referer·혼합콘텐츠 회피(네이버 CDN referer는 서버 처리), SharePreviewCard 이미지 배경+스크림 0.55 폴백. (PR #77)
-
-### 남은 일 / 보류
-- **투어 시각 검증**(실기기/시뮬) — 사용자 직접.
-- **다국어(KO/EN/JA/ZH)**: 보류 해제 — 위 "앱 다국어" 절에서 진행 중.
-- **보류**: 내 클립 무한스크롤 — 임계 도달 시 cursor 기반(서버 `?before=&limit=` 필요), 지금은 미착수.
-
----
-
-## 완료 — Phase 5: 헤더·정적화면·온보딩·심사 (에픽 #42)
-
-설계 §4.4~4.7·§3.6·마일스톤 7~9. RN HeaderMenu·about/faq/onboarding/account-delete 이식. 서브 6/7 머지(AdMob 보류).
-
-- #43(#A) `APIClient.deleteAccount` + `DeleteAccountResult`(Phase1 누락분). 3 tests. (PR #50)
-- #44(#B) `AboutView`·`FaqView`·`BrandLogo`(정적). (PR #51)
-- #45(#C) `AccountDeleteView`(동의→확인→deleteAccount→clearLocalClips+signOut). (PR #52)
-- #46(#D) `OnboardingView`(TabView 4 슬라이드), RootView 플레이스홀더 교체. (PR #53)
-- #47(#E) `HeaderMenu`+`AppRouter`(전 화면 라우팅·로그인/로그아웃/회원탈퇴·개인정보), Home/Clips toolbar 배선. 시뮬 실행 스모크 확인. (PR #54)
-- #49(#G) `PrivacyInfo.xcprivacy`(수집유형·Required Reason CA92.1·추적 false), 앱 번들 포함 확인. (PR #55)
-- #48(#F) AdMob 배너 — 보류였다가 **iOS App ID 확보 후 재개·완료**(PR #56). GoogleMobileAds 12 SPM·AdConfig·AdBannerView·App ID 가드 start·SKAdNetwork 37종. 시뮬 스모크 확인.
-- 전체 76 tests / 13 suites 그린(iPhone 17 Pro).
-
-### 남은 일 (Phase 5 이후)
-- 실기기 검증: OAuth 3종 실제 로그인·실광고 노출, 제출 전 전체 QA(사람만 가능).
-- 앱 아이콘·런치스크린 에셋, 개인정보 처리방침 URL 최종 확인, TestFlight/심사 제출(수동).
-- Privacy Manifest — 광고 개인화 정책에 따라 NSPrivacyTracking/추적 도메인 재검토 여지.
-
----
-
-## 완료 — 업무 처리 시스템 도입
-
-- `CLAUDE.md`(업무 절차·iOS/Swift 표준), `.github/workflows/pr-review.yml`(macOS 빌드 CI), `REVIEW.md`(리뷰 기준), `index.md`/`plan.md` 스타터 추가.
-- 이후 작업은 Work Request Flow(이슈→브랜치→검증→리뷰→PR→자동머지)를 따른다.
-
----
-
-## 완료 — Phase 2 인증 (에픽 #4)
-
-- #5 Supabase SPM(2.51.0) + `AuthStore` 코어, #6 딥링크 라우팅(`.onOpenURL`), #7 Google/Kakao OAuth, #8 네이버 커스텀 OAuth. 35 tests / 6 suites 그린.
-- ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 상태로 머지**(사용자 승인). 로그인 안 되면 provider(Supabase 콘솔)·서버 콜백 설정 확인 후 별도 fix 필요할 수 있음.
-- HTTP 프로브 확인됨: Supabase Google·Kakao provider 켜짐(302 정상), 네이버 client_id·서버 `/api/auth/naver/callback` 살아있음. 남은 미검증 = redirect URL 허용목록 + 실제 자격증명 로그인(사람만 가능).
-
----
-
-## 완료 — Phase 3: 로컬저장(SwiftData) + HomeView (에픽 #16)
-
-설계 §3.4·§4.1. RN `lib/local-clips.ts` + `app/index.tsx` 이식. 서브 5개 전부 머지.
-
-- #17(#A) `LocalClipStore`(SwiftData): upsert·300캡·최신순·`knownTags`(UserDefaults 빈도). 8 tests.
-- #18(#B) `UClip` 매핑(Local/Db, id 로컬=url·DB=slug) + `parseTags`(쉼표·트림·빈값·최대6). 5 tests.
-- #19(#D) 미리보기 카드 `SharePreviewCard`(OG 재현)·`ClipCardView`·`TagChip`.
-- #20(#C) `HomeView`/`HomeViewModel`: 600ms 디바운스 메타 추출(이전 Task 취소)·제목 자동채움·게스트 로컬/로그인 공유·DB 저장. `URLHelpers`. 루트를 HomeView로. 10 tests.
-- #21(#E) 온보딩 게이트 `RootView`(`@AppStorage` 분기).
-- 전체 58 tests / 11 suites 그린(iPhone 17 Pro).
-
-### 이월(후속 페이즈)
-- **Phase 4**: ClipsView(목록·필터·스와이프·다중선택·편집)·공유복사(§4.2/4.3)·전체 ShareResultModal(열기·DB저장)·로그인 마이그레이션(`MigrateLocalClips`, §5).
-- **Phase 5**: 헤더 메뉴(About/FAQ/로그아웃/회원탈퇴)·실제 온보딩 슬라이드·AdBanner·심사 대비.
-- 현재 홈 공유 결과 = 최소 시트(링크+복사)만. 로그인 사용자 로그아웃 UI 없음(Phase 5 헤더 메뉴 대기).

@@ -7,7 +7,7 @@
 - **번들 ID**: `kr.co.clipnote.app` (URL 스킴 `clipnote://`)
 - **스택**: Swift 6 · SwiftUI · iOS 17+ · **XcodeGen**(`project.yml` → `ClipNote.xcodeproj`)
 - **백엔드**: `API_BASE`(clipnote.co.kr) · Supabase · 네이버 로그인 · AdMob (설정은 `Secrets.xcconfig`)
-- **배포**: App Store/TestFlight (수동)
+- **배포**: `main` push → `deploy.yml` 이 fastlane 으로 TestFlight 자동 업로드. App Store 심사 제출만 수동
 
 ## 빌드
 ```bash
@@ -37,6 +37,8 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Clips/MigrateLocalClips.swift` | 로컬→DB 업로드 실행(§5). 전량 성공 시에만 로컬을 비운다 |
 | `Clips/MigrateLocalClipsLayer.swift` | 옮기기 확인·진행·결과 알림(공용 modifier). 로그인 훅과 로컬 클립 화면이 함께 쓴다 |
 | `Clips/LocalClipsView.swift` | ‘이 기기에 남은 클립’ — 로그인 상태에서 로컬 클립만 보는 화면(옮기기·모두 삭제) |
+| `scripts/check-secrets.sh` | 시크릿 형식 검증(값은 출력 안 함). 배포 게이트·`Secrets Check` 가 쓴다 |
+| `scripts/check-localizations.py` | 문자열 카탈로그 무결성 검사. CI 첫 스텝 |
 | `Views/RootView.swift` | 루트 게이트(온보딩 분기 + 로그인 마이그레이션 훅) |
 | `Views/HomeView.swift` | 홈(URL 디바운스 메타·미리보기·저장·로딩 인디케이터·투어 앵커), `HomeViewModel`. 헤더 타이틀 없음 |
 | `Views/SharePreviewCard·ClipCardView.swift` | 미리보기 카드(OG 재현·클립 카드·TagChip) |
@@ -79,7 +81,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - Phase 5: `HeaderMenu`+`AppRouter`(공통 메뉴·로그아웃·전 화면 라우팅)·`AboutView`/`FaqView`/`AccountDeleteView`·`OnboardingView`(실제 슬라이드)·`deleteAccount` API·`PrivacyInfo.xcprivacy`(심사).
   - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider·서버 콜백 설정에 따라 실동작 별도 확인 필요.
   - AdMob(#48 재개·완료): `AdConfig`(DEBUG 테스트/RELEASE Secrets)·`AdBannerView`(앵커 적응형)·App ID 가드 start. Home(키보드 숨김)·Clips 하단. 실 App ID `~9380940221`, 배너 unit `/6008671423`(Secrets, gitignored).
-- **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `fastlane ios beta`로 빌드 **3까지 업로드**. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 섹션 참고**.
+- **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `main` push 마다 `fastlane ios beta` 가 자동 업로드한다(빌드번호 = TestFlight 최신+1). 최근 업로드는 **1.1.0(2026-08-03, 배포 #15)** 이고 **그 빌드는 실행 즉시 죽는다** — 아래 항목 참고. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 절**과 `docs/DEPLOY.md` 참고.
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 내 클립 무한스크롤(임계 도달 시 cursor 방식). 다국어는 보류 해제 — 아래 항목 참고.
@@ -104,6 +106,13 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
     기기에서도 보인다. 겉모습이 같은데 할 수 있는 일이 다르면 눌러 보고 나서야 알게 된다.
   - 옮기기 확인·진행·결과 알림은 `MigrateLocalClipsLayer` 하나를 로그인 훅과 로컬 화면이 함께 쓴다.
   - 웹 `clipnote` 도 같은 구성(`LocalClipsPanel`). **한쪽만 바꾸지 않는다.**
+- **🔴 1.1.0 배포 상태(2026-08-03)**: TestFlight 업로드는 성공했으나 **그 빌드는 실행 즉시 죽는다.**
+  `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 에 광고 단위 ID 가 들어가 있어 GoogleMobileAds SDK 가
+  앱을 종료시킨다. **시크릿을 고치고 다시 빌드해야 한다** — 코드 수정으로는 못 막는다
+  (형식만 맞으면 SDK 가 자체 검증에서 거부한다). 경위·재발 방지는 `plan.md` "진행 중 — 1.1.0 배포 크래시" 절 참고.
+  - 배포에 검증 게이트가 걸려 있어, 시크릿이 정상화되기 전에는 빌드가 만들어지지 않는다.
+  - `ADMOB_APP_ID` 를 **별도 시크릿**으로 넣으면 6줄 덩어리를 덮어쓰지 않고 고칠 수 있다
+    (`docs/DEPLOY.md` ④). 정상화 후에는 그 시크릿을 지우고 `SECRETS_XCCONFIG` 를 정본으로 되돌린다.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).

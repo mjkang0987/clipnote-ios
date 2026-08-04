@@ -41,9 +41,27 @@ jobs:
       - name: Write Secrets.xcconfig
         # 시크릿을 스크립트에 직접 박으면 bash가 값 안의 $()·백틱을 실행해 xcconfig의 //주석 회피
         # 트릭($())을 깨뜨림 → URL이 https:로 잘려 앱이 켜자마자 크래시. 환경변수로 넘겨 원문 그대로 기록.
+        #
+        # `ADMOB_APP_ID` 시크릿이 따로 있으면 그 값이 이긴다(xcconfig 는 뒤에 온 정의가 이긴다).
+        #
+        # **왜 갈라 뒀나** — SECRETS_XCCONFIG 는 6줄을 한 덩어리로 담는다. 그래서 한 줄만
+        # 고치려 해도 6줄을 다 알아야 하고(되읽기가 안 된다), 손으로 복원하다 다른 줄을
+        # 잃기 쉽다. 실제로 그렇게 앱 ID 한 줄이 광고 단위 ID 로 바뀐 채 배포됐다.
+        # 자주 틀리는 값 하나만 떼어 두면 나머지를 건드리지 않고 고칠 수 있다.
         env:
           SECRETS_XCCONFIG: ${{ secrets.SECRETS_XCCONFIG }}
-        run: printf '%s\n' "$SECRETS_XCCONFIG" > Secrets.xcconfig
+          ADMOB_APP_ID_OVERRIDE: ${{ secrets.ADMOB_APP_ID }}
+        run: |
+          printf '%s\n' "$SECRETS_XCCONFIG" > Secrets.xcconfig
+          if [ -n "$ADMOB_APP_ID_OVERRIDE" ]; then
+            printf 'ADMOB_APP_ID = %s\n' "$ADMOB_APP_ID_OVERRIDE" >> Secrets.xcconfig
+            echo "ADMOB_APP_ID 를 별도 시크릿 값으로 덮어썼다."
+          fi
+
+      # 시크릿이 깨진 채로 빌드가 올라가는 것을 막는다. 오늘 그렇게 올라간 빌드가
+      # 실행 즉시 죽었다 — 값 검증은 몇 초, 잘못된 배포는 심사 한 사이클이다.
+      - name: Validate secrets
+        run: bash scripts/check-secrets.sh Secrets.xcconfig
 
       - name: Generate Xcode project
         run: xcodegen generate
