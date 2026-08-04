@@ -10,7 +10,7 @@ on:
   push:
     branches:
       - "claude/**"
-      - develop
+      - "feature/**"
     paths-ignore:
       - "**/*.md"
   pull_request:
