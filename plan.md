@@ -4,6 +4,70 @@
 
 ---
 
+## 진행 중 — App Store 제출 준비 (2026-08-04)
+
+> **범위는 제출 버튼 직전까지.** 심사 제출은 실기기에서 앱이 켜지는 것을 확인한 뒤 사람이 누른다.
+
+### 배경
+
+1.1.0 은 TestFlight 까지 갔고 크래시 대응 빌드가 올라가 있다. 그런데 **심사 제출에 필요한 스토어
+목록 정보가 저장소에 없다** — fastlane 에는 `beta`(TestFlight) 레인만 있고 `fastlane/metadata/` 에는
+릴리스 노트뿐이다. 지금 상태로는 ASC 웹에서 손으로 4개 언어를 채워야 하고, 다음 릴리스에 또 반복된다.
+
+### 범위
+
+- **포함**: 스토어 메타데이터 4개 언어(부제·설명·키워드·프로모션 문구·URL 3종·저작권),
+  메타데이터 업로드 레인, ASC 제출 체크리스트.
+- **제외**: 심사 제출, 스크린샷 촬영(맥 필요), 앱 이름·카테고리, UMP/ATT.
+
+### 왜 UMP·ATT 를 빼나
+
+UMP 부재는 **애플 심사 블로커가 아니다.** 구글 정책이라 EEA/영국 사용자에게 광고가 게재되지 않는
+문제이지 리젝 사유가 아니다. ATT 는 개인화 광고(IDFA)를 쓸 때만 필요한데 지금은 쓰지 않는다.
+둘 다 별건으로 미룬다.
+
+다만 ASC 의 **App Privacy 설문**은 AdMob 을 실은 상태에 맞춰 답해야 한다 — 체크리스트에 넣는다.
+`PrivacyInfo.xcprivacy` 는 광고 도입 전 상태(`NSPrivacyTracking: false`, 추적 도메인 비어 있음)라
+설문 답과 어긋나지 않는지 제출 전에 한 번 본다.
+
+### 구현
+
+- `fastlane/metadata/{ko,en-US,ja,zh-Hans}/` — `subtitle`·`description`·`keywords`·
+  `promotional_text`·`support_url`·`marketing_url`·`privacy_url`.
+  `release_notes.txt` 는 이미 있고 건드리지 않는다.
+- `fastlane/metadata/copyright.txt`
+- `fastlane/Deliverfile` + `Fastfile` 에 메타데이터 업로드 레인
+- `docs/APPSTORE.md` — ASC 에서 사람이 눌러야 하는 것을 순서대로
+
+### 일부러 넣지 않는 파일
+
+`deliver` 는 **존재하는 파일만** 반영하고 없는 항목은 ASC 의 현재 값을 그대로 둔다. 이 성질을 이용해
+건드리면 안 되는 것을 아예 파일로 만들지 않는다.
+
+- `name.txt` — 등록된 앱 이름(`ClipNote by pikaworks`)을 덮어쓴다. 이름 변경은 심사 대상이라
+  의도 없이 바꾸면 안 된다.
+- `primary_category.txt`·`secondary_category.txt` — 이미 설정돼 있는데 현재 값을 확인하지 못했다.
+  잘못 덮으면 조용히 바뀐다.
+
+### 리스크
+
+- **`deliver` 는 ASC 를 덮어쓴다.** 시크릿과 같은 종류의 위험이다 — 레인을 CI 에 걸지 않고 사람이
+  부른다. `skip_binary_upload: true`·`submit_for_review: false` 로 두어 바이너리 업로드와 심사
+  제출은 하지 않는다. 처음 올리기 전에 `deliver download_metadata` 로 현재 값을 받아 둔다.
+- **문구는 초안이다.** 스토어에 나가는 글이라 사용자 확인을 받고 올린다.
+
+### 검증
+
+메타데이터·문서만 바뀌어 앱 빌드에 영향이 없다. `.md` 가 아닌 파일이 있어 CI(`pr-review.yml`)는
+실행되므로 그린만 확인한다.
+
+### 남은 것 (사람만 가능)
+
+- **실기기에서 빌드 구동 확인** — 이게 끝나기 전에는 제출하지 않는다.
+- 스크린샷(필수 규격), App Privacy 설문, 연령등급, 수출규정 신고, 심사 제출.
+
+---
+
 ## 진행 중 — 1.1.0 배포 크래시: AdMob 앱 ID (2026-08-03)
 
 > **미해결.** `SECRETS_XCCONFIG` 의 `ADMOB_APP_ID` 를 고치고 다시 빌드해야 끝난다.
