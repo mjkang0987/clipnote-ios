@@ -1,0 +1,16 @@
+Paste a link and ClipNote reads its title and image, then turns it into a card. Tag it so you can find it again, and share it as a single line.
+
+■ Just paste
+Drop in a link and ClipNote pulls the title, description, and image into a preview card. Don't like the title? Edit it yourself.
+
+■ Organize with tags
+Tag each clip and filter your list by tag. You can also select several at once to add or remove tags together.
+
+■ Works without an account
+Clips are saved on this device even if you never sign in. Sign in later and you can move them to your account — and declining to move them never deletes anything.
+
+■ Send from other apps
+Pick ClipNote from the share sheet in Safari or any other app, and the link lands in the input field.
+
+■ Four languages
+Korean, English, Japanese, and Simplified Chinese. Switch in Settings — no restart needed.

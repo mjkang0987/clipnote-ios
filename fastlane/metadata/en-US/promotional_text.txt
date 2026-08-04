@@ -1,0 +1,1 @@
+Paste a link and it becomes a card, with the title and image read for you. Tag it, and share it as a single line.
