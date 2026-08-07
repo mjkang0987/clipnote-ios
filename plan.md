@@ -4,6 +4,98 @@
 
 ---
 
+## 진행 중 — 심사 리젝 대응: Sign in with Apple (2026-08-07)
+
+### ⚠️ 전제 — 실제 리젝 사유를 확인하지 못했다
+
+받은 것은 App Store Connect 의 **정형 거절 메일**이고, 거기엔 사유가 없다("go to the App Review
+page to find out why"). 진짜 사유는 ASC → App Review → **Resolution Center** 안에만 있는데
+그 원문을 받지 못했다.
+
+그래서 이 작업은 **추정 위에 서 있다.** 다만 아래 근거로 4.8 을 가장 유력하게 보고 먼저 친다.
+
+- 저장소 전체에 `ASAuthorization`·`com.apple.developer.applesignin` 이 **하나도 없다.**
+  `LoginView.swift` 의 로그인 수단은 Google·Kakao·Naver 셋뿐이다.
+- Guideline 4.8 은 서드파티/소셜 로그인으로 계정을 만들면 **동등한 프라이버시 로그인**을
+  함께 제공하라고 요구한다(수집을 이름·이메일로 제한, 이메일 숨기기 지원). 셋 다 이 조건을
+  만족하지 못하므로 지금 구성은 4.8 을 만족할 수 없다.
+- **틀려도 버리는 작업이 아니다.** 이번 리젝이 4.8 이 아니었더라도 이 구성은 언젠가 4.8 에
+  걸린다. 그래서 사유 확인 전에 선행해도 손해가 없는 유일한 항목이다.
+
+Resolution Center 원문을 받으면 이 절의 전제를 지우고 실제 사유에 맞춰 범위를 다시 잡는다.
+
+### 왜 웹 OAuth 가 아니라 네이티브인가
+
+Supabase 의 `signInWithOAuth(provider: .apple)` 로도 로그인은 된다(Google·Kakao 와 같은 경로).
+그런데 **그 길로 가면 4.8 을 만족하지 못할 수 있다.** 애플 로그인을 웹뷰로 띄우면 사용자는
+시스템 시트(Face ID · 이메일 숨기기)를 보지 못하고, "이메일 가리기"가 빠지면 4.8 이 요구하는
+동등성 자체가 성립하지 않는다. 리젝을 고치러 갔다가 같은 조항에 다시 걸릴 이유가 없다.
+
+그래서 `ASAuthorizationAppleIDCredential` 로 identity token 을 받아
+`auth.signInWithIdToken(credentials: .init(provider: .apple, idToken:, nonce:))` 로 넘긴다.
+API 는 SPM 이 실제로 물어 올 **v2.54.1** 소스에서 확인했다(`from: "2.51.0"` → 최신 2.x).
+
+### nonce 를 두 벌 쓰는 이유
+
+애플에는 **해시**를 주고 Supabase 에는 **원본**을 준다. 애플은 `request.nonce` 로 받은 값을
+그대로 id token 의 `nonce` 클레임에 박아 넣는데, 원본을 그대로 주면 그 값이 토큰에 평문으로
+남는다. 그래서 관례대로 SHA-256 을 넘기고, 검증하는 쪽(Supabase)에는 원본을 줘서 해시를
+맞춰 보게 한다. **둘을 바꿔 넣으면 로그인이 조용히 실패한다** — 토큰은 받아지는데 서버 검증만
+떨어져서, 화면에는 원인을 알 수 없는 오류만 뜬다.
+
+### 버튼은 시스템 것을 쓴다 (`SignInWithAppleButton`)
+
+애플 로고·모서리·문구는 브랜딩 규정이 있어 직접 그리면 그 자체가 지적 사유가 된다.
+기존 `brandButton` 을 재사용하지 않는 유일한 예외다.
+
+- **대신 갈리는 점이 하나 있다** — 이 버튼은 **기기 언어**로 문구를 만든다. 앱 안에서 언어를
+  영어로 바꿔도 기기가 한국어면 버튼만 "Apple로 계속하기" 로 남는다. 시스템이 그리는 버튼이라
+  `LocalizationStore` 가 닿지 않는다. 규정 준수와 문구 일관성 중 **규정을 택했다.**
+- 순서는 **맨 위**. 4.8 은 동등한 노출을 요구하고, 아래로 밀면 그 자체가 지적거리다.
+- 동의 체크박스 게이트는 다른 버튼과 똑같이 건다. 그런데 `SignInWithAppleButton` 은 탭을
+  가로챌 자리가 없어(`onRequest` 는 이미 요청이 시작된 뒤다) **투명 버튼을 위에 덮어** 막는다.
+
+### 함께 고치는 것 — 로그인 취소 후 버튼이 잠기던 것
+
+`LoginView.start()` 는 `loadingProvider` 를 세워 두고 `auth.lastError` 가 **바뀔 때만** 내린다.
+그런데 취소는 에러가 아니라서(`isUserCancellation`) `lastError` 가 `nil` 그대로다 —
+`nil` → `nil` 은 변화가 아니므로 `onChange` 가 안 뜬다. 즉 **구글 로그인을 한 번 취소하면
+로그인 버튼 전체가 비활성으로 굳는다.** 화면을 다시 만들기 전엔 안 풀린다.
+
+범위 밖으로 미룰까 했는데 미루지 않는다. 심사자가 로그인을 취소해 보는 건 정상 동선이고,
+그 상태는 "앱이 반응하지 않는다"(2.1)로 읽힌다. 리젝을 고치러 가면서 리젝거리를 남길 이유가 없다.
+고치는 방법은 `await` 뒤에서 직접 내리는 것 — 신호를 기다리지 않으면 놓칠 일도 없다.
+
+### 범위
+
+- **포함**: entitlement, `AuthStore` 의 애플 경로(nonce·id token·취소 판정·공급자 표기),
+  `LoginView` 버튼, 오류 문구 1개(4개 언어), 취소 잠김 수정, 테스트, 수동 설정 절차 문서화.
+- **제외**: ATT/UMP(별건, `plan.md` 위 절 참고), App Privacy 설문 응답(ASC 에서 사람이),
+  스크린샷·메타데이터.
+
+### 사람이 해야 하는 것 (이걸 안 하면 코드가 있어도 로그인이 안 된다)
+
+코드만으로 끝나지 않는다. 셋 다 사람이 콘솔에서 해야 하고, **빠지면 증상이 제각각이다.**
+
+1. **Apple Developer → Identifiers → `kr.co.clipnote.app` → Sign in with Apple 활성화.**
+   빠지면 아카이브가 프로비저닝 오류로 **실패**한다(entitlement 가 프로파일에 없다).
+2. **프로비저닝 프로파일 재발급** — 서명이 `Manual`(`match AppStore kr.co.clipnote.app`)이라
+   기존 프로파일에는 새 entitlement 가 없다. 1번 후 `fastlane match` 재실행이 필요하다.
+   CI 는 `CODE_SIGNING_ALLOWED=NO` 라 **이 문제를 잡지 못한다** — 그린이어도 안심할 수 없다.
+3. **Supabase → Authentication → Providers → Apple 활성화**, 그리고 **Client IDs 에
+   번들 ID `kr.co.clipnote.app` 을 추가.** 네이티브 흐름의 id token 은 `aud` 가 Services ID 가
+   아니라 **번들 ID** 라, 이게 빠지면 토큰은 받아지는데 Supabase 가 거부한다.
+
+절차는 `docs/DEPLOY.md` 에 적는다.
+
+### 검증
+
+- 로컬 빌드 불가(리눅스·Xcode 없음) → 브랜치 push 로 `pr-review.yml`(`xcodebuild test`) 그린까지.
+- `scripts/check-localizations.py` — 키 1개 추가분 4개 언어·정규 형식.
+- **사람만 가능**: 실기기에서 실제 애플 로그인(이메일 숨기기 포함), 위 3단계 설정 후 동작.
+
+---
+
 ## 진행 중 — App Store 제출 준비 (2026-08-04)
 
 > **범위는 제출 버튼 직전까지.** 심사 제출은 실기기에서 앱이 켜지는 것을 확인한 뒤 사람이 누른다.
