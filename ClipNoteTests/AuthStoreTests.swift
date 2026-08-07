@@ -145,15 +145,22 @@ import Supabase
         #expect(digest.allSatisfy { $0.isHexDigit && !$0.isUppercase })
     }
 
-    /// 토큰 없는 자격증명은 넘길 게 없다 — 케이스로 구분해야 화면이 번역된 문구를 고른다.
-    @Test func appleSignInWithoutCredentialReportsMissingToken() async {
+    /// 실패는 보이고 취소는 안 보인다.
+    ///
+    /// ⚠️ **`.appleTokenMissing` 은 여기서 검증할 수 없다.** 그 분기는 `.success` 안에
+    /// 있는데 `ASAuthorization` 은 시스템만 만들 수 있어 테스트에서 구성이 안 된다. 이름으로
+    /// 덮은 것처럼 보이게 두면 없는 보호막을 믿게 되므로 범위를 여기 적어 둔다 —
+    /// 그 경로는 실기기 확인 대상이다.
+    @Test func appleSignInSurfacesFailureButNotCancellation() async {
         let store = makeStore()
-        // ASAuthorization 은 앱이 만들 수 없어 실패 경로만 직접 검증한다.
         await store.completeAppleSignIn(.failure(ASAuthorizationError(.failed)), nonce: "n")
         #expect(store.lastError != nil)
 
+        // 앞선 실패가 남아 있어도 취소는 조용해야 한다. 다만 이 단언만으로는 약하다 —
+        // completeAppleSignIn 이 시작하며 lastError 를 비우기 때문에, isUserCancellation 에서
+        // 애플 케이스가 빠져도 통과한다. 그 가드는 appleCancellationNotTreatedAsError 가 본다.
         await store.completeAppleSignIn(.failure(ASAuthorizationError(.canceled)), nonce: "n")
-        #expect(store.lastError == nil)  // 취소는 오류가 아니다
+        #expect(store.lastError == nil)
     }
 
     @Test func appleProviderNameIsLatin() {

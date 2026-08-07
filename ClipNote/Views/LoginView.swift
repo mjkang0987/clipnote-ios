@@ -52,10 +52,13 @@ struct LoginView: View {
             .frame(maxWidth: .infinity)
         }
         .background(AppColor.bg)
-        .sheet(item: $naverAuth) { item in SafariView(url: item.url).ignoresSafeArea() }
+        // 네이버는 시트가 **어떻게 닫히든** 잠금을 푼다. 콜백만 보고 풀면 사용자가 시트를
+        // 쓸어내려 닫았을 때(딥링크가 오지 않는다) 로그인 버튼 넷이 전부 굳는다.
+        .sheet(item: $naverAuth, onDismiss: { loadingProvider = nil }) { item in
+            SafariView(url: item.url).ignoresSafeArea()
+        }
         .sheet(item: $privacy) { item in SafariView(url: item.url).ignoresSafeArea() }
-        .onChange(of: auth.naverCallbackCount) { _, _ in naverAuth = nil; loadingProvider = nil }
-        .onChange(of: auth.lastError) { _, _ in loadingProvider = nil }
+        .onChange(of: auth.naverCallbackCount) { _, _ in naverAuth = nil }
         .onChange(of: auth.loggedIn) { _, now in if now { dismiss() } }
     }
 
@@ -152,19 +155,23 @@ struct LoginView: View {
         // 다른 버튼과 **같은 크기**로 못박는다. 4.8 은 동등한 노출을 요구하고, 시스템 버튼의
         // 기본 크기에 맡기면 폭이 갈릴 수 있다.
         .frame(maxWidth: .infinity).frame(height: 48)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
-        .overlay(alignment: .trailing) {
-            if lastProvider == "apple" && loadingProvider == nil {
-                recentBadge.padding(.trailing, 12).allowsHitTesting(false)
-            }
-        }
+        // `clipShape` 가 아니라 `cornerRadius` 다. 이 버튼은 자기 배경을 직접 그려서
+        // (기본 6pt) 바깥에서 12pt 로 잘라 봐야 깎이는 픽셀이 없다 — 혼자 각져 보인다.
+        .cornerRadius(Radius.md)
+        // **'최근 로그인' 배지를 얹지 않는다.** 애플은 버튼 위에 무언가를 덮는 것을 금지한다.
+        // 시스템 버튼을 쓴 이유가 규정 준수인데 그 위에 그리면 이유가 무너진다.
+        //
         // 동의 전에는 시스템 시트가 뜨기 전에 막아야 한다. 이 버튼은 탭을 가로챌 자리가 없어
         // (`onRequest` 는 이미 요청이 시작된 뒤다) 투명 버튼을 덮어 다른 버튼과 동작을 맞춘다.
+        // **덮는 것만으로는 부족하다** — 오버레이는 아래 버튼을 접근성 트리에서 치우지 않아
+        // VoiceOver 는 가려진 버튼을 그대로 짚어 동의 없이 시트를 열 수 있다.
+        .accessibilityHidden(!agreed)
         .overlay {
             if !agreed {
                 Button { consentError = true } label: {
                     Color.clear.contentShape(Rectangle())
                 }
+                .accessibilityLabel(i18n.t("login.continueWith", args: "Apple"))
             }
         }
         .disabled(loadingProvider != nil)

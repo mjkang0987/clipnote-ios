@@ -133,6 +133,10 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - ⚠️ **콘솔 3단계가 남았다 — 안 하면 코드가 있어도 안 된다.** App ID 에 capability 활성화,
     프로파일 재발급(`match`), Supabase Apple provider 의 **Client IDs 에 번들 ID** 추가.
     CI 는 `CODE_SIGNING_ALLOWED=NO` 라 이걸 못 잡는다. 절차는 `docs/DEPLOY.md`.
+  - 🚨 **재제출 전 반드시 — 계정 삭제 시 애플 토큰 폐기(5.1.1(v))가 아직 없다.** 애플 로그인을
+    넣으면 따라오는 의무인데 `DELETE /api/account` 에 폐기 호출이 없다. **이대로 내면 4.8 을
+    고치고 5.1.1(v) 로 다시 리젝된다.** 서버(`clipnote`) 작업이 선행이라 이 저장소에서 끝나지
+    않는다 — 순서와 이유는 `plan.md`·`docs/DEPLOY.md`.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).

@@ -114,6 +114,21 @@ ADMOB_BANNER_UNIT_ID = ca-app-pub-3019917862455282/6008671423
 > **CI 는 이걸 잡지 못한다.** `pr-review.yml` 은 `CODE_SIGNING_ALLOWED=NO` 로 빌드해서
 > entitlement 와 프로파일이 맞는지 보지 않는다. CI 가 그린이어도 1·2번은 별도로 확인할 것.
 
+### 🚨 아직 안 된 것 — 계정 삭제 시 애플 토큰 폐기 (5.1.1(v))
+
+애플 로그인을 넣으면 **계정 삭제 때 애플 REST API 로 토큰을 폐기할 의무**가 함께 생긴다.
+안 하면 탈퇴한 사용자의 설정 > Apple ID > "Apple로 로그인" 목록에 ClipNote 가 그대로 남고,
+**4.8 을 고쳐 놓고 5.1.1(v) 로 다시 리젝된다.**
+
+현재 `DELETE /api/account` 는 Bearer 토큰만 보내고 폐기 호출이 없다. 필요한 일:
+
+1. **서버(`clipnote` 저장소)** — 애플 개인키로 client_secret JWT 를 서명해 `/auth/revoke` 호출.
+2. **앱** — 로그인 때 받은 `authorizationCode` 를 Keychain 에 두었다가 삭제 요청에 실어 보낸다
+   (삭제는 며칠 뒤일 수 있어 그때 다시 받을 수 없다).
+3. 실기기에서 탈퇴 후 설정 목록에서 사라지는지 확인.
+
+**이게 끝나기 전에는 재제출하지 않는다.**
+
 ## App Store 심사 제출
 
 ### 목록 정보 올리기 (`fastlane metadata`)
