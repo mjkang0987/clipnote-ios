@@ -106,6 +106,62 @@ import Supabase
             URLError(.timedOut)) == false)
     }
 
+    /// 애플 시트 취소는 웹 로그인과 **다른 에러 타입**으로 온다. 한쪽만 보면 취소가
+    /// 빨간 오류 문구로 뜬다.
+    @Test func appleCancellationNotTreatedAsError() {
+        #expect(AuthStore.isUserCancellation(
+            ASAuthorizationError(.canceled)) == true)
+        #expect(AuthStore.isUserCancellation(
+            ASAuthorizationError(.failed)) == false)
+    }
+
+    // MARK: - Sign in with Apple (Guideline 4.8)
+
+    @Test func nonceHasRequestedLengthAndSafeCharacters() {
+        let allowed = Set("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
+        for length in [1, 16, 32, 64] {
+            let nonce = AuthStore.randomNonce(length: length)
+            #expect(nonce.count == length)
+            #expect(nonce.allSatisfy { allowed.contains($0) })
+        }
+    }
+
+    /// 1회성이어야 재생 공격을 막는다. 같은 값이 두 번 나오면 그 성질이 깨진다.
+    @Test func nonceDiffersBetweenCalls() {
+        let nonces = Set((0..<50).map { _ in AuthStore.randomNonce() })
+        #expect(nonces.count == 50)
+    }
+
+    /// 애플에 넘기는 값은 원본이 아니라 이 해시다. 알려진 벡터로 구현을 못박는다 —
+    /// 여기가 어긋나면 로그인은 되는 듯하다 서버 검증만 조용히 떨어진다.
+    @Test func sha256HexMatchesKnownVector() {
+        #expect(AuthStore.sha256Hex("abc")
+            == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        #expect(AuthStore.sha256Hex("")
+            == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        // 64자 소문자 16진수 — 애플이 nonce 로 받아 주는 형태.
+        let digest = AuthStore.sha256Hex(AuthStore.randomNonce())
+        #expect(digest.count == 64)
+        #expect(digest.allSatisfy { $0.isHexDigit && !$0.isUppercase })
+    }
+
+    /// 토큰 없는 자격증명은 넘길 게 없다 — 케이스로 구분해야 화면이 번역된 문구를 고른다.
+    @Test func appleSignInWithoutCredentialReportsMissingToken() async {
+        let store = makeStore()
+        // ASAuthorization 은 앱이 만들 수 없어 실패 경로만 직접 검증한다.
+        await store.completeAppleSignIn(.failure(ASAuthorizationError(.failed)), nonce: "n")
+        #expect(store.lastError != nil)
+
+        await store.completeAppleSignIn(.failure(ASAuthorizationError(.canceled)), nonce: "n")
+        #expect(store.lastError == nil)  // 취소는 오류가 아니다
+    }
+
+    @Test func appleProviderNameIsLatin() {
+        #expect(AccountInfo(email: nil, provider: "apple").providerName == "Apple")
+        #expect(AccountInfo(email: nil, provider: "google").providerName == "Google")
+        #expect(AccountInfo(email: nil, provider: "unknown").providerName == nil)
+    }
+
     @Test func naverAuthURLMatchesRNContract() throws {
         let url = try #require(AuthStore.makeNaverAuthURL(clientID: "cid-1", nonce: "abc"))
         let comps = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
