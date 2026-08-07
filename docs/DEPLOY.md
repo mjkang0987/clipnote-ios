@@ -96,6 +96,24 @@ ADMOB_BANNER_UNIT_ID = ca-app-pub-3019917862455282/6008671423
 
 ---
 
+## Sign in with Apple 설정 (코드만으로는 안 켜진다)
+
+앱에는 Sign in with Apple 이 들어가 있다(Guideline 4.8 — 소셜 로그인을 쓰면 동등한 프라이버시
+로그인을 함께 줘야 한다). **아래 셋은 콘솔에서 사람이 해야 하고, 빠지면 증상이 제각각이다.**
+
+| # | 할 일 | 빠뜨리면 |
+|---|---|---|
+| 1 | Apple Developer → Identifiers → `kr.co.clipnote.app` → **Sign in with Apple** 체크 | 아카이브가 프로비저닝 오류로 **실패** |
+| 2 | 1번 후 **프로비저닝 프로파일 재발급**(`fastlane match` 재실행) | 같음 — 기존 프로파일엔 새 entitlement 가 없다 |
+| 3 | Supabase → Authentication → Providers → **Apple** 켜고 **Client IDs 에 번들 ID `kr.co.clipnote.app` 추가** | 애플 시트는 뜨는데 로그인만 실패 |
+
+3번이 특히 헷갈린다. 네이티브 로그인의 id token 은 `aud` 가 Services ID 가 **아니라 번들 ID** 라,
+웹용 Services ID 만 등록해 두면 토큰은 정상인데 Supabase 가 거부한다. 화면에는 원인을 알 수 없는
+오류만 뜬다.
+
+> **CI 는 이걸 잡지 못한다.** `pr-review.yml` 은 `CODE_SIGNING_ALLOWED=NO` 로 빌드해서
+> entitlement 와 프로파일이 맞는지 보지 않는다. CI 가 그린이어도 1·2번은 별도로 확인할 것.
+
 ## App Store 심사 제출
 
 ### 목록 정보 올리기 (`fastlane metadata`)

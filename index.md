@@ -20,7 +20,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | 경로 | 역할 |
 |------|------|
 | `App/ClipNoteApp.swift` | 앱 진입점(@main), `.onOpenURL` 딥링크, AuthStore·LocalizationStore 주입, `modelContainer(LocalClip)` |
-| `Auth/AuthStore.swift` | 인증(@MainActor): 세션·토큰·OAuth·네이버 |
+| `Auth/AuthStore.swift` | 인증(@MainActor): 세션·토큰·OAuth·네이버·**애플**(nonce 원본/해시 분리 → `signInWithIdToken`) |
 | `Auth/AuthDeepLink.swift` | `clipnote://auth/...` 파싱 |
 | `Models/Models.swift` | 도메인 모델 |
 | `Networking/APIClient.swift` | API 통신 |
@@ -55,7 +55,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
 | `Views/PrivacyView.swift` | 개인정보처리방침(네이티브 정적) |
 | `Views/AccountDeleteView.swift` | 회원 탈퇴(deleteAccount) |
 | `Ads/AdConfig·AdBannerView.swift` | AdMob 배너(GoogleMobileAds 12, 앵커 적응형) |
-| `Views/LoginView.swift` | 로그인(Google/Kakao/네이버) |
+| `Views/LoginView.swift` | 로그인(**Apple**/Google/Kakao/네이버). 애플은 시스템 `SignInWithAppleButton` — 브랜딩 규정 탓에 직접 그리지 않는다 |
 | `Views/SafariView.swift` | SFSafariViewController 래퍼(네이버·바로가기·개인정보) |
 | `Theme/Theme.swift` | 테마/스타일 |
 | `Info.plist` | 앱 설정 |
@@ -121,6 +121,18 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `fastlane metadata` 레인이 ASC 에 올린다(바이너리·스크린샷·심사 제출은 하지 않는다).
   `name.txt`·카테고리 파일은 **일부러 두지 않았다** — 없는 파일은 deliver 가 건드리지 않으므로
   앱 이름이 조용히 바뀌는 것을 막는다. 절차는 `docs/DEPLOY.md` "App Store 심사 제출" 절.
+- **심사 리젝 대응 — Sign in with Apple(2026-08-07)**: 첫 심사에서 리젝됐다. **거절 메일에는
+  사유가 없고**(정형 템플릿) Resolution Center 원문을 아직 받지 못했다. 저장소에 애플 로그인이
+  아예 없어 **Guideline 4.8**(소셜 로그인을 쓰면 동등한 프라이버시 로그인 필수)을 가장 유력하게
+  보고 먼저 구현했다 — 사유가 달랐더라도 언젠가 걸릴 항목이라 헛일이 되지 않는다.
+  - 웹 OAuth 가 아니라 **네이티브**(`ASAuthorizationAppleIDCredential` → `signInWithIdToken`).
+    웹뷰로 띄우면 "이메일 가리기" 가 빠져 4.8 의 동등성이 성립하지 않는다.
+  - **nonce 는 두 벌** — 애플엔 SHA-256 해시, Supabase 엔 원본. 뒤바꾸면 서버 검증만 조용히 떨어진다.
+  - 함께 고침: 로그인을 **취소하면 버튼 전체가 잠긴 채 굳던 것**(취소는 `lastError` 를 바꾸지
+    않아 `onChange` 가 안 떴다). 심사자 동선이라 2.1 로 읽힐 수 있어 미루지 않았다.
+  - ⚠️ **콘솔 3단계가 남았다 — 안 하면 코드가 있어도 안 된다.** App ID 에 capability 활성화,
+    프로파일 재발급(`match`), Supabase Apple provider 의 **Client IDs 에 번들 ID** 추가.
+    CI 는 `CODE_SIGNING_ALLOWED=NO` 라 이걸 못 잡는다. 절차는 `docs/DEPLOY.md`.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
