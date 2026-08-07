@@ -150,6 +150,12 @@ ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=<base64> bundle exec fastlane metada
 
 1. **스크린샷** — 맥에서 시뮬레이터로 찍는다. 6.9"·6.5" 는 필수.
 2. **카테고리·연령등급** — 앱 정보 화면.
+   - 🚨 **연령 등급의 "광고(Advertising)" 를 반드시 "예" 로.** 앱에 AdMob 배너가 실려 있다
+     (홈·내 클립 하단). 여기서 한 번 반려됐다 — 2026-08-07, `2.3.6 Accurate Metadata` +
+     자동 분석 경고. **심사가 시작조차 안 되고 자동 반려된다.**
+   - `fastlane metadata` 는 연령 등급을 건드리지 않는다(`app_rating_config_path` 미설정).
+     저장소로 관리하려면 먼저 `deliver download_metadata` 로 **현재 값을 받아** 스키마를
+     확인해야 한다 — 키를 추측해서 올리면 다른 항목까지 조용히 덮어써 오히려 반려 사유가 된다.
 3. **App Privacy 설문** — AdMob 을 실은 상태에 맞춰 답한다. `PrivacyInfo.xcprivacy` 는
    광고 도입 전 상태(`NSPrivacyTracking: false`, 추적 도메인 없음)라 설문 답과 어긋나지 않는지 본다.
 4. **수출 규정** — 암호화 사용 여부 신고.

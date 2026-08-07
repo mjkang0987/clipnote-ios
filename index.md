@@ -121,10 +121,14 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `fastlane metadata` 레인이 ASC 에 올린다(바이너리·스크린샷·심사 제출은 하지 않는다).
   `name.txt`·카테고리 파일은 **일부러 두지 않았다** — 없는 파일은 deliver 가 건드리지 않으므로
   앱 이름이 조용히 바뀌는 것을 막는다. 절차는 `docs/DEPLOY.md` "App Store 심사 제출" 절.
-- **심사 리젝 대응 — Sign in with Apple(2026-08-07)**: 첫 심사에서 리젝됐다. **거절 메일에는
-  사유가 없고**(정형 템플릿) Resolution Center 원문을 아직 받지 못했다. 저장소에 애플 로그인이
-  아예 없어 **Guideline 4.8**(소셜 로그인을 쓰면 동등한 프라이버시 로그인 필수)을 가장 유력하게
-  보고 먼저 구현했다 — 사유가 달랐더라도 언젠가 걸릴 항목이라 헛일이 되지 않는다.
+- 🚨 **첫 심사 반려 — 연령 등급에 광고 미표시(2026-08-07, `2.3.6`)**: **코드 문제가 아니다.**
+  AdMob 배너가 실려 있는데 ASC 연령 등급 설문에서 **광고(Advertising)를 "예" 로 고르지 않아**
+  심사가 시작조차 못 하고 자동 반려됐다. 고치는 곳은 ASC → 앱 정보 → 연령 등급 한 곳뿐이고,
+  메타데이터 수정이라 **재제출 없이 회신으로 끝난다.** 절차는 `docs/DEPLOY.md`.
+- **Sign in with Apple — 보류(이번 반려와 무관)**: 거절 메일에 사유가 없어 Guideline 4.8 로
+  **추정하고 먼저 구현했는데 추정이 틀렸다.** 브랜치
+  (`claude/clipnote-app-store-review-94rj0l`)에만 있고 머지하지 않았다. 4.8 자체는 언젠가
+  필요하지만 지금 급하지 않다 — 판단은 `plan.md` "보류" 절.
   - 웹 OAuth 가 아니라 **네이티브**(`ASAuthorizationAppleIDCredential` → `signInWithIdToken`).
     웹뷰로 띄우면 "이메일 가리기" 가 빠져 4.8 의 동등성이 성립하지 않는다.
   - **nonce 는 두 벌** — 애플엔 SHA-256 해시, Supabase 엔 원본. 뒤바꾸면 서버 검증만 조용히 떨어진다.

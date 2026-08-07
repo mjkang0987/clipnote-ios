@@ -4,25 +4,50 @@
 
 ---
 
-## 진행 중 — 심사 리젝 대응: Sign in with Apple (2026-08-07)
+## 🚨 실제 리젝 사유 — 연령 등급에 광고 미표시 (2.3.6)
 
-### ⚠️ 전제 — 실제 리젝 사유를 확인하지 못했다
+**코드 문제가 아니다. ASC 에서 클릭 한 번으로 끝난다.**
 
-받은 것은 App Store Connect 의 **정형 거절 메일**이고, 거기엔 사유가 없다("go to the App Review
-page to find out why"). 진짜 사유는 ASC → App Review → **Resolution Center** 안에만 있는데
-그 원문을 받지 못했다.
+받은 두 통은 **같은 건 하나**다.
 
-그래서 이 작업은 **추정 위에 서 있다.** 다만 아래 근거로 4.8 을 가장 유력하게 보고 먼저 친다.
+- 자동 분석: "app may include advertising but you did not select **Yes** for the
+  **Advertising** content descriptor on the Age Rating selection".
+- `2.3.6 Performance: Accurate Metadata` — 2.3.6 이 곧 **연령 등급 조항**이다
+  ("Answer the age rating questions honestly so that your app aligns properly with
+  parental controls").
 
-- 저장소 전체에 `ASAuthorization`·`com.apple.developer.applesignin` 이 **하나도 없다.**
-  `LoginView.swift` 의 로그인 수단은 Google·Kakao·Naver 셋뿐이다.
-- Guideline 4.8 은 서드파티/소셜 로그인으로 계정을 만들면 **동등한 프라이버시 로그인**을
-  함께 제공하라고 요구한다(수집을 이름·이메일로 제한, 이메일 숨기기 지원). 셋 다 이 조건을
-  만족하지 못하므로 지금 구성은 4.8 을 만족할 수 없다.
-- **틀려도 버리는 작업이 아니다.** 이번 리젝이 4.8 이 아니었더라도 이 구성은 언젠가 4.8 에
-  걸린다. 그래서 사유 확인 전에 선행해도 손해가 없는 유일한 항목이다.
+앱에 AdMob 배너가 실려 있는데(`Ads/AdBannerView.swift`, 홈·내 클립 하단) 연령 등급 설문에서
+광고를 "예" 로 고르지 않았다. 심사가 시작조차 되지 않은 **자동 반려**다.
 
-Resolution Center 원문을 받으면 이 절의 전제를 지우고 실제 사유에 맞춰 범위를 다시 잡는다.
+### 고치는 법 (사람이 ASC 에서, 저장소 작업 없음)
+
+1. App Store Connect → 앱 → **앱 정보** → **연령 등급** → 편집.
+2. **광고(Advertising)** 항목을 **"예"** 로.
+3. 저장 → App Review 페이지에서 회신하거나 재제출.
+
+> 애플 메일에도 적혀 있다 — 메타데이터만 고치는 경우 **재제출 없이 회신으로 끝난다.**
+
+### ❌ 내가 틀린 것
+
+거절 메일에 사유가 없어(정형 템플릿) **Guideline 4.8(Sign in with Apple)로 추정하고 먼저
+구현했다. 추정이 틀렸다.** 실제 사유는 연령 등급이고 애플 로그인과 무관하다.
+
+사유를 확인하지 않은 채 큰 기능을 만든 것이 잘못이다. 그 작업은 아래 절로 분리해 남긴다 —
+**이번 리젝과는 무관하며, 지금 내보낼 이유가 없다.**
+
+---
+
+## 보류 — Sign in with Apple (이번 리젝과 무관, 별건)
+
+> **이번 심사 반려와 관계없다.** 위 추정 착오로 먼저 만들어진 작업이라 브랜치에만 올려 두고
+> 판단을 기다린다. 내보낼지 접을지는 지시자가 정한다.
+
+### 그래도 언젠가 필요한 이유
+
+Guideline 4.8 은 서드파티/소셜 로그인으로 계정을 만들면 **동등한 프라이버시 로그인**을
+함께 제공하라고 요구한다(수집을 이름·이메일로 제한, 이메일 숨기기 지원). 현재 로그인 수단은
+Google·Kakao·Naver 셋뿐이라 이 조건을 만족하지 못한다. 다만 **이번에 그것으로 반려된 것은
+아니다** — 시급하지 않다.
 
 ### 왜 웹 OAuth 가 아니라 네이티브인가
 
