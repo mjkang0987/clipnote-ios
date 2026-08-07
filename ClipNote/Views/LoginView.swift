@@ -275,7 +275,10 @@ struct LoginView: View {
         consentError = false
         lastProvider = key
         loadingProvider = key
-        Task { await action() }
+        // 끝나면 여기서 직접 푼다. `lastError` 변화만 보고 풀면 **취소가 새지 않는다** —
+        // 취소는 에러로 치지 않아 `lastError` 가 nil 그대로고, nil→nil 은 onChange 가 뜨지
+        // 않아 로그인 버튼 전체가 비활성으로 굳는다.
+        Task { await action(); loadingProvider = nil }
     }
 
     private func startNaver() {
