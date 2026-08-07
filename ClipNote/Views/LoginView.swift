@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 import Supabase
 
 /// sheet(item:) 표시용 URL 래퍼.
@@ -21,6 +22,8 @@ struct LoginView: View {
     @State private var loadingProvider: String?
     @State private var naverAuth: IdentifiedURL?
     @State private var privacy: IdentifiedURL?
+    /// 애플 요청 때 만든 **원본** nonce. 애플에는 해시를 주고 검증에는 이 값을 쓴다.
+    @State private var appleNonce = ""
 
     private let privacyURL = URL(string: "https://clipnote.co.kr/privacy")!
 
@@ -105,6 +108,8 @@ struct LoginView: View {
 
     private var buttons: some View {
         VStack(spacing: 12) {
+            // 맨 위에 둔다. Guideline 4.8 은 서드파티 로그인과 **동등한 노출**을 요구한다.
+            appleButton
             // 공급자 이름은 라틴 표기로 고정한다 — 번역하면 사용자가 자기 계정을 못 알아본다.
             brandButton(provider: "Google", key: "google",
                         bg: AppColor.bg, fg: AppColor.fg, border: true) {
@@ -119,6 +124,51 @@ struct LoginView: View {
                 startNaver()
             }
         }
+    }
+
+    /// Sign in with Apple. **시스템 버튼을 쓴다** — 로고·모서리·문구에 브랜딩 규정이 있어
+    /// 직접 그리면 그 자체가 지적 사유가 된다. `brandButton` 을 재사용하지 않는 유일한 예외다.
+    ///
+    /// 대신 문구는 **기기 언어**를 따른다(시스템이 그리는 버튼이라 `LocalizationStore` 가 닿지
+    /// 않는다). 앱 표시 언어와 갈릴 수 있는데, 규정 준수를 택했다.
+    private var appleButton: some View {
+        SignInWithAppleButton(.continue) { request in
+            let nonce = AuthStore.randomNonce()
+            appleNonce = nonce
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = AuthStore.sha256Hex(nonce)
+        } onCompletion: { result in
+            lastProvider = "apple"
+            loadingProvider = "apple"
+            let nonce = appleNonce
+            // 성공하면 `auth.loggedIn` 변화가 화면을 닫는다. 실패·취소는 여기서 직접 푼다 —
+            // `lastError` 변화를 기다리면 취소(에러 없음)에서 버튼이 잠긴 채 남는다.
+            Task {
+                await auth.completeAppleSignIn(result, nonce: nonce)
+                loadingProvider = nil
+            }
+        }
+        .signInWithAppleButtonStyle(.black)
+        // 다른 버튼과 **같은 크기**로 못박는다. 4.8 은 동등한 노출을 요구하고, 시스템 버튼의
+        // 기본 크기에 맡기면 폭이 갈릴 수 있다.
+        .frame(maxWidth: .infinity).frame(height: 48)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        .overlay(alignment: .trailing) {
+            if lastProvider == "apple" && loadingProvider == nil {
+                recentBadge.padding(.trailing, 12).allowsHitTesting(false)
+            }
+        }
+        // 동의 전에는 시스템 시트가 뜨기 전에 막아야 한다. 이 버튼은 탭을 가로챌 자리가 없어
+        // (`onRequest` 는 이미 요청이 시작된 뒤다) 투명 버튼을 덮어 다른 버튼과 동작을 맞춘다.
+        .overlay {
+            if !agreed {
+                Button { consentError = true } label: {
+                    Color.clear.contentShape(Rectangle())
+                }
+            }
+        }
+        .disabled(loadingProvider != nil)
+        .opacity(loadingProvider != nil && loadingProvider != "apple" ? 0.5 : 1)
     }
 
     private func brandButton(provider: String, key: String, bg: Color, fg: Color,
@@ -215,6 +265,7 @@ struct LoginView: View {
     private func message(for error: AuthErrorMessage) -> String {
         switch error {
         case .naverNotConfigured: i18n.t("login.errorNaverNotConfigured")
+        case .appleTokenMissing: i18n.t("login.errorAppleTokenMissing")
         case .system(let text): text
         }
     }

@@ -1,5 +1,6 @@
 import Foundation
 import AuthenticationServices
+import CryptoKit
 import Supabase
 
 /// Pure, testable snapshot of auth state. `loggedIn` is derived from token presence.
@@ -21,6 +22,7 @@ struct AccountInfo: Equatable {
     /// 여기서 한국어 대체 문구를 만들면 표시 언어를 바꿔도 그 낱말만 한국어로 남는다.
     var providerName: String? {
         switch provider {
+        case "apple": "Apple"
         case "google": "Google"
         case "kakao": "Kakao"
         case "naver": "Naver"
@@ -34,6 +36,8 @@ struct AccountInfo: Equatable {
 enum AuthErrorMessage: Equatable {
     /// 네이버 client_id 가 빌드에 없다(`Secrets.xcconfig` 누락).
     case naverNotConfigured
+    /// 애플이 자격증명은 줬는데 identity token 이 없다. 이게 없으면 Supabase 에 넘길 게 없다.
+    case appleTokenMissing
     /// Supabase·시스템이 준 설명. 이미 사람이 읽는 문장이라 그대로 보여 준다.
     case system(String)
 }
@@ -172,9 +176,68 @@ final class AuthStore: ObservableObject {
         }
     }
 
-    /// ASWebAuthenticationSession 유저 취소는 에러로 취급하지 않는다.
+    /// 유저 취소는 에러로 취급하지 않는다. 웹 로그인(Google/Kakao)과 애플 시트가 각각 다른
+    /// 에러 타입으로 취소를 알려 오므로 둘 다 본다 — 한쪽만 보면 취소가 빨간 문구로 뜬다.
     static func isUserCancellation(_ error: Error) -> Bool {
-        (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin
+        if (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin { return true }
+        if (error as? ASAuthorizationError)?.code == .canceled { return true }
+        return false
+    }
+
+    // MARK: - Sign in with Apple (Guideline 4.8)
+
+    /// nonce 에 쓰는 문자 집합. 애플이 id token 에 그대로 싣는 값이라 URL·JSON 에서 탈이 없는
+    /// 문자만 둔다(RFC 3986 unreserved).
+    private static let nonceCharacters = Array(
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._"
+    )
+
+    /// 재생 공격 방지용 1회성 난수. `randomElement()` 는 애플 플랫폼에서 암호학적 난수
+    /// (`SystemRandomNumberGenerator`)를 쓴다.
+    static func randomNonce(length: Int = 32) -> String {
+        String((0..<max(1, length)).compactMap { _ in nonceCharacters.randomElement() })
+    }
+
+    /// 애플에 넘길 nonce 해시. **애플에는 이 해시를, Supabase 에는 원본을 준다** —
+    /// 원본을 애플에 주면 id token 에 평문으로 남고, 뒤바꿔 넣으면 검증만 조용히 떨어진다.
+    static func sha256Hex(_ input: String) -> String {
+        SHA256.hash(data: Data(input.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+    }
+
+    /// `SignInWithAppleButton` 의 결과를 세션으로 바꾼다. `nonce` 는 요청 때 만든 **원본**.
+    /// 성공 시 세션은 `authStateChanges` → `apply` 로 반영된다.
+    func completeAppleSignIn(_ result: Result<ASAuthorization, Error>, nonce: String) async {
+        lastError = nil
+        switch result {
+        case let .success(authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let data = credential.identityToken,
+                  let idToken = String(data: data, encoding: .utf8) else {
+                lastError = .appleTokenMissing
+                return
+            }
+            await signInWithApple(idToken: idToken, nonce: nonce)
+        case let .failure(error):
+            if !Self.isUserCancellation(error) {
+                lastError = .system(error.localizedDescription)
+            }
+        }
+    }
+
+    /// 애플 id token 을 Supabase 세션으로 교환한다. 순수 네트워크 단계라 따로 뽑아 둔다.
+    /// 여기까지 왔으면 사용자는 이미 시트를 끝낸 뒤라 취소를 가릴 일이 없다 — 실패는 곧 오류다.
+    func signInWithApple(idToken: String, nonce: String) async {
+        do {
+            _ = try await client.auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(
+                    provider: .apple, idToken: idToken, nonce: nonce
+                )
+            )
+        } catch {
+            lastError = .system(error.localizedDescription)
+        }
     }
 
     // MARK: - 네이버(커스텀 OAuth)

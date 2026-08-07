@@ -4040,6 +4040,36 @@
         }
       }
     },
+    "login.errorAppleTokenMissing" : {
+      "comment" : "앱 전용 — 애플이 자격증명은 줬는데 identity token 이 없을 때. 일시적일 수 있어 재시도를 안내한다",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't get your Apple sign-in details. Please try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple ログイン情報を取得できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "애플 로그인 정보를 받지 못했어요. 다시 시도해 주세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未能获取 Apple 登录信息，请重试。"
+          }
+        }
+      }
+    },
     "login.errorConsent" : {
       "extractionState" : "manual",
       "localizations" : {
