@@ -7,7 +7,7 @@
 - **번들 ID**: `kr.co.clipnote.app` (URL 스킴 `clipnote://`)
 - **스택**: Swift 6 · SwiftUI · iOS 17+ · **XcodeGen**(`project.yml` → `ClipNote.xcodeproj`)
 - **백엔드**: `API_BASE`(clipnote.co.kr) · Supabase · 네이버 로그인 · AdMob (설정은 `Secrets.xcconfig`)
-- **배포**: `main` push → `deploy.yml` 이 fastlane 으로 TestFlight 자동 업로드. App Store 심사 제출만 수동
+- **배포**: **App Store 출시 완료.** `main` push → `deploy.yml` 이 fastlane 으로 TestFlight 자동 업로드. 신규 버전 심사 제출만 수동
 
 ## 빌드
 ```bash
@@ -81,7 +81,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - Phase 5: `HeaderMenu`+`AppRouter`(공통 메뉴·로그아웃·전 화면 라우팅)·`AboutView`/`FaqView`/`AccountDeleteView`·`OnboardingView`(실제 슬라이드)·`deleteAccount` API·`PrivacyInfo.xcprivacy`(심사).
   - ⚠️ **#7/#8 실제 OAuth 로그인은 미검증 머지** — provider·서버 콜백 설정에 따라 실동작 별도 확인 필요.
   - AdMob(#48 재개·완료): `AdConfig`(DEBUG 테스트/RELEASE Secrets)·`AdBannerView`(앵커 적응형)·App ID 가드 start. Home(키보드 숨김)·Clips 하단. 실 App ID `~9380940221`, 배너 unit `/6008671423`(Secrets, gitignored).
-- **배포 단계(TestFlight)** — App Store Connect "ClipNote by pikaworks"(App `6792600343`). `main` push 마다 `fastlane ios beta` 가 자동 업로드한다(빌드번호 = TestFlight 최신+1). 최근 업로드는 **1.1.0 빌드 21(2026-08-04, 배포 #18)** 이고 **실기기 구동 확인됨**. 배포 전 시크릿 검증 게이트가 걸려 있어 값이 깨져 있으면 빌드가 만들어지지 않는다. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 절**과 `docs/DEPLOY.md` 참고.
+- **출시 완료(App Store)** — "ClipNote by pikaworks"(App `6792600343`)로 App Store 에 출시돼 있다(2026-09-07 지시자 확인). 배포 파이프라인은 계속 TestFlight 경유다. `main` push 마다 `fastlane ios beta` 가 자동 업로드한다(빌드번호 = TestFlight 최신+1). 최근 업로드는 **1.1.0 빌드 21(2026-08-04, 배포 #18)** 이고 **실기기 구동 확인됨**. 배포 전 시크릿 검증 게이트가 걸려 있어 값이 깨져 있으면 빌드가 만들어지지 않는다. 배포 파이프라인·서명·API키 위치는 **plan.md "진행 중 — 배포" 절**과 `docs/DEPLOY.md` 참고.
   - 실기기 QA 수정: 로그인 시트 닫힘·개인정보 방침 네이티브(PR #59, 빌드3).
 - **출시 후속 UI 개선(2026-07-20)**: 홈 헤더 타이틀 제거(#65)·BrandLogo 앱 아이콘 교체(#66)·주요 async 로딩 인디케이터(#67)·온보딩 스포트라이트 투어(#68, #70)·URL 입력 텍스트 검정 고정(#73)·공유 복사 제목·링크만(#75)·공유 카드 원본이미지+프록시(#77). 투어 시각 검증은 사용자 직접.
   - 보류: 내 클립 무한스크롤(임계 도달 시 cursor 방식). 다국어는 보류 해제 — 아래 항목 참고.
@@ -123,7 +123,7 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   앱 이름이 조용히 바뀌는 것을 막는다. 절차는 `docs/DEPLOY.md` "App Store 심사 제출" 절.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
-  - App Store Connect: 개인정보 URL(`https://clipnote.co.kr/privacy`) 입력(제출 필수)·스크린샷·설명·심사 제출(수동). 앱 아이콘은 사용자 제공 512→1024 업스케일본(원본 있으면 교체).
+  - 앱 아이콘: 현재 사용자 제공 512→1024 업스케일본(1024 원본 있으면 교체).
   - Privacy Manifest는 AdMob 포함 상태 재검토 여지(`NSPrivacyTracking`/추적 도메인 — 현재 false).
 
 ## 설정 파일
