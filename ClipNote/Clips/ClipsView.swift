@@ -462,10 +462,13 @@ private struct ClipRow: View {
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 VStack(alignment: .leading, spacing: 2) {
+                    // 제목은 자르지 않는다 — 말줄임만 보고는 무슨 클립인지 알 수 없다.
+                    // 서버가 120 그래핌으로 자르므로 카드가 무한정 길어지지는 않는다.
+                    // 아래 호스트 줄은 그대로 한 줄 — 이번에 바꾼 건 제목뿐이다.
                     Text(clip.title)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.fg)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(prettyHost(clip.url))
                         .font(.system(size: 13))
                         .foregroundStyle(AppColor.fgMuted)
