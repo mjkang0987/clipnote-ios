@@ -121,6 +121,13 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `fastlane metadata` 레인이 ASC 에 올린다(바이너리·스크린샷·심사 제출은 하지 않는다).
   `name.txt`·카테고리 파일은 **일부러 두지 않았다** — 없는 파일은 deliver 가 건드리지 않으므로
   앱 이름이 조용히 바뀌는 것을 막는다. 절차는 `docs/DEPLOY.md` "App Store 심사 제출" 절.
+- **방침·로그인 고지에 네이버 반영(2026-09-15, #124)**: 로그인 화면에 네이버 버튼이 실제로
+  있는데 방침은 Google·카카오만 말했다. 더구나 **네이버는 이메일을 수집하지 않는다** —
+  콜백이 읽는 건 id·nickname·profile_image 뿐이고 회원 구분용 내부 식별값
+  `naver_<id>@naver.invalid` 를 만든다(존재하지 않는 주소, 발송 없음).
+  `PrivacyView` §1·§4 와 `login.subtitleWithKakao`·`login.consent` 를 4개 언어에서 고쳤다.
+  시행일 갱신. 웹 `clipnote` 와 문구가 같은지 파일 대조로 확인했다. **한쪽만 바꾸지 않는다.**
+  - ⚠️ App Store Connect 의 앱 개인정보(App Privacy) 답변과 어긋나지 않는지 확인 필요.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - 앱 아이콘: 현재 사용자 제공 512→1024 업스케일본(1024 원본 있으면 교체).
