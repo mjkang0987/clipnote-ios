@@ -135,8 +135,9 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   - ⚠️ **네이버 신원 처리가 화면과 어긋난 채로 남아 있다**(별건·지시자 판단, plan.md 표):
     `SettingsView.swift:69` 가 네이버 사용자에게 `naver_<id>@naver.invalid` 를 계정으로
     보여 준다(웹은 막는다). `AuthStore.swift:26` 의 `case "naver"` 는 죽은 코드다.
-    카카오 이메일이 실제로 필수인지는 **저장소에서 확인할 수 없다**(동의항목이 대시보드에
-    있고 코드에 `scopes` 지정이 없다).
+  - 동의 문구를 한 번 더 고쳤다 — 처음엔 "공급자가 제공하는 경우 이메일" 로 약하게 적었지만
+    이메일은 **Google·카카오 필수**고(Supabase 가 카카오 기본 scope 를 강제 추가한다)
+    **네이버만** 미수집이다. 방침 §1 과 같은 공급자 기준으로 4개 언어를 맞췄다.
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - 앱 아이콘: 현재 사용자 제공 512→1024 업스케일본(1024 원본 있으면 교체).
