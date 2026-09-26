@@ -2237,25 +2237,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yes. You can save links on this device without an account. Creating short share links requires signing in with Google or Kakao."
+            "value" : "Yes. You can save links on this device without an account. Creating short share links requires signing in."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "はい。ログインしなくてもリンクをこの端末に保存できます。ただし短い共有リンクの作成には Google または Kakao でのログインが必要です。"
+            "value" : "はい。ログインしなくてもリンクをこの端末に保存できます。ただし短い共有リンクの作成にはログインが必要です。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "네. 비로그인 상태에서도 링크를 이 기기에 저장할 수 있어요. 다만 짧은 공유 링크 생성은 로그인(Google·Kakao)이 필요합니다."
+            "value" : "네. 비로그인 상태에서도 링크를 이 기기에 저장할 수 있어요. 다만 짧은 공유 링크 생성은 로그인이 필요합니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可以。不登录也能把链接保存到此设备。但生成短分享链接需要用 Google 或 Kakao 登录。"
+            "value" : "可以。不登录也能把链接保存到此设备。但生成短分享链接需要登录。"
           }
         }
       }
