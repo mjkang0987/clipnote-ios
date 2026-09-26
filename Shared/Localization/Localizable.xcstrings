@@ -3958,25 +3958,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I agree that my social account details (unique identifier, profile nickname and image, and email where the provider supplies it) are collected to identify me when signing in."
+            "value" : "I agree that my social account details (unique identifier, profile nickname and image, and email — Google and Kakao only) are collected to identify me when signing in."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ログイン時に会員識別のためソーシャルアカウント情報(固有識別子、プロフィールのニックネーム・画像、提供元が提供する場合はメール)が収集されることに同意します。"
+            "value" : "ログイン時に会員識別のためソーシャルアカウント情報(固有識別子、プロフィールのニックネーム・画像、メール — Google・Kakao のみ)が収集されることに同意します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 프로필 닉네임·이미지, 공급자가 제공하는 경우 이메일)가 수집되는 데 동의합니다."
+            "value" : "로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 프로필 닉네임·이미지, 이메일 — Google·카카오만)가 수집되는 데 동의합니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我同意在登录时为识别会员而收集社交账号信息(唯一标识符、昵称与头像，以及服务商提供时的邮箱)。"
+            "value" : "我同意在登录时为识别会员而收集社交账号信息(唯一标识符、昵称与头像，以及邮箱 — 仅 Google 和 Kakao)。"
           }
         }
       }
