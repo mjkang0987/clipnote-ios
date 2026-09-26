@@ -25,7 +25,9 @@ struct ClipCardView: View {
     let tags: [String]
 
     var body: some View {
-        HStack(spacing: 12) {
+        // `alignment: .top` 은 목록 행(`ClipRow`)과 같은 이유 — 제목이 행 높이를 정하므로
+        // 가운데 정렬이면 썸네일이 카드 중간에 뜬다.
+        HStack(alignment: .top, spacing: 12) {
             ClipThumbnail(imageURL: imageURL, gradient: gradient)
                 .frame(width: 56, height: 56)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
