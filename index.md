@@ -127,7 +127,16 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `naver_<id>@naver.invalid` 를 만든다(존재하지 않는 주소, 발송 없음).
   `PrivacyView` §1·§4 와 `login.subtitleWithKakao`·`login.consent` 를 4개 언어에서 고쳤다.
   시행일 갱신. 웹 `clipnote` 와 문구가 같은지 파일 대조로 확인했다. **한쪽만 바꾸지 않는다.**
+  코드리뷰로 세 건 더: **`faq.a3` 가 "로그인(Google·Kakao)" 이라 네이버 사용자에게 공유
+  링크를 못 만든다고 말하고 있었다**(공급자 열거를 4개 언어에서 없앴다 — 카카오 온·오프와
+  네이버 추가로 이미 두 번 낡은 문장이다), §1 에 같은 문장이 두 번 있던 것, 시행일이
+  **과거 날짜**(2026-09-15)여서 머지되면 적용일이 발행일보다 앞서던 것 → 2026-09-26.
   - ⚠️ App Store Connect 의 앱 개인정보(App Privacy) 답변과 어긋나지 않는지 확인 필요.
+  - ⚠️ **네이버 신원 처리가 화면과 어긋난 채로 남아 있다**(별건·지시자 판단, plan.md 표):
+    `SettingsView.swift:69` 가 네이버 사용자에게 `naver_<id>@naver.invalid` 를 계정으로
+    보여 준다(웹은 막는다). `AuthStore.swift:26` 의 `case "naver"` 는 죽은 코드다.
+    카카오 이메일이 실제로 필수인지는 **저장소에서 확인할 수 없다**(동의항목이 대시보드에
+    있고 코드에 `scopes` 지정이 없다).
 - **미완/이월(사람만 가능)**:
   - **실기기 검증** — OAuth 3종 실제 로그인·실광고 노출, 전체 QA.
   - 앱 아이콘: 현재 사용자 제공 512→1024 업스케일본(1024 원본 있으면 교체).
