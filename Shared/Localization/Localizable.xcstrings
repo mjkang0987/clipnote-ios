@@ -1028,6 +1028,36 @@
         }
       }
     },
+    "clips.emptyForSearch" : {
+      "comment" : "%@ 는 입력한 검색어",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No clips match ‘%@’."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」に一致するクリップがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 검색 결과가 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配「%@」的剪藏。"
+          }
+        }
+      }
+    },
     "clips.emptyForTag" : {
       "comment" : "%@ 는 선택된 태그 이름",
       "extractionState" : "manual",
@@ -1054,6 +1084,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有带「%@」标签的剪藏。"
+          }
+        }
+      }
+    },
+    "clips.emptyForTagSearch" : {
+      "comment" : "첫 %@ 는 선택된 태그, 둘째 %@ 는 검색어 — 한쪽만 말하면 거짓말이 된다",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No clips tagged ‘%@’ match ‘%@’."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」タグに「%@」と一致するクリップがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 태그에 ‘%@’ 검색 결과가 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」标签下没有匹配「%@」的剪藏。"
           }
         }
       }
@@ -1495,6 +1555,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存中…"
+          }
+        }
+      }
+    },
+    "clips.searchPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search by title, URL, or tag"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトル・URL・タグで検索"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제목·주소·태그로 검색"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按标题、网址或标签搜索"
           }
         }
       }

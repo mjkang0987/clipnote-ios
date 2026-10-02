@@ -45,6 +45,36 @@ struct ClipsView: View {
     /// 날짜 그룹 머리글은 선택 언어를 따른다 — 시스템 언어가 아니라(앱 안에서 바꿀 수 있다).
     private var locale: Locale { Locale(identifier: i18n.language.rawValue) }
 
+    /// `.searchable` 이 쓸 검색어 바인딩. 스토어가 옵셔널이라 강제 언래핑 대신 직접 만든다.
+    private var searchText: Binding<String> {
+        Binding(get: { self.store?.query ?? "" }, set: { self.store?.query = $0 })
+    }
+
+    /// 선택한 것 중 **지금 화면에 보이는** 개수.
+    ///
+    /// 선택한 뒤 검색어나 태그로 목록을 좁히면 고른 것 중 일부가 화면에서 사라진다. 일괄
+    /// 작업이 그걸 건드리면 **보이지 않는 클립까지 지워진다** — 삭제는 되돌릴 수 없다.
+    /// 화면 밖으로 나간 선택을 잊지는 않는다(`selected` 에 그대로 있고 필터를 풀면 다시 센다).
+    private var visibleSelectedCount: Int {
+        store?.visibleSelectedCount(selected) ?? 0
+    }
+
+    /// 목록이 빈 이유. 좁히는 축이 둘이라 **둘 다 걸렸으면 둘 다 말한다.**
+    ///
+    /// 검색어만 탓하면 거짓말이 된다 — ‘개발’ 태그 + ‘뉴스’ 검색으로 비었을 때 "‘뉴스’ 검색
+    /// 결과가 없어요" 는 사실이 아니다(‘뉴스’ 클립은 있고, 그게 ‘개발’ 태그가 아닐 뿐이다).
+    private func emptyFilterNote(_ store: ClipsStore) -> String {
+        let q = store.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        // `activeTag` 가 아니라 `effectiveTag` 다 — 목록이 바뀌어 사라진 태그를 그대로
+        // 읽으면 걸리지도 않은 필터를 탓하게 된다.
+        let tag = store.effectiveTag
+        if !q.isEmpty, let tag {
+            return i18n.t("clips.emptyForTagSearch", args: tag, q)
+        }
+        if !q.isEmpty { return i18n.t("clips.emptyForSearch", args: q) }
+        return i18n.t("clips.emptyForTag", args: tag ?? "")
+    }
+
     var body: some View {
         Group {
             if let store {
@@ -55,7 +85,7 @@ struct ClipsView: View {
         }
         .overlay { if bulkBusy { blockingOverlay } }
         .navigationTitle(selectMode
-                         ? i18n.t("clips.selectedCount", args: selected.count)
+                         ? i18n.t("clips.selectedCount", args: visibleSelectedCount)
                          : i18n.t("common.myClips"))
         .navigationBarTitleDisplayMode(.inline)
         .background(AppColor.bg)
@@ -113,8 +143,10 @@ struct ClipsView: View {
 
     /// 다중선택 하단 바 — 태그 적용 / 삭제(n).
     private var bulkBar: some View {
-        HStack(spacing: 8) {
-            Button { tagApplyRequest = ClipCount(value: selected.count) } label: {
+        // `filtered` 를 훑는 값이라 한 번만 구해 돌려 쓴다.
+        let count = visibleSelectedCount
+        return HStack(spacing: 8) {
+            Button { tagApplyRequest = ClipCount(value: count) } label: {
                 Text(i18n.t("clips.applyTags"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.brandStrong)
@@ -122,16 +154,20 @@ struct ClipsView: View {
                     .background(AppColor.brandSoft)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
-            Button { bulkDeleteRequest = ClipCount(value: selected.count) } label: {
-                Text(i18n.t("clips.bulkDeleteButton", args: selected.count))
+            // 삭제와 같이 잠근다. 안 잠그면 0개짜리 모달이 열리고, 확인해도 아무 일이
+            // 없는 채로 선택만 조용히 풀린다.
+            .disabled(count == 0)
+            .opacity(count == 0 ? 0.5 : 1)
+            Button { bulkDeleteRequest = ClipCount(value: count) } label: {
+                Text(i18n.t("clips.bulkDeleteButton", args: count))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppColor.white)
                     .frame(maxWidth: .infinity).frame(height: 48)
                     .background(AppColor.danger)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
             }
-            .disabled(selected.isEmpty)
-            .opacity(selected.isEmpty ? 0.5 : 1)
+            .disabled(count == 0)
+            .opacity(count == 0 ? 0.5 : 1)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -164,7 +200,7 @@ struct ClipsView: View {
                     filterRow(store).plainRow()
                 }
                 if store.filtered.isEmpty {
-                    Text(i18n.t("clips.emptyForTag", args: store.activeTag ?? ""))
+                    Text(emptyFilterNote(store))
                         .font(.system(size: 14))
                         .foregroundStyle(AppColor.fgMuted)
                         .plainRow()
@@ -184,6 +220,9 @@ struct ClipsView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            // 검색바는 SwiftUI 가 준다 — 내비게이션 바 자리·지우기 버튼·취소·VoiceOver 까지.
+            // 웹이 `<input type="search">` 를 쓰는 것과 같은 이유로 직접 그리지 않는다.
+            .searchable(text: searchText, prompt: Text(i18n.t("clips.searchPrompt")))
         }
     }
 
@@ -456,16 +495,32 @@ private struct ClipRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
+            // `alignment: .top` — 행 높이를 제목이 정하게 된 뒤로 기본값(.center)이면
+            // 썸네일·체크박스·⋯ 가 카드 **중간에 떠 버린다**(제목이 길수록 아래로).
+            // 웹의 `items-center` → `items-start` 와 같은 자리다.
+            HStack(alignment: .top, spacing: 12) {
                 if selectMode { checkbox }
                 ClipThumbnail(imageURL: clip.image, gradient: gradient)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 VStack(alignment: .leading, spacing: 2) {
+                    // 제목은 자르지 않는다 — 말줄임만 보고는 무슨 클립인지 알 수 없다.
+                    //
+                    // ⚠️ **앱 안에는 제목 상한이 없다.** 상한은 웹에 있다 —
+                    // `/api/metadata` 응답(`lib/metadata.ts` 의 `TITLE_MAX = 120`, 웹 #51)과
+                    // 로그인 저장 라우트(`POST /api/clip`)다. 그러니
+                    //   · 로그인 클립: 서버가 자른 값이 온다
+                    //   · 게스트 클립(`LocalClipStore`): `/api/metadata` 가 자른 값이면 120,
+                    //     **직접 타이핑한 제목은 무제한**이고, 웹 #51 배포 **이전에** 저장된
+                    //     것도 무제한이다(인스타 `og:title` 은 캡션 전문이다 —
+                    //     `Util/ShareText.swift` 주석이 같은 함정을 적어 뒀다)
+                    // 즉 "서버가 자르니 괜찮다" 고 쓰면 게스트 경로에서 틀린다.
+                    //
+                    // 아래 호스트 줄은 그대로 한 줄 — 이번에 바꾼 건 제목뿐이다.
                     Text(clip.title)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.fg)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(prettyHost(clip.url))
                         .font(.system(size: 13))
                         .foregroundStyle(AppColor.fgMuted)
