@@ -495,16 +495,32 @@ private struct ClipRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
+            // `alignment: .top` — 행 높이를 제목이 정하게 된 뒤로 기본값(.center)이면
+            // 썸네일·체크박스·⋯ 가 카드 **중간에 떠 버린다**(제목이 길수록 아래로).
+            // 웹의 `items-center` → `items-start` 와 같은 자리다.
+            HStack(alignment: .top, spacing: 12) {
                 if selectMode { checkbox }
                 ClipThumbnail(imageURL: clip.image, gradient: gradient)
                     .frame(width: 56, height: 56)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
                 VStack(alignment: .leading, spacing: 2) {
+                    // 제목은 자르지 않는다 — 말줄임만 보고는 무슨 클립인지 알 수 없다.
+                    //
+                    // ⚠️ **앱 안에는 제목 상한이 없다.** 상한은 웹에 있다 —
+                    // `/api/metadata` 응답(`lib/metadata.ts` 의 `TITLE_MAX = 120`, 웹 #51)과
+                    // 로그인 저장 라우트(`POST /api/clip`)다. 그러니
+                    //   · 로그인 클립: 서버가 자른 값이 온다
+                    //   · 게스트 클립(`LocalClipStore`): `/api/metadata` 가 자른 값이면 120,
+                    //     **직접 타이핑한 제목은 무제한**이고, 웹 #51 배포 **이전에** 저장된
+                    //     것도 무제한이다(인스타 `og:title` 은 캡션 전문이다 —
+                    //     `Util/ShareText.swift` 주석이 같은 함정을 적어 뒀다)
+                    // 즉 "서버가 자르니 괜찮다" 고 쓰면 게스트 경로에서 틀린다.
+                    //
+                    // 아래 호스트 줄은 그대로 한 줄 — 이번에 바꾼 건 제목뿐이다.
                     Text(clip.title)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppColor.fg)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(prettyHost(clip.url))
                         .font(.system(size: 13))
                         .foregroundStyle(AppColor.fgMuted)

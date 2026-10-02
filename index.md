@@ -125,6 +125,24 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `MARKETING_VERSION` 과 **두 타깃 `info.properties` 의 `CFBundleShortVersionString`**,
   그리고 추적되는 생성물 `ClipNote/Info.plist`·`ClipNoteShare/Info.plist` 다섯 곳을 함께
   고쳤다(빌드번호는 fastlane 이 TestFlight 최신+1 로 계산하므로 손대지 않는다).
+- **클립 카드 제목 전체 노출(2026-09-15, #122)**: 제목을 자르지 않는다. 전에는 화면마다 값이
+  달랐다 — 내 클립 목록(`ClipRow`)은 2줄, 이 기기에 남은 클립·홈 미리보기·온보딩 투어가 함께
+  쓰는 `ClipCardView` 는 1줄. 둘 다 풀고 `.fixedSize(…vertical: true)` 로 행 높이에 눌려
+  잘리지 않게 했다. 호스트 줄은 그대로 한 줄. 웹 `clipnote` 도 같은 구성.
+  - ⚠️ **앱 안에는 제목 상한이 없다.** 상한은 웹에 있다 — `/api/metadata` 응답(`TITLE_MAX
+    = 120`, 웹 #51)과 `POST /api/clip`. 그래서 로그인 클립은 잘린 값이 오지만, **게스트
+    클립은 직접 타이핑한 제목이 무제한**이고 웹 #51 배포 이전 저장분도 무제한이다
+    (인스타 `og:title` 은 캡션 전문 — `Util/ShareText.swift` 가 같은 함정을 적어 뒀다).
+    답답하면 `.lineLimit(3)` 으로 되돌릴 수 있다.
+  - ⚠️ 카드 높이 숫자(320px에서 555px)는 **웹에서 잰 값이고 앱에서는 재지 못했다**
+    (리눅스 컨테이너라 빌드가 없다). 앱은 폭·폰트·여백이 달라 그대로 옮겨 읽으면 안 된다.
+  - ⚠️ 눈 확인이 필요한 것: **온보딩 투어의 미리보기 단계**(`SpotlightTour` 의 `isPreview`).
+    카드가 커지면 `calloutStack` 이 `ScrollView` 없는 `VStack` 이라 설명 상자가 밀릴 수 있다
+    — 특히 ja·zh 의 목업 제목이 길 때. (스포트라이트 **구멍**은 이 단계에 그려지지 않으므로
+    "하이라이트가 어긋난다" 는 걱정은 틀렸다 — `ClipCardView` 가 투어에 나오는 경로는
+    `anchor == nil` 인 미리보기 단계뿐이다.)
+  - 썸네일·체크박스·⋯ 가 카드 중간에 뜨던 것도 함께 고쳤다 — `HStack(alignment: .top)`
+    (웹의 `items-center` → `items-start` 와 같은 자리).
 - **내 클립 검색(2026-09-15, #120)**: 제목·URL·태그로 찾는다. 검색바는 네이티브 `.searchable`.
   태그 필터와 **AND** — 축이 다르니(태그=분류, 검색어=내용) 한쪽이 다른 쪽을 지우지 않는다.
   매칭은 `lowercased()` — `localizedCaseInsensitiveContains` 는 `Locale.current` 로 대소문자를

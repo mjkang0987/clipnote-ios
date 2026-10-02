@@ -25,16 +25,20 @@ struct ClipCardView: View {
     let tags: [String]
 
     var body: some View {
-        HStack(spacing: 12) {
+        // `alignment: .top` 은 목록 행(`ClipRow`)과 같은 이유 — 제목이 행 높이를 정하므로
+        // 가운데 정렬이면 썸네일이 카드 중간에 뜬다.
+        HStack(alignment: .top, spacing: 12) {
             ClipThumbnail(imageURL: imageURL, gradient: gradient)
                 .frame(width: 56, height: 56)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
 
             VStack(alignment: .leading, spacing: 2) {
+                // 목록 행(`ClipRow`)과 같은 규칙. 홈 미리보기가 목록보다 짧게 자르면
+                // 저장한 뒤 다른 걸 보게 된다 — 그건 미리보기가 아니다.
                 Text(title)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppColor.fg)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let h = host, !h.isEmpty {
                     Text(h)
                         .font(.system(size: 13))
