@@ -17,10 +17,10 @@ struct PrivacyView: View {
     }
 
     // ⚠️ 머지 직전에 다시 확인할 값. 방침은 공개된 날부터 적용되므로 **과거 날짜를 적으면
-    // 사실과 다르다** — PR 을 열어 둔 사이 15일이 지나 26일로 고쳤다. 웹
+    // 사실과 다르다** — PR 을 열어 둔 사이 두 번 지나갔다(9/15 → 9/26 → 10/2). 웹
     // (`app/_components/PrivacyPage.tsx` 의 `EFFECTIVE_DATE`)에도 같은 값이 하드코딩돼
-    // 있으니 **한쪽만 바꾸지 않는다**.
-    private let effectiveDate = "시행일: 2026년 9월 26일"
+    // 있으니 **한쪽만 바꾸지 않는다**. 웹이 정본이고 이 값은 웹 발행일을 따른다.
+    private let effectiveDate = "시행일: 2026년 10월 2일"
     private let intro = "ClipNote(이하 \"서비스\")는 「개인정보 보호법」을 준수하며, 이용자의 개인정보를 보호하기 위해 다음과 같이 개인정보처리방침을 두고 있습니다. 서비스는 회원 로그인에 필요한 최소한의 정보만 수집합니다."
 
     private let sections: [Section] = [
