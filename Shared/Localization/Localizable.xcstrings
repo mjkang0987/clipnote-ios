@@ -2326,25 +2326,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yes. You can save links on this device without an account. Creating short share links requires signing in with Google or Kakao."
+            "value" : "Yes. You can save links on this device without an account. Creating short share links requires signing in."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "はい。ログインしなくてもリンクをこの端末に保存できます。ただし短い共有リンクの作成には Google または Kakao でのログインが必要です。"
+            "value" : "はい。ログインしなくてもリンクをこの端末に保存できます。ただし短い共有リンクの作成にはログインが必要です。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "네. 비로그인 상태에서도 링크를 이 기기에 저장할 수 있어요. 다만 짧은 공유 링크 생성은 로그인(Google·Kakao)이 필요합니다."
+            "value" : "네. 비로그인 상태에서도 링크를 이 기기에 저장할 수 있어요. 다만 짧은 공유 링크 생성은 로그인이 필요합니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可以。不登录也能把链接保存到此设备。但生成短分享链接需要用 Google 或 Kakao 登录。"
+            "value" : "可以。不登录也能把链接保存到此设备。但生成短分享链接需要登录。"
           }
         }
       }
@@ -4047,25 +4047,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I agree that my social account details (unique identifier, email, profile nickname and image) are collected to identify me when signing in."
+            "value" : "I agree that my social account details (unique identifier, profile nickname and image, and email — Google and Kakao only) are collected to identify me when signing in."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ログイン時に会員識別のためソーシャルアカウント情報(固有識別子、メール、プロフィールのニックネーム・画像)が収集されることに同意します。"
+            "value" : "ログイン時に会員識別のためソーシャルアカウント情報(固有識別子、プロフィールのニックネーム・画像、メール — Google・Kakao のみ)が収集されることに同意します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 이메일, 프로필 닉네임·이미지)가 수집되는 데 동의합니다."
+            "value" : "로그인 시 회원 식별을 위해 소셜 계정 정보(고유 식별자, 프로필 닉네임·이미지, 이메일 — Google·카카오만)가 수집되는 데 동의합니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "我同意在登录时为识别会员而收集社交账号信息(唯一标识符、邮箱、昵称与头像)。"
+            "value" : "我同意在登录时为识别会员而收集社交账号信息(唯一标识符、昵称与头像，以及邮箱 — 仅 Google 和 Kakao)。"
           }
         }
       }
@@ -4312,25 +4312,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Get started quickly with your Google or Kakao account."
+            "value" : "Get started quickly with your Google, Kakao, or Naver account."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Google・Kakao アカウントで手軽に始められます。"
+            "value" : "Google・Kakao・Naver アカウントで手軽に始められます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Google·Kakao 계정으로 간편하게 시작하세요."
+            "value" : "Google·Kakao·Naver 계정으로 간편하게 시작하세요."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用 Google 或 Kakao 账号快速开始。"
+            "value" : "用 Google、Kakao 或 Naver 账号快速开始。"
           }
         }
       }

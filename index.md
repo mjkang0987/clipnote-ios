@@ -125,6 +125,25 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `MARKETING_VERSION` 과 **두 타깃 `info.properties` 의 `CFBundleShortVersionString`**,
   그리고 추적되는 생성물 `ClipNote/Info.plist`·`ClipNoteShare/Info.plist` 다섯 곳을 함께
   고쳤다(빌드번호는 fastlane 이 TestFlight 최신+1 로 계산하므로 손대지 않는다).
+- **방침·로그인 고지에 네이버 반영(2026-09-15, #124)**: 로그인 화면에 네이버 버튼이 실제로
+  있는데 방침은 Google·카카오만 말했다. 더구나 **네이버는 이메일을 수집하지 않는다** —
+  콜백이 읽는 건 id·nickname·profile_image 뿐이고 회원 구분용 내부 식별값
+  `naver_<id>@naver.invalid` 를 만든다(존재하지 않는 주소, 발송 없음).
+  `PrivacyView` §1·§4 와 `login.subtitleWithKakao`·`login.consent` 를 4개 언어에서 고쳤다.
+  시행일 갱신. 웹 `clipnote` 와 문구가 같은지 파일 대조로 확인했다. **한쪽만 바꾸지 않는다.**
+  코드리뷰로 세 건 더: **`faq.a3` 가 "로그인(Google·Kakao)" 이라 네이버 사용자에게 공유
+  링크를 못 만든다고 말하고 있었다**(공급자 열거를 4개 언어에서 없앴다 — 카카오 온·오프와
+  네이버 추가로 이미 두 번 낡은 문장이다), §1 에 같은 문장이 두 번 있던 것, 시행일이
+  **과거 날짜**(2026-09-15)여서 머지되면 적용일이 발행일보다 앞서던 것 → 머지일
+  **2026-10-02**(9/26 으로 고친 뒤 승인까지 6일이 더 걸려 한 번 더 맞췄다 — 웹이 정본이라
+  웹 발행일을 따른다).
+  - ⚠️ App Store Connect 의 앱 개인정보(App Privacy) 답변과 어긋나지 않는지 확인 필요.
+  - ⚠️ **네이버 신원 처리가 화면과 어긋난 채로 남아 있다**(별건·지시자 판단, plan.md 표):
+    `SettingsView.swift:69` 가 네이버 사용자에게 `naver_<id>@naver.invalid` 를 계정으로
+    보여 준다(웹은 막는다). `AuthStore.swift:26` 의 `case "naver"` 는 죽은 코드다.
+  - 동의 문구를 한 번 더 고쳤다 — 처음엔 "공급자가 제공하는 경우 이메일" 로 약하게 적었지만
+    이메일은 **Google·카카오 필수**고(Supabase 가 카카오 기본 scope 를 강제 추가한다)
+    **네이버만** 미수집이다. 방침 §1 과 같은 공급자 기준으로 4개 언어를 맞췄다.
 - **클립 카드 제목 전체 노출(2026-09-15, #122)**: 제목을 자르지 않는다. 전에는 화면마다 값이
   달랐다 — 내 클립 목록(`ClipRow`)은 2줄, 이 기기에 남은 클립·홈 미리보기·온보딩 투어가 함께
   쓰는 `ClipCardView` 는 1줄. 둘 다 풀고 `.fixedSize(…vertical: true)` 로 행 높이에 눌려
