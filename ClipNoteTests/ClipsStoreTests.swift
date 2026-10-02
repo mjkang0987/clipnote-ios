@@ -69,6 +69,116 @@ final class ClipsStubURLProtocol: URLProtocol, @unchecked Sendable {
         #expect(store.filtered.count == 2)
     }
 
+    // MARK: - 검색 (#120)
+
+    /// 검색 대상은 제목·URL·태그. 카드에 보이는 것으로 찾을 수 있어야 한다.
+    @Test func searchMatchesTitleUrlAndTag() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://news.example.com/a", title: "경제 브리핑", description: nil,
+                   image: nil, siteName: nil, gradient: "ocean", tags: ["뉴스"])
+        local.save(url: "https://github.com/vercel/next.js", title: "릴리스 노트", description: nil,
+                   image: nil, siteName: nil, gradient: "ocean", tags: ["개발"])
+        await store.load(loggedIn: false, accessToken: nil)
+
+        store.query = "브리핑"                               // 제목
+        #expect(store.filtered.map(\.title) == ["경제 브리핑"])
+        store.query = "github"                              // URL (제목엔 없다)
+        #expect(store.filtered.map(\.title) == ["릴리스 노트"])
+        store.query = "뉴스"                                 // 태그 (제목·URL 엔 없다)
+        #expect(store.filtered.map(\.title) == ["경제 브리핑"])
+    }
+
+    /// 대소문자를 가리지 않고, 앞뒤 공백만 있는 검색어는 안 건 것으로 본다.
+    @Test func searchIgnoresCaseAndBlankQuery() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://a.com", title: "Frontend 정리", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        local.save(url: "https://b.com", title: "백엔드 정리", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        await store.load(loggedIn: false, accessToken: nil)
+
+        store.query = "FRONTEND"
+        #expect(store.filtered.map(\.title) == ["Frontend 정리"])
+        store.query = "   "
+        #expect(store.filtered.count == 2)
+        store.query = ""
+        #expect(store.filtered.count == 2)
+    }
+
+    /// 태그와 검색어는 **함께** 건다. 한쪽이 다른 쪽을 지우면 태그를 고른 채로는 검색할 수 없다.
+    @Test func searchAndTagNarrowTogether() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://1", title: "디자인 토큰", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["개발"])
+        local.save(url: "https://2", title: "릴리스 노트", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["개발"])
+        local.save(url: "https://3", title: "디자인 레퍼런스", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["기타"])
+        await store.load(loggedIn: false, accessToken: nil)
+
+        store.activeTag = "개발"
+        #expect(store.filtered.count == 2)
+        store.query = "디자인"
+        #expect(store.filtered.map(\.title) == ["디자인 토큰"])   // 둘 다 만족하는 것만
+        store.query = "없는말"
+        #expect(store.filtered.isEmpty)
+        store.query = ""
+        #expect(store.filtered.count == 2)                      // 검색어만 풀면 태그는 남는다
+    }
+
+    /// 선택한 뒤 목록을 좁히면, **화면에 없는 선택은 지우지 않는다.**
+    ///
+    /// 일괄 삭제가 전체 목록에서 대상을 찾으면 보이지 않는 클립까지 지운다 — 되돌릴 수 없다.
+    /// 잊지는 않는다: 호출부의 선택은 그대로라, 필터를 풀면 다시 대상이 된다.
+    @Test func bulkDeleteSkipsClipsHiddenByFilter() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://keep.com", title: "남을 것", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        local.save(url: "https://gone.com", title: "지울 것", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: [])
+        await store.load(loggedIn: false, accessToken: nil)
+
+        store.query = "지울"                                  // ‘남을 것’ 은 화면에서 사라진다
+        #expect(store.visibleSelectedCount(["https://keep.com", "https://gone.com"]) == 1)
+
+        await store.bulkDelete(ids: ["https://keep.com", "https://gone.com"])
+        #expect(local.all().map(\.url) == ["https://keep.com"])
+    }
+
+    /// 같은 규칙이 태그 일괄 적용에도 걸린다 — 안 보이는 클립의 태그를 바꾸지 않는다.
+    @Test func applyTagsSkipsClipsHiddenByFilter() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://1", title: "보이는 것", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["a"])
+        local.save(url: "https://2", title: "숨은 것", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["a"])
+        await store.load(loggedIn: false, accessToken: nil)
+
+        store.query = "보이는"
+        await store.applyTags(ids: ["https://1", "https://2"], tags: ["z"], mode: .replace)
+
+        let byURL = Dictionary(uniqueKeysWithValues: local.all().map { ($0.url, $0.tags) })
+        #expect(byURL["https://1"] == ["z"])
+        #expect(byURL["https://2"] == ["a"])
+    }
+
+    /// 목록이 바뀌어 사라진 태그는 **안 건 것**으로 본다.
+    ///
+    /// 빈 상태 문구가 이 값을 읽는다 — `activeTag` 를 그대로 보면 걸리지도 않은 필터를 탓한다.
+    @Test func effectiveTagDropsTagMissingFromList() async throws {
+        let (store, local) = try make()
+        local.save(url: "https://1", title: "T", description: nil, image: nil,
+                   siteName: nil, gradient: "ocean", tags: ["개발"])
+        await store.load(loggedIn: false, accessToken: nil)
+        store.activeTag = "개발"
+        #expect(store.effectiveTag == "개발")
+
+        // 그 태그를 떼면 목록에서 사라진다 — 필터가 걸린 채로 남아선 안 된다.
+        await store.saveEdit(store.clips!.first!, title: "T", tags: [])
+        #expect(store.effectiveTag == nil)
+        #expect(store.filtered.count == 1)
+    }
+
     @Test func applyTagsAddDedupCapsSix() async throws {
         let (store, local) = try make()
         local.save(url: "https://u1", title: "T", description: nil, image: nil,

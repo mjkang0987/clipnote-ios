@@ -19,7 +19,29 @@ final class ClipsStore {
     /// 필터 칩과 `filtered` 가 각각 읽어서 렌더 한 번에 클립 수만큼을 두 번씩 순회했다.
     private(set) var allTags: [String] = []
 
-    var activeTag: String?
+    /// 태그 필터. 바뀌면 `filtered` 를 다시 계산한다.
+    ///
+    /// `didSet` 을 쓰지 않는다 — `@Observable` 매크로가 저장 프로퍼티에 get/set 접근자를
+    /// 만들어 넣는데, 관찰자(`didSet`)와 겹칠 때 어떻게 되는지 이 저장소에 선례가 없다.
+    /// 확실한 쪽으로 간다: 저장은 따로 두고 set 에서 직접 부른다.
+    var activeTag: String? {
+        get { storedActiveTag }
+        set {
+            storedActiveTag = newValue
+            refreshFiltered()
+        }
+    }
+    private var storedActiveTag: String?
+
+    /// 검색어. 태그와 좁히는 축이 달라(태그=분류, 검색어=내용) 서로를 지우지 않는다.
+    var query: String {
+        get { storedQuery }
+        set {
+            storedQuery = newValue
+            refreshFiltered()
+        }
+    }
+    private var storedQuery: String = ""
 
     private let api: APIClient
     private let localStore: LocalClipStore
@@ -71,6 +93,8 @@ final class ClipsStore {
     private func apply(_ next: [UClip]) {
         clips = next
         allTags = orderedUnique(next.flatMap(\.tags))
+        // `allTags` 가 먼저 정해져야 한다 — `effectiveTag` 가 그걸 보고 stale 태그를 버린다.
+        refreshFiltered()
     }
 
     func reload() async {
@@ -79,12 +103,45 @@ final class ClipsStore {
 
     // MARK: - Derived
 
-    var filtered: [UClip] {
-        guard let clips else { return [] }
-        if let t = activeTag, allTags.contains(t) {
-            return clips.filter { $0.tags.contains(t) }
+    /// 실제로 걸려 있는 태그. 목록이 바뀌어 사라진 태그는 **안 건 것**으로 본다.
+    ///
+    /// 빈 상태 문구도 이 값을 봐야 한다 — `activeTag` 를 그대로 읽으면 걸리지도 않은
+    /// 필터를 탓하게 된다.
+    var effectiveTag: String? {
+        storedActiveTag.flatMap { allTags.contains($0) ? $0 : nil }
+    }
+
+    /// 태그와 검색어를 **함께** 건 결과. 한쪽이 다른 쪽을 지우면 태그를 고른 채로는 검색할 수 없다.
+    ///
+    /// **계산 프로퍼티가 아니다.** 한 번 그리는 동안 목록·하단 바·제목이 각각 읽어 네 번쯤
+    /// 훑게 되고, 그게 키 입력마다 반복된다. `allTags` 를 캐시로 돌린 것과 같은 이유다.
+    private(set) var filtered: [UClip] = []
+
+    /// `filtered` 의 id 집합 — 선택이 지금 보이는지 O(1) 로 본다.
+    private var visibleIDs: Set<String> = []
+
+    /// 목록·태그·검색어가 바뀔 때만 다시 계산한다.
+    private func refreshFiltered() {
+        let source = clips ?? []
+        let tag = effectiveTag
+        // 소문자 변환은 **여기서 한 번만** — 클립마다 내리면 목록 길이만큼 낭비다.
+        let q = storedQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        if tag == nil, q.isEmpty {
+            filtered = source
+        } else {
+            filtered = source.filter { clip in
+                if let tag, !clip.tags.contains(tag) { return false }
+                if !q.isEmpty, !clip.matches(lowercasedQuery: q) { return false }
+                return true
+            }
         }
-        return clips
+        visibleIDs = Set(filtered.map(\.id))
+    }
+
+    /// 선택한 것 중 **지금 화면에 보이는** 개수. 하단 바·제목·확인 문구가 쓴다.
+    func visibleSelectedCount(_ ids: Set<String>) -> Int {
+        ids.filter { visibleIDs.contains($0) }.count
     }
 
     /// 공유 복사 텍스트(§4.3) — 제목+브릿지 링크(설명 제외, #74/PR #75). 로컬 클립은 slug 없어 nil.
@@ -121,9 +178,13 @@ final class ClipsStore {
     }
 
     /// id 목록을 클립으로 바꾼다. `ids` 하나마다 배열을 훑으면 선택이 늘수록 제곱으로 느려진다.
+    ///
+    /// **`clips` 가 아니라 `filtered` 에서 찾는다.** 선택한 뒤 검색어나 태그로 목록을 좁히면
+    /// 고른 것 중 일부가 화면에서 사라지는데, 전체 목록에서 찾으면 **보이지 않는 클립까지**
+    /// 지워진다. 삭제는 되돌릴 수 없다. 화면 밖으로 나간 선택을 잊지는 않는다 — 호출부의
+    /// `selected` 에 그대로 있고, 필터를 풀면 다시 대상이 된다.
     private func lookup(_ ids: [String]) -> [UClip] {
-        guard let clips else { return [] }
-        let byID = Dictionary(clips.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let byID = Dictionary(filtered.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return ids.compactMap { byID[$0] }
     }
 
@@ -188,6 +249,23 @@ final class ClipsStore {
         } else if let slug = clip.slug {
             _ = await api.updateClip(slug: slug, title: nil, tags: tags, shared: nil, accessToken: ctx.token)
         }
+    }
+}
+
+extension UClip {
+    /// 검색어와 맞는가 — **제목·URL·태그**. 웹 `ClipsClient` 와 같은 규칙이다.
+    /// 카드에 보이는 호스트는 URL 에서 뽑은 것이라 URL 만 훑으면 함께 걸린다.
+    ///
+    /// `localizedCaseInsensitiveContains` 를 **쓰지 않는다.** 그건 `Locale.current` 로
+    /// 대소문자를 접어서, 터키어 기기에서는 `I` 가 `ı` 로 내려가 같은 검색어가 기기마다
+    /// 다르게 걸린다. 웹이 `toLocaleLowerCase()` 대신 `toLowerCase()` 를 쓰는 것과 같은
+    /// 이유다 — `lowercased()` 는 로케일을 타지 않는 유니코드 기본 매핑이다.
+    ///
+    /// `query` 는 **이미 소문자로 내린 것**을 받는다. 클립마다 다시 내리면 목록 길이만큼 낭비다.
+    func matches(lowercasedQuery query: String) -> Bool {
+        title.lowercased().contains(query)
+            || url.lowercased().contains(query)
+            || tags.contains { $0.lowercased().contains(query) }
     }
 }
 
