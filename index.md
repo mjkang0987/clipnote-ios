@@ -121,6 +121,10 @@ xcodebuild build -scheme ClipNote -destination 'generic/platform=iOS Simulator'
   `fastlane metadata` 레인이 ASC 에 올린다(바이너리·스크린샷·심사 제출은 하지 않는다).
   `name.txt`·카테고리 파일은 **일부러 두지 않았다** — 없는 파일은 deliver 가 건드리지 않으므로
   앱 이름이 조용히 바뀌는 것을 막는다. 절차는 `docs/DEPLOY.md` "App Store 심사 제출" 절.
+- **버전 1.2.0(2026-10-02)**: 검색 추가가 들어가 Minor 로 올렸다. `project.yml` 의
+  `MARKETING_VERSION` 과 **두 타깃 `info.properties` 의 `CFBundleShortVersionString`**,
+  그리고 추적되는 생성물 `ClipNote/Info.plist`·`ClipNoteShare/Info.plist` 다섯 곳을 함께
+  고쳤다(빌드번호는 fastlane 이 TestFlight 최신+1 로 계산하므로 손대지 않는다).
 - **내 클립 검색(2026-09-15, #120)**: 제목·URL·태그로 찾는다. 검색바는 네이티브 `.searchable`.
   태그 필터와 **AND** — 축이 다르니(태그=분류, 검색어=내용) 한쪽이 다른 쪽을 지우지 않는다.
   매칭은 `lowercased()` — `localizedCaseInsensitiveContains` 는 `Locale.current` 로 대소문자를
